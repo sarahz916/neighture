@@ -1,3 +1,3 @@
 # neigh-nature
 
-Link to design doc: [go/neighborhood_nature](go/neighborhood_nature)
+Link to design doc: [go/neighborhood_nature](https://docs.google.com/document/d/1BnRnIR6EMvhhJG4jlYIN1QwnX7rDls_Fsa_Vs0WV-bc/edit)
