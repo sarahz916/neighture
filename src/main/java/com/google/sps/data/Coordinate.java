@@ -19,9 +19,11 @@ public final class Coordinate {
 
   public final Double x;
   public final Double y;
+  public final String label;
 
-  public Coordinate(Double x, Double y) {
+  public Coordinate(Double x, Double y, String label) {
     this.x = x;
     this.y = y;
+    this.label = label;
   }
 }
