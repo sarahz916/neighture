@@ -1,4 +1,6 @@
 package com.example.appengine.users;
+import com.google.sps.data.Comment;
+
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;

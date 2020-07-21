@@ -1,9 +1,13 @@
 package com.example.appengine.users;
+import com.google.sps.data.Comment;
+
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Map;
+import java.util.HashMap;
 
 /** Servlet that searches for a given name in a database, 
   * parsing out and returning the coordinates
@@ -14,5 +18,12 @@ public class DatabaseServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     // TODO: return the coordinates that match the request
+  }
+
+  private static Map<String, String> createMap() {
+    Map<String,String> myMap = new HashMap<String,String>();
+    myMap.put("a", "b");
+    myMap.put("c", "d");
+    return myMap;
   }
 }

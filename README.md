@@ -6,4 +6,5 @@ Link to design doc: [go/neighborhood_nature](https://docs.google.com/document/d/
 Authors: Andrea Collins, Hannah Zhang, Sarah Zou
 
 To run a dev server: mvn package appengine:run
+
 To see our web app: #TODO - add link
