@@ -13,6 +13,7 @@ import java.io.IOException;
 public class WaypointQueryServlet extends HttpServlet {
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    String text = getParameter(request, "text-input", "");
     // TODO: Parse out input and find in database
     // Database will probably have to wait until everything is set up
     // or I'll just call another servlet with a GET function
