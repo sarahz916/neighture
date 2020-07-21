@@ -13,7 +13,7 @@
 // limitations under the License.
 
 package com.example.appengine.users;
-import com.google.sps.data.Comment;
+import com.google.sps.data.Coordinate;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;

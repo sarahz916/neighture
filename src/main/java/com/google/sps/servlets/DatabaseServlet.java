@@ -13,7 +13,7 @@
 // limitations under the License.
 
 package com.example.appengine.users;
-import com.google.sps.data.Comment;
+import com.google.sps.data.Coordinate;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -41,9 +41,9 @@ public class DatabaseServlet extends HttpServlet {
 
   private static Map<String, Coordinate> createMap() {
     Map<String, Coordinate> myMap = new HashMap<String, Coordinate>();
-    myMap.put("clover", {x: 3, y: 2, label: "clover"});
-    myMap.put("daisy", {x: 1, y: 3, label: "daisy"});
-    myMap.put("bellflower", {x: 7, y: 8, label: "bellflower"});
+    // myMap.put("clover", {x: 3, y: 2, label: "clover"});
+    // myMap.put("daisy", {x: 1, y: 3, label: "daisy"});
+    // myMap.put("bellflower", {x: 7, y: 8, label: "bellflower"});
     return myMap;
   }
 }
