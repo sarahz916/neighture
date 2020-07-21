@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 /** Servlet that searches for a given name in a database, 
-  * parsing out and returning the coordinates
+  * returning the coordinates as part of a JSON
   */
 @WebServlet("/database")
 public class DatabaseServlet extends HttpServlet {
@@ -32,12 +32,18 @@ public class DatabaseServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     // TODO: return the coordinates that match the request
+    Map<String, Coordinate> locations = createMap();
+    String feature = request.getParameter("feature");
+    if (locations.containsKey(feature)) {
+      //do something
+    }
   }
 
-  private static Map<String, String> createMap() {
-    Map<String,String> myMap = new HashMap<String,String>();
-    myMap.put("a", "b");
-    myMap.put("c", "d");
+  private static Map<String, Coordinate> createMap() {
+    Map<String, Coordinate> myMap = new HashMap<String, Coordinate>();
+    myMap.put("clover", {x: 3, y: 2, label: "clover"});
+    myMap.put("daisy", {x: 1, y: 3, label: "daisy"});
+    myMap.put("bellflower", {x: 7, y: 8, label: "bellflower"});
     return myMap;
   }
 }
