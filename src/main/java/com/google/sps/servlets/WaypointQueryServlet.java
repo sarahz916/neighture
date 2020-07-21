@@ -13,7 +13,7 @@
 // limitations under the License.
 
 package com.example.appengine.users;
-import com.google.sps.data.Comment;
+import com.google.sps.data.Coordinate;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -29,7 +29,7 @@ import java.io.IOException;
 public class WaypointQueryServlet extends HttpServlet {
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    String text = getParameter(request, "text-input", "");
+    String text = request.getParameter("text-input");
     // TODO: Parse out input and find in database
     // Database will probably have to wait until everything is set up
     // or I'll just call another servlet with a GET function
