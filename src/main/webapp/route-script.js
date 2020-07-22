@@ -20,6 +20,7 @@ window.onload = function createMapWithDirections() {
     let chicagoThree = new google.maps.LatLng(41.850033, -86.6500523);
     initMap(directionsService, directionsRenderer, chicagoOne);
     calcRoute(directionsService, directionsRenderer, chicagoOne, chicagoThree, [chicagoTwo]);
+    generateURL (chicagoOne, chicagoThree, [chicagoTwo]);
 }
 
 function initMap(directionsService, directionsRenderer, center) {
@@ -47,3 +48,14 @@ function calcRoute(directionsService, directionsRenderer, start, end, waypoints)
         }
     });
 }
+
+function generateURL(start, end, waypoints){
+    let globalURL = 'https://www.google.com/maps/dir/?api=1';
+    globalURL = globalURL + '&origin=' + start + '&destination=' + end;
+    globalURL += '&waypoints='
+    waypoints.forEach(pt => globalURL += pt + '|')
+    globalURL = globalURL + '&travelmode=walking';
+    const URLcontainer = document.getElementById('globalURL');
+    URLcontainer.innerHTML = "<a href = " + globalURL + ">" + globalURL + "</a>";
+}
+
