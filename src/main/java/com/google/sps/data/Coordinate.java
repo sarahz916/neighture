@@ -17,11 +17,25 @@ package com.google.sps.data;
 /** A coordinate. */
 public final class Coordinate {
 
-  public final Double x;
-  public final Double y;
+  private final Double x;
+  private final Double y;
+  private final String label;
 
-  public Coordinate(Double x, Double y) {
+  public Coordinate(Double x, Double y, String label) {
     this.x = x;
     this.y = y;
+    this.label = label;
+  }
+
+  public Double getX() {
+    return x;
+  }
+  
+  public Double getY() {
+    return y;
+  }
+
+  public String getLabel() {
+    return label;
   }
 }

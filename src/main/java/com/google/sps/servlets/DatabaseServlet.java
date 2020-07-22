@@ -13,7 +13,6 @@
 // limitations under the License.
 
 package com.example.appengine.users;
-import com.google.sps.data.Comment;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -24,20 +23,30 @@ import java.util.Map;
 import java.util.HashMap;
 
 /** Servlet that searches for a given name in a database, 
-  * parsing out and returning the coordinates
+  * returning the coordinates as part of a JSON
   */
 @WebServlet("/database")
 public class DatabaseServlet extends HttpServlet {
-  // TODO: Add map of points to coordinates
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    // TODO: return the coordinates that match the request
+    Map<String, String> locations = createMap();
+    String feature = request.getParameter("q");
+    System.out.println(feature);
+    if (locations.containsKey(feature)) {
+      response.setContentType("application/json");
+      System.out.println(locations.get(feature));
+      response.getWriter().println(locations.get(feature));
+    } else {
+      response.setContentType("application/json");
+      response.getWriter().println("[]");
+    }
   }
 
   private static Map<String, String> createMap() {
-    Map<String,String> myMap = new HashMap<String,String>();
-    myMap.put("a", "b");
-    myMap.put("c", "d");
+    Map<String, String> myMap = new HashMap<String, String>();
+    myMap.put("clover", "{\"latitude\": 43, \"longitude\": -87, \"common_name\": {\"name\": \"clover\"}}");
+    myMap.put("daisy", "{\"latitude\": 41, \"longitude\": -88,  \"common_name\": {\"name\": \"daisy\"}}");
+    myMap.put("bellflower", "{\"latitude\": 45, \"longitude\": -90,  \"common_name\": {\"name\": \"bellflower\"}}");
     return myMap;
   }
 }
