@@ -11,3 +11,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+function calcRoute() {
+  let directionsService = new google.maps.DirectionsService();
+  let directionsRenderer = new google.maps.DirectionsRenderer();
+  let start = new google.maps.LatLng(41.850033, -87.6500523); // hard-coded to be Chicago for now
+  let end = start;
+  let request = {
+    origin: start,
+    destination: end,
+    travelMode: 'WALKING'
+  };
+  directionsService.route(request, function(result, status) {
+    if (status == 'OK') {
+      directionsRenderer.setDirections(result);
+    }
+  });
+}
