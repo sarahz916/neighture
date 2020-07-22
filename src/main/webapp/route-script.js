@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-window.onload = function createMapWithDirections() {
+window.onload = async function createMapWithDirections() {
+    let res = await fetch('/query');
+    let waypoint = await res.json();
+    
     let directionsService = new google.maps.DirectionsService();
     let directionsRenderer = new google.maps.DirectionsRenderer();
     let chicagoOne = new google.maps.LatLng(41.850033, -87.6500523);
@@ -34,7 +37,6 @@ function initMap(directionsService, directionsRenderer, center) {
 function calcRoute(directionsService, directionsRenderer, start, end, waypoints) {
     let waypointsData = [];
     waypoints.forEach(pt => waypointsData.push({ location: pt }));
-    console.log(waypointsData)
     let request = {
         origin: start,
         destination: end,
