@@ -89,6 +89,9 @@ function calcRoute(directionsService, directionsRenderer, start, end, waypoints)
     });
 }
 
+/**
+ * Creates a URL based on Maps URLs that will open the generated route on Google Maps on any device.
+ */
 function generateURL(start, end, waypoints){
     let globalURL = 'https://www.google.com/maps/dir/?api=1';
     globalURL = globalURL + '&origin=' + start + '&destination=' + end;
