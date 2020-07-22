@@ -24,7 +24,7 @@ document.getElementById('submit').addEventListener('submit', createMapWithWaypoi
  * Create a route and map from a waypoint entered by the user.
  */
 async function createMapWithWaypoint() {
-    let res = await getWaypoint();
+     res = await getWaypoint();
     let waypoint = new google.maps.LatLng(res.y, res.x);
     var start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
     var end = new google.maps.LatLng(41.850033, -86.6500523); // hardcoded end; will get from user later
@@ -99,6 +99,7 @@ function generateURL(start, end, waypoints){
     waypoints.forEach(pt => globalURL += pt + '|')
     globalURL = globalURL + '&travelmode=walking';
     const URLcontainer = document.getElementById('globalURL');
-    URLcontainer.innerHTML = globalURL;
+    globalURL = globalURL.split(" ").join("") //need to get rid of white space for link to work
+    URLcontainer.innerHTML = '<a href ='+ globalURL  + '>' + globalURL + '</a>';
 }
 
