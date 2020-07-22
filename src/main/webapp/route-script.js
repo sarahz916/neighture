@@ -13,11 +13,9 @@
 // limitations under the License.
 
 window.onload = function setup() {
-    var chicagoOne = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
-    var chicagoTwo = new google.maps.LatLng(40.850033, -87.6500523); 
-    var chicagoThree = new google.maps.LatLng(41.850033, -86.6500523); // hardcoded end; will get from user later
-
-    createMapWithDirections(chicagoOne, chicagoThree, [chicagoTwo]);
+    // Inialize and create a map with no directions on it when the page is reloaded.
+    var chicago = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
+    initMap(chicago);
 }
 
 document.getElementById('submit').addEventListener('submit', createMapWithWaypoint());
@@ -28,9 +26,9 @@ document.getElementById('submit').addEventListener('submit', createMapWithWaypoi
 async function createMapWithWaypoint() {
     let res = await getWaypoint();
     let waypoint = new google.maps.LatLng(res.y, res.x);
-    var chicagoOne = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
-    var chicagoThree = new google.maps.LatLng(41.850033, -86.6500523); // hardcoded end; will get from user later
-    createMapWithDirections(chicagoOne, chicagoThree, [waypoint]);
+    var start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
+    var end = new google.maps.LatLng(41.850033, -86.6500523); // hardcoded end; will get from user later
+    createMapWithDirections(start, end, [waypoint]);
 }
 
 /**
@@ -40,7 +38,8 @@ async function createMapWithWaypoint() {
 function createMapWithDirections(start, end, waypoints) {
     let directionsService = new google.maps.DirectionsService();
     let directionsRenderer = new google.maps.DirectionsRenderer();
-    initMap(directionsService, directionsRenderer, start);
+    let map = initMap(start);
+    directionsRenderer.setMap(map);
     calcRoute(directionsService, directionsRenderer, start, end, waypoints);
 }
 
@@ -50,7 +49,6 @@ function createMapWithDirections(start, end, waypoints) {
 async function getWaypoint() {
     let res = await fetch('/query');
     let waypoint = await res.json();
-    console.log(waypoint);
     if (waypoint == null) {
         throw new Error("Waypoint is null");
     }
@@ -60,13 +58,12 @@ async function getWaypoint() {
 /**
  * Given a DirectionsService object, DirectionsRenderer object, and a center coordinate, create a Google Map.
  */
-function initMap(directionsService, directionsRenderer, center) {
+function initMap(center) {
     let mapOptions = {
     zoom: 4,
     center: center
     }
-    let map = new google.maps.Map(document.getElementById('map'), mapOptions);
-    directionsRenderer.setMap(map);
+    return new google.maps.Map(document.getElementById('map'), mapOptions);
 }
 
 /**
