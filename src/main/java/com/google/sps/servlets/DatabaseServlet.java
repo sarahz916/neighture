@@ -31,10 +31,9 @@ public class DatabaseServlet extends HttpServlet {
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     Map<String, String> locations = createMap();
     String feature = request.getParameter("q");
-    System.out.println(feature);
-    if (locations.containsKey(feature)) {
+    if (locations.containsKey(feature)) { // Feature is in the database
+      // Return all waypoints with feature
       response.setContentType("application/json");
-      System.out.println(locations.get(feature));
       response.getWriter().println(locations.get(feature));
     } else {
       response.setContentType("application/json");
@@ -42,11 +41,13 @@ public class DatabaseServlet extends HttpServlet {
     }
   }
 
+  /** Returns a hard-coded map of features to waypoints 
+    */
   private static Map<String, String> createMap() {
     Map<String, String> myMap = new HashMap<String, String>();
-    myMap.put("clover", "{\"latitude\": 43, \"longitude\": -87, \"common_name\": {\"name\": \"clover\"}}");
-    myMap.put("daisy", "{\"latitude\": 41, \"longitude\": -88,  \"common_name\": {\"name\": \"daisy\"}}");
-    myMap.put("bellflower", "{\"latitude\": 45, \"longitude\": -90,  \"common_name\": {\"name\": \"bellflower\"}}");
+    myMap.put("clover", "{\"latitude\": 40.847881, \"longitude\": -87.653633, \"common_name\": {\"name\": \"clover\"}}");
+    myMap.put("daisy", "{\"latitude\": 40.826222, \"longitude\": -87.646227,  \"common_name\": {\"name\": \"daisy\"}}");
+    myMap.put("bellflower", "{\"latitude\": 40.855942, \"longitude\": -87.643636,  \"common_name\": {\"name\": \"bellflower\"}}");
     return myMap;
   }
 }
