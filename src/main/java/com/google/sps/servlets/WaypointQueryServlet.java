@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;  
+import java.util.ArrayList;
 
 /** Servlet that handles the user's query by parsing out
   * the waypoint queries and their matching coordinates in 
@@ -34,25 +35,34 @@ import java.net.URL;
   */
 @WebServlet("/query")
 public class WaypointQueryServlet extends HttpServlet {
-  private Coordinate waypoint = null;
+  private ArrayList<Coordinate> waypoints = new ArrayList<Coordinate>();
 
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    // Return last stored waypoint
+    // Return last stored waypoints
     response.setContentType("application/json");
-    String json = new Gson().toJson(waypoint);
+    String json = new Gson().toJson(waypoints);
+    System.out.println(json);
     response.getWriter().println(json);
   }
 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    String feature = request.getParameter("text-input");
-    System.out.println(feature);
+    // Since we got a new query, we can get rid of the old waypoints
+    waypoints.clear();
 
-    // Make call to database
-    Coordinate location = sendGET(feature);
-    //request.setAttribute("coordinates", location);
-    waypoint = location;
+    String input = request.getParameter("text-input");
+    System.out.println(input);
+    // Parse out feature requests from input
+    String[] featureQueries = input.split(";[ ]?");
+    System.out.println(featureQueries);
+    for (String feature : featureQueries) {
+      // Make call to database
+      Coordinate location = sendGET(feature);
+      if (location != null) {
+        waypoints.add(location);
+      }
+    }
 
     // Redirect back to the index page.
     response.sendRedirect("/index.html");
