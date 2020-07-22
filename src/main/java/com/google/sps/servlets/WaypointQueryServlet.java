@@ -38,6 +38,7 @@ public class WaypointQueryServlet extends HttpServlet {
 
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    // Return last stored waypoint
     response.setContentType("application/json");
     String json = new Gson().toJson(waypoint);
     response.getWriter().println(json);
@@ -57,6 +58,9 @@ public class WaypointQueryServlet extends HttpServlet {
     response.sendRedirect("/index.html");
   }
 
+  /** Sends a request for the input feature to the database
+    * Returns the Coordinate matching the input feature 
+    */ 
   private static Coordinate sendGET(String feature) throws IOException {
     URL obj = new URL("http://localhost:8080/database?q=" + feature);
 		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -77,13 +81,15 @@ public class WaypointQueryServlet extends HttpServlet {
 
 			// print result
 			System.out.println(response.toString());
+
+      // Turn the response into a Coordinate
       JSONObject jsonObject = new JSONObject(response.toString());
       Double x = jsonObject.getDouble("longitude");
       Double y = jsonObject.getDouble("latitude");
       Coordinate featureCoordinate = new Coordinate(x, y, feature);
       return featureCoordinate;
 		} else {
-			System.out.println("GET request not worked");
+			System.out.println("GET request didn't work");
       return null;
 		}
   }
