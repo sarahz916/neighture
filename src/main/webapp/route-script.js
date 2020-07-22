@@ -29,6 +29,7 @@ async function createMapWithWaypoint() {
     var start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
     var end = new google.maps.LatLng(41.850033, -86.6500523); // hardcoded end; will get from user later
     createMapWithDirections(start, end, [waypoint]);
+
 }
 
 /**
@@ -42,6 +43,7 @@ function createMapWithDirections(start, end, waypoints) {
     directionsRenderer.setMap(map);
     calcRoute(directionsService, directionsRenderer, start, end, waypoints);
     generateURL (start, end, waypoints);
+    generateURL(start, end, waypoints)
 }
 
 /**
@@ -94,6 +96,6 @@ function generateURL(start, end, waypoints){
     waypoints.forEach(pt => globalURL += pt + '|')
     globalURL = globalURL + '&travelmode=walking';
     const URLcontainer = document.getElementById('globalURL');
-    URLcontainer.innerHTML = "<a href = " + globalURL + ">" + globalURL + "</a>";
+    URLcontainer.innerHTML = globalURL;
 }
 
