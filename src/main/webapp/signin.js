@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// This script communicates with UserServlet to display UserServlet response on a background that is consistent accross the website.
 var asyncRequest;    
 function start(){
     try
