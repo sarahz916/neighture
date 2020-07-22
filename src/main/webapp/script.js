@@ -12,11 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function calcRoute() {
-  let directionsService = new google.maps.DirectionsService();
-  let directionsRenderer = new google.maps.DirectionsRenderer();
-  let start = new google.maps.LatLng(41.850033, -87.6500523); // hard-coded to be Chicago for now
-  let end = start;
+window.onload = function createMapWithDirections() {
+    let directionsService = new google.maps.DirectionsService();
+    let directionsRenderer = new google.maps.DirectionsRenderer();
+    let chicago_one = new google.maps.LatLng(41.850033, -87.6500523);
+    let chicago_two = new google.maps.LatLng(41.850033, -86.6500523);
+    initMap(directionsService, directionsRenderer, chicago_one);
+    calcRoute(directionsService, directionsRenderer, chicago_one, chicago_two);
+}
+
+function initMap(directionsService, directionsRenderer, center) {
+  let mapOptions = {
+    zoom: 4,
+    center: center
+  }
+  let map = new google.maps.Map(document.getElementById('map'), mapOptions);
+  directionsRenderer.setMap(map);
+}
+
+function calcRoute(directionsService, directionsRenderer, start, end) {
   let request = {
     origin: start,
     destination: end,
