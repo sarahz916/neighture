@@ -31,10 +31,8 @@ public class DatabaseServlet extends HttpServlet {
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     Map<String, String> locations = createMap();
     String feature = request.getParameter("q");
-    System.out.println(feature);
     if (locations.containsKey(feature)) {
       response.setContentType("application/json");
-      System.out.println(locations.get(feature));
       response.getWriter().println(locations.get(feature));
     } else {
       response.setContentType("application/json");
