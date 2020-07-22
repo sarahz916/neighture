@@ -29,6 +29,7 @@ async function createMapWithWaypoint() {
     var start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
     var end = new google.maps.LatLng(41.850033, -86.6500523); // hardcoded end; will get from user later
     createMapWithDirections(start, end, [waypoint]);
+
 }
 
 /**
@@ -41,6 +42,8 @@ function createMapWithDirections(start, end, waypoints) {
     let map = initMap(start);
     directionsRenderer.setMap(map);
     calcRoute(directionsService, directionsRenderer, start, end, waypoints);
+    generateURL (start, end, waypoints);
+    generateURL(start, end, waypoints)
 }
 
 /**
@@ -85,3 +88,17 @@ function calcRoute(directionsService, directionsRenderer, start, end, waypoints)
         }
     });
 }
+
+/**
+ * Creates a URL based on Maps URLs that will open the generated route on Google Maps on any device.
+ */
+function generateURL(start, end, waypoints){
+    let globalURL = 'https://www.google.com/maps/dir/?api=1';
+    globalURL = globalURL + '&origin=' + start + '&destination=' + end;
+    globalURL += '&waypoints='
+    waypoints.forEach(pt => globalURL += pt + '|')
+    globalURL = globalURL + '&travelmode=walking';
+    const URLcontainer = document.getElementById('globalURL');
+    URLcontainer.innerHTML = globalURL;
+}
+
