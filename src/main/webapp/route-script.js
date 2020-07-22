@@ -15,30 +15,35 @@
 window.onload = function createMapWithDirections() {
     let directionsService = new google.maps.DirectionsService();
     let directionsRenderer = new google.maps.DirectionsRenderer();
-    let chicago_one = new google.maps.LatLng(41.850033, -87.6500523);
-    let chicago_two = new google.maps.LatLng(41.850033, -86.6500523);
-    initMap(directionsService, directionsRenderer, chicago_one);
-    calcRoute(directionsService, directionsRenderer, chicago_one, chicago_two);
+    let chicagoOne = new google.maps.LatLng(41.850033, -87.6500523);
+    let chicagoTwo = new google.maps.LatLng(40.850033, -87.6500523);
+    let chicagoThree = new google.maps.LatLng(41.850033, -86.6500523);
+    initMap(directionsService, directionsRenderer, chicagoOne);
+    calcRoute(directionsService, directionsRenderer, chicagoOne, chicagoThree, [chicagoTwo]);
 }
 
 function initMap(directionsService, directionsRenderer, center) {
-  let mapOptions = {
+    let mapOptions = {
     zoom: 4,
     center: center
-  }
-  let map = new google.maps.Map(document.getElementById('map'), mapOptions);
-  directionsRenderer.setMap(map);
+    }
+    let map = new google.maps.Map(document.getElementById('map'), mapOptions);
+    directionsRenderer.setMap(map);
 }
 
-function calcRoute(directionsService, directionsRenderer, start, end) {
-  let request = {
-    origin: start,
-    destination: end,
-    travelMode: 'WALKING'
-  };
-  directionsService.route(request, function(result, status) {
-    if (status == 'OK') {
-      directionsRenderer.setDirections(result);
-    }
-  });
+function calcRoute(directionsService, directionsRenderer, start, end, waypoints) {
+    let waypointsData = [];
+    waypoints.forEach(pt => waypointsData.push({ location: pt }));
+    console.log(waypointsData)
+    let request = {
+        origin: start,
+        destination: end,
+        waypoints: waypointsData,
+        travelMode: 'WALKING'
+    };
+    directionsService.route(request, function(result, status) {
+        if (status == 'OK') {
+            directionsRenderer.setDirections(result);
+        }
+    });
 }
