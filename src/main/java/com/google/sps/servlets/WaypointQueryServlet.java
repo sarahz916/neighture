@@ -15,6 +15,7 @@
 package com.example.appengine.users;
 import com.google.sps.data.Coordinate;
 import com.google.gson.Gson;
+import org.json.JSONObject;  
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -25,8 +26,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
-import org.json.JSONObject;    
+import java.net.URL;  
 
 /** Servlet that handles the user's query by parsing out
   * the waypoint queries and their matching coordinates in 
@@ -34,6 +34,15 @@ import org.json.JSONObject;
   */
 @WebServlet("/query")
 public class WaypointQueryServlet extends HttpServlet {
+  private Coordinate waypoint = null;
+
+  @Override
+  public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    response.setContentType("application/json");
+    String json = new Gson().toJson(waypoint);
+    response.getWriter().println(json);
+  }
+
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
     String feature = request.getParameter("text-input");
@@ -41,7 +50,8 @@ public class WaypointQueryServlet extends HttpServlet {
 
     // Make call to database
     Coordinate location = sendGET(feature);
-    request.setAttribute("coordinates", location);
+    //request.setAttribute("coordinates", location);
+    waypoint = location;
 
     // Redirect back to the index page.
     response.sendRedirect("/index.html");
