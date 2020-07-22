@@ -12,29 +12,67 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-window.onload = function createMapWithDirections() {
-    let directionsService = new google.maps.DirectionsService();
-    let directionsRenderer = new google.maps.DirectionsRenderer();
-    let chicagoOne = new google.maps.LatLng(41.850033, -87.6500523);
-    let chicagoTwo = new google.maps.LatLng(40.850033, -87.6500523);
-    let chicagoThree = new google.maps.LatLng(41.850033, -86.6500523);
-    initMap(directionsService, directionsRenderer, chicagoOne);
-    calcRoute(directionsService, directionsRenderer, chicagoOne, chicagoThree, [chicagoTwo]);
+window.onload = function setup() {
+    // Inialize and create a map with no directions on it when the page is reloaded.
+    var chicago = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
+    initMap(chicago);
 }
 
-function initMap(directionsService, directionsRenderer, center) {
+document.getElementById('submit').addEventListener('submit', createMapWithWaypoint());
+
+/**
+ * Create a route and map from a waypoint entered by the user.
+ */
+async function createMapWithWaypoint() {
+    let res = await getWaypoint();
+    let waypoint = new google.maps.LatLng(res.y, res.x);
+    var start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
+    var end = new google.maps.LatLng(41.850033, -86.6500523); // hardcoded end; will get from user later
+    createMapWithDirections(start, end, [waypoint]);
+}
+
+/**
+ * Given a start coordinate, end coordinate, and a list of waypoint coordinates, 
+ * create a route and a map and display the route on the map to the user.
+ */
+function createMapWithDirections(start, end, waypoints) {
+    let directionsService = new google.maps.DirectionsService();
+    let directionsRenderer = new google.maps.DirectionsRenderer();
+    let map = initMap(start);
+    directionsRenderer.setMap(map);
+    calcRoute(directionsService, directionsRenderer, start, end, waypoints);
+}
+
+/**
+ * Get a waypoint by querying the waypoint servlet.
+ */
+async function getWaypoint() {
+    let res = await fetch('/query');
+    let waypoint = await res.json();
+    if (waypoint == null) {
+        throw new Error("Waypoint is null");
+    }
+    return waypoint;
+}
+
+/**
+ * Given a DirectionsService object, DirectionsRenderer object, and a center coordinate, create a Google Map.
+ */
+function initMap(center) {
     let mapOptions = {
     zoom: 4,
     center: center
     }
-    let map = new google.maps.Map(document.getElementById('map'), mapOptions);
-    directionsRenderer.setMap(map);
+    return new google.maps.Map(document.getElementById('map'), mapOptions);
 }
 
+/**
+ * Given a DirectionsService object, a DirectionsRenderer object, start/end coordinates and a list
+ * of waypoint coordinates, generate a route using the Google Maps API.
+ */
 function calcRoute(directionsService, directionsRenderer, start, end, waypoints) {
     let waypointsData = [];
     waypoints.forEach(pt => waypointsData.push({ location: pt }));
-    console.log(waypointsData)
     let request = {
         origin: start,
         destination: end,
