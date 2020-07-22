@@ -45,9 +45,9 @@ public class DatabaseServlet extends HttpServlet {
     */
   private static Map<String, String> createMap() {
     Map<String, String> myMap = new HashMap<String, String>();
-    myMap.put("clover", "{\"latitude\": 40.847881, \"longitude\": -87.653633, \"common_name\": {\"name\": \"clover\"}}");
-    myMap.put("daisy", "{\"latitude\": 40.826222, \"longitude\": -87.646227,  \"common_name\": {\"name\": \"daisy\"}}");
-    myMap.put("bellflower", "{\"latitude\": 40.855942, \"longitude\": -87.643636,  \"common_name\": {\"name\": \"bellflower\"}}");
+    myMap.put("clover", "{\"latitude\": 41.855967, \"longitude\": -87.635604, \"common_name\": {\"name\": \"clover\"}}");
+    myMap.put("daisy", "{\"latitude\": 41.848653, \"longitude\": -87.629454,  \"common_name\": {\"name\": \"daisy\"}}");
+    myMap.put("bellflower", "{\"latitude\": 41.843539, \"longitude\": -87.647480,  \"common_name\": {\"name\": \"bellflower\"}}");
     return myMap;
   }
 }
