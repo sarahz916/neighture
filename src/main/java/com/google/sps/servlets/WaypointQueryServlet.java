@@ -28,6 +28,9 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;  
 import java.util.ArrayList;
+import com.google.appengine.api.datastore.DatastoreService;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
 
 /** Servlet that handles the user's query by parsing out
   * the waypoint queries and their matching coordinates in 
@@ -63,7 +66,8 @@ public class WaypointQueryServlet extends HttpServlet {
         waypoints.add(location);
       }
     }
-
+    // Store input text and waypoint in datastore.
+    storeInputAndWaypoints(input, waypoints);
     // Redirect back to the index page.
     response.sendRedirect("/index.html");
   }
@@ -74,16 +78,16 @@ public class WaypointQueryServlet extends HttpServlet {
   private static Coordinate sendGET(String feature) throws IOException {
     //URL obj = new URL("http://localhost:8080/database?q=" + feature);
     URL obj = new URL("https://neighborhood-nature.appspot.com/database?q=" + feature);
-		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-		con.setRequestMethod("GET");
-		con.setRequestProperty("User-Agent", "Mozilla/5.0");
-		int responseCode = con.getResponseCode();
-		System.out.println("GET Response Code :: " + responseCode);
-		if (responseCode == HttpURLConnection.HTTP_OK) { // success
-			BufferedReader in = new BufferedReader(new InputStreamReader(
-					con.getInputStream()));
-			String inputLine;
-			StringBuffer response = new StringBuffer();
+    HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+    con.setRequestMethod("GET");
+    con.setRequestProperty("User-Agent", "Mozilla/5.0");
+    int responseCode = con.getResponseCode();
+    System.out.println("GET Response Code :: " + responseCode);
+    if (responseCode == HttpURLConnection.HTTP_OK) { // success
+        BufferedReader in = new BufferedReader(new InputStreamReader(
+                con.getInputStream()));
+        String inputLine;
+        StringBuffer response = new StringBuffer();
 
 
         while ((inputLine = in.readLine()) != null) {
@@ -91,22 +95,38 @@ public class WaypointQueryServlet extends HttpServlet {
         }
         in.close();
 
-			// print result
-			System.out.println(response.toString());
-      String responseString = response.toString();
-      if (responseString.equals("{}")) {
-        return null;
-      }
+        // print result
+        System.out.println(response.toString());
+        String responseString = response.toString();
+        if (responseString.equals("{}")) {
+            return null;
+        }
 
-      // Turn the response into a Coordinate
-      JSONObject jsonObject = new JSONObject(responseString);
-      Double x = jsonObject.getDouble("longitude");
-      Double y = jsonObject.getDouble("latitude");
-      Coordinate featureCoordinate = new Coordinate(x, y, feature);
-      return featureCoordinate;
-		} else {
-			System.out.println("GET request didn't work");
-      return null;
-		}
-  }
+        // Turn the response into a Coordinate
+        JSONObject jsonObject = new JSONObject(responseString);
+        Double x = jsonObject.getDouble("longitude");
+        Double y = jsonObject.getDouble("latitude");
+        Coordinate featureCoordinate = new Coordinate(x, y, feature);
+        return featureCoordinate;
+    } 
+    else {
+        System.out.println("GET request didn't work");
+        return null;
+        }
+    }
+
+
+  /** Stores input text and waypoints in a RouteEntity in datastore.
+    * Returns nothing.
+    */ 
+private void storeInputAndWaypoints(String textInput, ArrayList<Coordinate> waypoints){
+    Entity RouteEntity = new Entity("Route");
+    RouteEntity.setProperty("text", textInput);
+    RouteEntity.setProperty("waypoints", waypoints);
+
+    // Store Route.
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+    datastore.put(RouteEntity);
+    }
+
 }

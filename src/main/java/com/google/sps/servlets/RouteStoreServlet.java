@@ -45,37 +45,20 @@ public class RouteStoreServlet extends HttpServlet {
      
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-     // Let's first just return the json object {text input: waypoints}
-     
-     // not sure how to query the datastore
-    Query query = new Query("Route").addSort("timestamp", SortDirection.DESCENDING);
+     // Show all the generated routes stored. 
+    Query query = new Query("Route");
 
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     PreparedQuery results = datastore.prepare(query);
-
+    ArrayList<String> Inputs = new ArrayList<>();
+    for (Entity entity : results.asIterable()) {
+       Inputs.add((String) entity.getProperty("text"));
+    }
     Gson gson = new Gson();
+
     response.setContentType("application/json");
-    response.getWriter().println(request.getRequestURL());
+    response.getWriter().println(gson.toJson(Inputs));
   }
 
-  @Override
-  public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    
-    // Get the text input that came with the query
-    String thisUrl = request.getRequestURI();
-    URL queryservlet = new URL("");
-
-    // Get the waypoints that came wtih the query
-    //String text = getParameter(request, "text-input", "");
-    // how do we want waypoints stored (by coordinates or names?) see how Waypoint Query communicates with route-script.js
-    Entity RouteEntity = new Entity("Route");
-    //RouteEntity.setProperty("text", text);
-    //RouteEntity.setProperty("waypoints", waypoints);
-
-    // Store Route.
-    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-    datastore.put(RouteEntity);
-
-  }
 }
 
