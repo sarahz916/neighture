@@ -47,13 +47,13 @@ public class WaypointQueryServlet extends HttpServlet {
     String json = new Gson().toJson(waypoints);
     System.out.println(json);
     response.getWriter().println(json);
+
+    // After the map is made, we can get rid of the old waypoints
+    waypoints.clear();
   }
 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    // Since we got a new query, we can get rid of the old waypoints
-    waypoints.clear();
-
     String input = request.getParameter("text-input");
     System.out.println(input);
     // Parse out feature requests from input
@@ -67,7 +67,7 @@ public class WaypointQueryServlet extends HttpServlet {
       }
     }
     // Store input text and waypoint in datastore.
-    storeInputAndWaypoints(input, waypoints);
+    //storeInputAndWaypoints(input, waypoints);
     // Redirect back to the index page.
     response.sendRedirect("/index.html");
   }
