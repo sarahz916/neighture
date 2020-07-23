@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.GeoPt; 
 
 /** Servlet that handles the user's query by parsing out
   * the waypoint queries and their matching coordinates in 
@@ -67,7 +68,7 @@ public class WaypointQueryServlet extends HttpServlet {
       }
     }
     // Store input text and waypoint in datastore.
-    //storeInputAndWaypoints(input, waypoints);
+    storeInputAndWaypoints(input, waypoints);
     // Redirect back to the index page.
     response.sendRedirect("/index.html");
   }
@@ -119,14 +120,14 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Stores input text and waypoints in a RouteEntity in datastore.
     * Returns nothing.
     */ 
-  private void storeInputAndWaypoints(String textInput, ArrayList<Coordinate> waypoints){
+    private void storeInputAndWaypoints(String textInput, ArrayList<Coordinate> waypoints){
     Entity RouteEntity = new Entity("Route");
     RouteEntity.setProperty("text", textInput);
-    RouteEntity.setProperty("waypoints", waypoints);
-
+    String json = new Gson().toJson(waypoints);
+    // Store as a json string because Coordinates are unsupported.
+    RouteEntity.setProperty("waypoints", json);
     // Store Route.
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     datastore.put(RouteEntity);
   }
-
 }

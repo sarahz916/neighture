@@ -53,6 +53,7 @@ public class RouteStoreServlet extends HttpServlet {
     ArrayList<String> Inputs = new ArrayList<>();
     for (Entity entity : results.asIterable()) {
        Inputs.add((String) entity.getProperty("text"));
+       Inputs.add((String) entity.getProperty("waypoints"));
     }
     Gson gson = new Gson();
 
