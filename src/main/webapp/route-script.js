@@ -99,6 +99,7 @@ function generateURL(start, end, waypoints){
     waypoints.forEach(pt => globalURL += pt + '|')
     globalURL = globalURL + '&travelmode=walking';
     const URLcontainer = document.getElementById('globalURL');
-    URLcontainer.innerHTML = globalURL;
+    globalURL = globalURL.split(" ").join("") //need to get rid of white space for link to work
+    URLcontainer.innerHTML = '<a href ='+ globalURL  + '>' + globalURL + '</a>';
 }
 
