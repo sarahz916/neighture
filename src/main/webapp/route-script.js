@@ -24,11 +24,16 @@ document.getElementById('submit').addEventListener('submit', createMapWithWaypoi
  * Create a route and map from a waypoint entered by the user.
  */
 async function createMapWithWaypoint() {
-    let res = await getWaypoint();
-    let waypoint = new google.maps.LatLng(res.y, res.x);
-    var start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
-    var end = new google.maps.LatLng(41.850033, -86.6500523); // hardcoded end; will get from user later
-    createMapWithDirections(start, end, [waypoint]);
+    let res = await getWaypoints();
+    console.log(res);
+    let waypoints = [];
+    for (let pt of res) {
+        let waypoint = new google.maps.LatLng(pt.y, pt.x);
+        waypoints.push(waypoint);
+    }
+    let start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
+    let end = new google.maps.LatLng(41.850033, -87.5500523); // hardcoded end; will get from user later
+    createMapWithDirections(start, end, waypoints);
 
 }
 
@@ -47,15 +52,12 @@ function createMapWithDirections(start, end, waypoints) {
 }
 
 /**
- * Get a waypoint by querying the waypoint servlet.
+ * Get a list of waypoints by querying the waypoint servlet.
  */
-async function getWaypoint() {
+async function getWaypoints() {
     let res = await fetch('/query');
-    let waypoint = await res.json();
-    if (waypoint == null) {
-        throw new Error("Waypoint is null");
-    }
-    return waypoint;
+    let waypoints = await res.json();
+    return waypoints;
 }
 
 /**
