@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.example.appengine.users;
-import com.google.sps.data.Coordinate;
+package com.google.sps;
+import com.google.sps.Coordinate;
 import com.google.gson.Gson;
 import org.json.JSONObject;  
 
@@ -55,8 +55,8 @@ public class WaypointQueryServlet extends HttpServlet {
     System.out.println(input);
     // Parse out feature requests from input
     String[] featureQueries = input.split(";[ ]?");
-    System.out.println(featureQueries);
     for (String feature : featureQueries) {
+      System.out.println(feature);
       // Make call to database
       Coordinate location = sendGET(feature);
       if (location != null) {

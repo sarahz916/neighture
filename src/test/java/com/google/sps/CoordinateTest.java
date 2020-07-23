@@ -14,36 +14,22 @@
 
 package com.google.sps;
 
-/** A coordinate. */
-public final class Coordinate {
+import org.junit.Test;
+import org.junit.Before;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+import org.junit.Assert;
 
-  private final Double x;
-  private final Double y;
-  private final String label;
-
-  /** Creates a new coordinate with a label
-    */
-  public Coordinate(Double x, Double y, String label) {
-    this.x = x;
-    this.y = y;
-    this.label = label;
-  }
-
-  /** Returns the x coordinate of this point.
-    */
-  public Double getX() {
-    return x;
-  }
-  
-  /** Returns the y coordinate of this point.
-    */
-  public Double getY() {
-    return y;
-  }
-
-  /** Returns the label of this point.
-    */
-  public String getLabel() {
-    return label;
-  }
+@RunWith(JUnit4.class)
+public final class CoordinateTest {
+    public static final String LABEL = "name";
+    public static final Double X = 3.0;
+    public static final Double Y = 4.0;
+    @Test
+    public void canConstructSimpleCoordinateObject() {
+        Coordinate point = new Coordinate(X, Y, LABEL);
+        Assert.assertEquals(X, point.getX());
+        Assert.assertEquals(Y, point.getY());
+        Assert.assertEquals(LABEL, point.getLabel());
+    }
 }

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.example.appengine.users;
+package com.google.sps;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -37,7 +37,7 @@ public class DatabaseServlet extends HttpServlet {
       response.getWriter().println(locations.get(feature));
     } else {
       response.setContentType("application/json");
-      response.getWriter().println("[]");
+      response.getWriter().println("{}");
     }
   }
 
