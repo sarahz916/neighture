@@ -12,29 +12,72 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-window.onload = function createMapWithDirections() {
-    let directionsService = new google.maps.DirectionsService();
-    let directionsRenderer = new google.maps.DirectionsRenderer();
-    let chicagoOne = new google.maps.LatLng(41.850033, -87.6500523);
-    let chicagoTwo = new google.maps.LatLng(40.850033, -87.6500523);
-    let chicagoThree = new google.maps.LatLng(41.850033, -86.6500523);
-    initMap(directionsService, directionsRenderer, chicagoOne);
-    calcRoute(directionsService, directionsRenderer, chicagoOne, chicagoThree, [chicagoTwo]);
+window.onload = function setup() {
+    // Inialize and create a map with no directions on it when the page is reloaded.
+    var chicago = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
+    initMap(chicago);
 }
 
-function initMap(directionsService, directionsRenderer, center) {
+document.getElementById('submit').addEventListener('submit', createMapWithWaypoint());
+
+/**
+ * Create a route and map from a waypoint entered by the user.
+ */
+async function createMapWithWaypoint() {
+    let res = await getWaypoints();
+    console.log(res);
+    let waypoints = [];
+    for (let pt of res) {
+        let waypoint = new google.maps.LatLng(pt.y, pt.x);
+        waypoints.push(waypoint);
+    }
+    let start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
+    let end = new google.maps.LatLng(41.850033, -87.5500523); // hardcoded end; will get from user later
+    createMapWithDirections(start, end, waypoints);
+
+}
+
+/**
+ * Given a start coordinate, end coordinate, and a list of waypoint coordinates, 
+ * create a route and a map and display the route on the map to the user.
+ */
+function createMapWithDirections(start, end, waypoints) {
+    let directionsService = new google.maps.DirectionsService();
+    let directionsRenderer = new google.maps.DirectionsRenderer();
+    let map = initMap(start);
+    directionsRenderer.setMap(map);
+    calcRoute(directionsService, directionsRenderer, start, end, waypoints);
+    generateURL (start, end, waypoints);
+    generateURL(start, end, waypoints)
+}
+
+/**
+ * Get a list of waypoints by querying the waypoint servlet.
+ */
+async function getWaypoints() {
+    let res = await fetch('/query');
+    let waypoints = await res.json();
+    return waypoints;
+}
+
+/**
+ * Given a DirectionsService object, DirectionsRenderer object, and a center coordinate, create a Google Map.
+ */
+function initMap(center) {
     let mapOptions = {
     zoom: 4,
     center: center
     }
-    let map = new google.maps.Map(document.getElementById('map'), mapOptions);
-    directionsRenderer.setMap(map);
+    return new google.maps.Map(document.getElementById('map'), mapOptions);
 }
 
+/**
+ * Given a DirectionsService object, a DirectionsRenderer object, start/end coordinates and a list
+ * of waypoint coordinates, generate a route using the Google Maps API.
+ */
 function calcRoute(directionsService, directionsRenderer, start, end, waypoints) {
     let waypointsData = [];
     waypoints.forEach(pt => waypointsData.push({ location: pt }));
-    console.log(waypointsData)
     let request = {
         origin: start,
         destination: end,
@@ -47,3 +90,18 @@ function calcRoute(directionsService, directionsRenderer, start, end, waypoints)
         }
     });
 }
+
+/**
+ * Creates a URL based on Maps URLs that will open the generated route on Google Maps on any device.
+ */
+function generateURL(start, end, waypoints){
+    let globalURL = 'https://www.google.com/maps/dir/?api=1';
+    globalURL = globalURL + '&origin=' + start + '&destination=' + end;
+    globalURL += '&waypoints='
+    waypoints.forEach(pt => globalURL += pt + '|')
+    globalURL = globalURL + '&travelmode=walking';
+    const URLcontainer = document.getElementById('globalURL');
+    globalURL = globalURL.split(" ").join("") //need to get rid of white space for link to work
+    URLcontainer.innerHTML = '<a href ='+ globalURL  + '>' + globalURL + '</a>';
+}
+
