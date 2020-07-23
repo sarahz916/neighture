@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.example.appengine.users;
-import com.google.sps.data.Coordinate;
+package com.google.sps;
+import com.google.sps.Coordinate;
 import com.google.gson.Gson;
 import org.json.JSONObject;  
 
@@ -55,10 +55,10 @@ public class WaypointQueryServlet extends HttpServlet {
     System.out.println(input);
     // Parse out feature requests from input
     String[] featureQueries = input.split(";[ ]?");
-    System.out.println(featureQueries);
     for (String feature : featureQueries) {
+      System.out.println(feature.toLowerCase());
       // Make call to database
-      Coordinate location = sendGET(feature);
+      Coordinate location = sendGET(feature.toLowerCase());
       if (location != null) {
         waypoints.add(location);
       }
@@ -72,36 +72,41 @@ public class WaypointQueryServlet extends HttpServlet {
     * Returns the Coordinate matching the input feature 
     */ 
   private static Coordinate sendGET(String feature) throws IOException {
-    URL obj = new URL("http://localhost:8080/database?q=" + feature);
-    HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-    con.setRequestMethod("GET");
-    con.setRequestProperty("User-Agent", "Mozilla/5.0");
-    int responseCode = con.getResponseCode();
-    System.out.println("GET Response Code :: " + responseCode);
-    if (responseCode == HttpURLConnection.HTTP_OK) { // success
-        BufferedReader in = new BufferedReader(new InputStreamReader(
-                con.getInputStream()));
-        String inputLine;
-        StringBuffer response = new StringBuffer();
+    //URL obj = new URL("http://localhost:8080/database?q=" + feature);
+    URL obj = new URL("https://neighborhood-nature.appspot.com/database?q=" + feature);
+		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+		con.setRequestMethod("GET");
+		con.setRequestProperty("User-Agent", "Mozilla/5.0");
+		int responseCode = con.getResponseCode();
+		System.out.println("GET Response Code :: " + responseCode);
+		if (responseCode == HttpURLConnection.HTTP_OK) { // success
+			BufferedReader in = new BufferedReader(new InputStreamReader(
+					con.getInputStream()));
+			String inputLine;
+			StringBuffer response = new StringBuffer();
+
 
         while ((inputLine = in.readLine()) != null) {
             response.append(inputLine);
         }
         in.close();
 
-        // print result
-        System.out.println(response.toString());
-
-        // Turn the response into a Coordinate
-        JSONObject jsonObject = new JSONObject(response.toString());
-        Double x = jsonObject.getDouble("longitude");
-        Double y = jsonObject.getDouble("latitude");
-        Coordinate featureCoordinate = new Coordinate(x, y, feature);
-        return featureCoordinate;
-    } 
-    else {
-        System.out.println("GET request didn't work");
+			// print result
+			System.out.println(response.toString());
+      String responseString = response.toString();
+      if (responseString.equals("{}")) {
         return null;
-    }
+      }
+
+      // Turn the response into a Coordinate
+      JSONObject jsonObject = new JSONObject(responseString);
+      Double x = jsonObject.getDouble("longitude");
+      Double y = jsonObject.getDouble("latitude");
+      Coordinate featureCoordinate = new Coordinate(x, y, feature);
+      return featureCoordinate;
+		} else {
+			System.out.println("GET request didn't work");
+      return null;
+		}
   }
 }
