@@ -33,10 +33,15 @@
     <div id="content" >
       <h1> Neighborhood Nature </h1>
       <h2> Prototype </h2>
-      <p> Enter clover, daisy, or bellflower.</p>
-    <form action="/query" method="POST">
+      <p> Enter clover, daisy, or bellflower.Can put in multiple terms with 
+          ';' as seperated. <br>
+          <i> Example: clover; daisy </i>
+      </p>
+    <form action="/query" method="POST" id ="form">
 
       <p>Enter text:</p>
+      <!--TODO (zous): Put in character/word limit on text box. -->
+      <!--TODO: try to have a feedback form-->
       <textarea name="text-input"></textarea>
       <br/>
       <input type="submit" id="submit"/>   
@@ -44,6 +49,7 @@
     </form>
 
     <div id="map"></div>
+    
     <div id ="globalURL"></div> 
   </div>
   </body>

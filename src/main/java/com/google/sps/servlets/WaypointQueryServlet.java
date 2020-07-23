@@ -73,34 +73,35 @@ public class WaypointQueryServlet extends HttpServlet {
     */ 
   private static Coordinate sendGET(String feature) throws IOException {
     URL obj = new URL("http://localhost:8080/database?q=" + feature);
-		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-		con.setRequestMethod("GET");
-		con.setRequestProperty("User-Agent", "Mozilla/5.0");
-		int responseCode = con.getResponseCode();
-		System.out.println("GET Response Code :: " + responseCode);
-		if (responseCode == HttpURLConnection.HTTP_OK) { // success
-			BufferedReader in = new BufferedReader(new InputStreamReader(
-					con.getInputStream()));
-			String inputLine;
-			StringBuffer response = new StringBuffer();
+    HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+    con.setRequestMethod("GET");
+    con.setRequestProperty("User-Agent", "Mozilla/5.0");
+    int responseCode = con.getResponseCode();
+    System.out.println("GET Response Code :: " + responseCode);
+    if (responseCode == HttpURLConnection.HTTP_OK) { // success
+        BufferedReader in = new BufferedReader(new InputStreamReader(
+                con.getInputStream()));
+        String inputLine;
+        StringBuffer response = new StringBuffer();
 
-			while ((inputLine = in.readLine()) != null) {
-				response.append(inputLine);
-			}
-			in.close();
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
+        }
+        in.close();
 
-			// print result
-			System.out.println(response.toString());
+        // print result
+        System.out.println(response.toString());
 
-      // Turn the response into a Coordinate
-      JSONObject jsonObject = new JSONObject(response.toString());
-      Double x = jsonObject.getDouble("longitude");
-      Double y = jsonObject.getDouble("latitude");
-      Coordinate featureCoordinate = new Coordinate(x, y, feature);
-      return featureCoordinate;
-		} else {
-			System.out.println("GET request didn't work");
-      return null;
-		}
+        // Turn the response into a Coordinate
+        JSONObject jsonObject = new JSONObject(response.toString());
+        Double x = jsonObject.getDouble("longitude");
+        Double y = jsonObject.getDouble("latitude");
+        Coordinate featureCoordinate = new Coordinate(x, y, feature);
+        return featureCoordinate;
+    } 
+    else {
+        System.out.println("GET request didn't work");
+        return null;
+    }
   }
 }
