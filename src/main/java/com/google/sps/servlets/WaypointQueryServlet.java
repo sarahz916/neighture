@@ -84,42 +84,42 @@ public class WaypointQueryServlet extends HttpServlet {
     int responseCode = con.getResponseCode();
     System.out.println("GET Response Code :: " + responseCode);
     if (responseCode == HttpURLConnection.HTTP_OK) { // success
-        BufferedReader in = new BufferedReader(new InputStreamReader(
-                con.getInputStream()));
-        String inputLine;
-        StringBuffer response = new StringBuffer();
+      BufferedReader in = new BufferedReader(new InputStreamReader(
+              con.getInputStream()));
+      String inputLine;
+      StringBuffer response = new StringBuffer();
 
 
-        while ((inputLine = in.readLine()) != null) {
-            response.append(inputLine);
-        }
-        in.close();
+      while ((inputLine = in.readLine()) != null) {
+          response.append(inputLine);
+      }
+      in.close();
 
-        // print result
-        System.out.println(response.toString());
-        String responseString = response.toString();
-        if (responseString.equals("{}")) {
-            return null;
-        }
+      // print result
+      System.out.println(response.toString());
+      String responseString = response.toString();
+      if (responseString.equals("{}")) {
+          return null;
+      }
 
-        // Turn the response into a Coordinate
-        JSONObject jsonObject = new JSONObject(responseString);
-        Double x = jsonObject.getDouble("longitude");
-        Double y = jsonObject.getDouble("latitude");
-        Coordinate featureCoordinate = new Coordinate(x, y, feature);
-        return featureCoordinate;
+      // Turn the response into a Coordinate
+      JSONObject jsonObject = new JSONObject(responseString);
+      Double x = jsonObject.getDouble("longitude");
+      Double y = jsonObject.getDouble("latitude");
+      Coordinate featureCoordinate = new Coordinate(x, y, feature);
+      return featureCoordinate;
     } 
     else {
-        System.out.println("GET request didn't work");
-        return null;
-        }
+      System.out.println("GET request didn't work");
+      return null;
     }
+  }
 
 
   /** Stores input text and waypoints in a RouteEntity in datastore.
     * Returns nothing.
     */ 
-private void storeInputAndWaypoints(String textInput, ArrayList<Coordinate> waypoints){
+  private void storeInputAndWaypoints(String textInput, ArrayList<Coordinate> waypoints){
     Entity RouteEntity = new Entity("Route");
     RouteEntity.setProperty("text", textInput);
     RouteEntity.setProperty("waypoints", waypoints);
@@ -127,6 +127,6 @@ private void storeInputAndWaypoints(String textInput, ArrayList<Coordinate> wayp
     // Store Route.
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     datastore.put(RouteEntity);
-    }
+  }
 
 }
