@@ -16,9 +16,10 @@ window.onload = function setup() {
     // Inialize and create a map with no directions on it when the page is reloaded.
     var chicago = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
     initMap(chicago);
+    console.log('reload');
 }
 
-document.getElementById('submit').addEventListener('submit', createMapWithWaypoint());
+document.getElementById('form').addEventListener('submit', createMapWithWaypoint());
 
 /**
  * Create a route and map from a waypoint entered by the user.
