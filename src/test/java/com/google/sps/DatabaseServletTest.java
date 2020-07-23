@@ -39,7 +39,6 @@ public class DatabaseServletTest {
         StringWriter stringWriter = new StringWriter();
         PrintWriter writer = new PrintWriter(stringWriter);
         when(response.getWriter()).thenReturn(writer);
-        System.out.println(stringWriter.toString());
 
         new DatabaseServlet().doGet(request, response);
 

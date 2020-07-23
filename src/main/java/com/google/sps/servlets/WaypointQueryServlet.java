@@ -56,9 +56,9 @@ public class WaypointQueryServlet extends HttpServlet {
     // Parse out feature requests from input
     String[] featureQueries = input.split(";[ ]?");
     for (String feature : featureQueries) {
-      System.out.println(feature);
+      System.out.println(feature.toLowerCase());
       // Make call to database
-      Coordinate location = sendGET(feature);
+      Coordinate location = sendGET(feature.toLowerCase());
       if (location != null) {
         waypoints.add(location);
       }
@@ -72,7 +72,7 @@ public class WaypointQueryServlet extends HttpServlet {
     * Returns the Coordinate matching the input feature 
     */ 
   private static Coordinate sendGET(String feature) throws IOException {
-    URL obj = new URL("http://localhost:8080/database?q=" + feature);
+    URL obj = new URL("https://neighborhood-nature.appspot.com/database?q=" + feature);
 		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 		con.setRequestMethod("GET");
 		con.setRequestProperty("User-Agent", "Mozilla/5.0");
@@ -91,9 +91,13 @@ public class WaypointQueryServlet extends HttpServlet {
 
 			// print result
 			System.out.println(response.toString());
+      String responseString = response.toString();
+      if (responseString.equals("{}")) {
+        return null;
+      }
 
       // Turn the response into a Coordinate
-      JSONObject jsonObject = new JSONObject(response.toString());
+      JSONObject jsonObject = new JSONObject(responseString);
       Double x = jsonObject.getDouble("longitude");
       Double y = jsonObject.getDouble("latitude");
       Coordinate featureCoordinate = new Coordinate(x, y, feature);
