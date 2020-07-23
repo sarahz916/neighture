@@ -42,6 +42,9 @@ public class WaypointQueryServlet extends HttpServlet {
 
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    // Since the page is refreshed, we can get rid of the old waypoints
+    waypoints.clear();
+
     // Return last stored waypoints
     response.setContentType("application/json");
     String json = new Gson().toJson(waypoints);
@@ -51,9 +54,6 @@ public class WaypointQueryServlet extends HttpServlet {
 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    // Since we got a new query, we can get rid of the old waypoints
-    waypoints.clear();
-
     String input = request.getParameter("text-input");
     System.out.println(input);
     // Parse out feature requests from input
