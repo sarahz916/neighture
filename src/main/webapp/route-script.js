@@ -113,7 +113,7 @@ async function writeToAssociatedText(){
     const response = await fetch("/text-store");
     const storedtext = await response.json();
     const associatedTextEl = document.getElementById('associated-text');
-    associatedTextEl.innerText = "You entered:" + storedtext[0];
+    associatedTextEl.innerText = "You entered: " + storedtext[0];
 }
 
 
