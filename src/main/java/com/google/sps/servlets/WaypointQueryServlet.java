@@ -66,7 +66,7 @@ public class WaypointQueryServlet extends HttpServlet {
         waypoints.add(location);
       }
     }   
-    // Store input text and waypoint in datastore. Only if waypoints are not empty.
+    // Store input text and waypoint in datastore.
     storeInputAndWaypoints(input, waypoints);
 
  
