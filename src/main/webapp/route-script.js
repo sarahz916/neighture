@@ -43,10 +43,12 @@ async function createMapWithWaypoint() {
  * create a route and a map and display the route on the map to the user.
  */
 function createMapWithDirections(start, end, waypoints) {
-    let directionsService = new google.maps.DirectionsService();
-    let directionsRenderer = new google.maps.DirectionsRenderer();
     let map = initMap(start);
-    directionsRenderer.setMap(map);
+    let directionsService = new google.maps.DirectionsService();
+    let directionsRenderer = new google.maps.DirectionsRenderer({
+        map: map,
+        draggable: true
+    });
     calcRoute(directionsService, directionsRenderer, start, end, waypoints);
     generateURL (start, end, waypoints);
     generateURL(start, end, waypoints)
