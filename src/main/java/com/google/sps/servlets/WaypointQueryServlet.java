@@ -76,7 +76,6 @@ public class WaypointQueryServlet extends HttpServlet {
     * Returns the Coordinate matching the input feature 
     */ 
   private static Coordinate sendGET(String feature) throws IOException {
-    //URL obj = new URL("http://localhost:8080/database?q=" + feature);
     URL obj = new URL("https://neighborhood-nature.appspot.com/database?q=" + feature);
     HttpURLConnection con = (HttpURLConnection) obj.openConnection();
     con.setRequestMethod("GET");
