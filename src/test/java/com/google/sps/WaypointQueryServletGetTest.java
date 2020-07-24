@@ -24,13 +24,14 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import org.junit.Test;
 import org.junit.Before;
+import org.junit.After;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @RunWith(JUnit4.class)
-public class WaypointQueryServletTest {
+public class WaypointQueryServletGetTest {
   public static final Coordinate DAISY = new Coordinate(-87.629454, 41.848653, "daisy");
   public static final Coordinate CLOVER = new Coordinate(-87.635604, 41.855967, "clover");
   public static final Coordinate BELLFLOWER = new Coordinate(-87.64748, 41.843539, "bellflower");
@@ -44,6 +45,10 @@ public class WaypointQueryServletTest {
   HttpServletRequest request;
   @Mock
   HttpServletResponse response;
+  @Mock
+  StringWriter stringWriter;
+  @Mock
+  PrintWriter writer;
   @InjectMocks
   WaypointQueryServlet servlet; //the class to test
 
@@ -53,6 +58,9 @@ public class WaypointQueryServletTest {
     response = mock(HttpServletResponse.class);  
     servlet = mock(WaypointQueryServlet.class);
     servlet = new WaypointQueryServlet();
+
+    stringWriter = new StringWriter();
+    writer = new PrintWriter(stringWriter);
 
     // Propagate private variable with data
     waypointMock = new ArrayList<Coordinate>();
@@ -66,13 +74,8 @@ public class WaypointQueryServletTest {
     waypointMock.add(BELLFLOWER);
     ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
 
-    StringWriter stringWriter = new StringWriter();
-    PrintWriter writer = new PrintWriter(stringWriter);
     when(response.getWriter()).thenReturn(writer);
-
     servlet.doGet(request, response);
-
-    writer.flush(); // it may not have been flushed yet...
     assertEquals(stringWriter.toString(), EXPECTED_MULTIPLE);
   }
 
@@ -81,14 +84,9 @@ public class WaypointQueryServletTest {
     // Set the private variable values here by reflection.
     waypointMock.add(DAISY);
     ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
-    
-    StringWriter stringWriter = new StringWriter();
-    PrintWriter writer = new PrintWriter(stringWriter);
+
     when(response.getWriter()).thenReturn(writer);
-
     servlet.doGet(request, response);
-
-    writer.flush(); // it may not have been flushed yet...
     assertEquals(stringWriter.toString(), EXPECTED_ONE);
   }
 
@@ -96,14 +94,16 @@ public class WaypointQueryServletTest {
   public void testServletGetEmpty() throws Exception {
     // Set the private variable values here by reflection.
     ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
-    
-    StringWriter stringWriter = new StringWriter();
-    PrintWriter writer = new PrintWriter(stringWriter);
+
     when(response.getWriter()).thenReturn(writer);
-
     servlet.doGet(request, response);
-
-    writer.flush(); // it may not have been flushed yet...
     assertEquals(stringWriter.toString(), EXPECTED_EMPTY);
+  }
+
+  //TODO: test one, multiple, bad input, lots of spacing, uppercase/not all lowercase
+
+  @After
+  public void after() {
+    writer.flush();
   }
 }
