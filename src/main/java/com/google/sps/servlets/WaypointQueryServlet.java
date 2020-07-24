@@ -57,11 +57,12 @@ public class WaypointQueryServlet extends HttpServlet {
     String input = request.getParameter("text-input");
     System.out.println(input);
     // Parse out feature requests from input
-    String[] featureQueries = input.split(";[ ]?");
+    String[] featureQueries = input.split(";");
     for (String feature : featureQueries) {
-      System.out.println(feature.toLowerCase());
+      feature = feature.toLowerCase().trim();
+      System.out.println(feature);
       // Make call to database
-      Coordinate location = sendGET(feature.toLowerCase());
+      Coordinate location = sendGET(feature);
       if (location != null) {
         waypoints.add(location);
       }
@@ -118,7 +119,7 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Stores input text and waypoints in a RouteEntity in datastore.
     * Returns nothing.
     */ 
-    private void storeInputAndWaypoints(String textInput, ArrayList<Coordinate> waypoints){
+  private static void storeInputAndWaypoints(String textInput, ArrayList<Coordinate> waypoints){
     Entity RouteEntity = new Entity("Route");
     RouteEntity.setProperty("text", textInput);
     String json = new Gson().toJson(waypoints);
