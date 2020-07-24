@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.GeoPt; 
 
 /** Servlet that handles the user's query by parsing out
   * the waypoint queries and their matching coordinates in 
