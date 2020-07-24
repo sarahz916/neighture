@@ -62,7 +62,7 @@ async function getWaypoints() {
 }
 
 /**
- * Given a DirectionsService object, DirectionsRenderer object, and a center coordinate, create a Google Map.
+ * Given a center coordinate, create a Google Map.
  */
 function initMap(center) {
     let mapOptions = {
