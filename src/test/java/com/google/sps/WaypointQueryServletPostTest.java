@@ -106,8 +106,8 @@ public class WaypointQueryServletPostTest {
   public void testServletPostMultiple() throws Exception {
     // Set the private variable values here by reflection.
     ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
-    when(request.getParameter("text-input")).thenReturn("daisy;clover");
-    ((PowerMockitoStubber) PowerMockito.doReturn(DAISY, CLOVER)).when(WaypointQueryServlet.class, "sendGET", anyString());
+    when(request.getParameter("text-input")).thenReturn("daisy;clover;bellflower");
+    ((PowerMockitoStubber) PowerMockito.doReturn(DAISY, CLOVER, BELLFLOWER)).when(WaypointQueryServlet.class, "sendGET", anyString());
     PowerMockito.doNothing().when(WaypointQueryServlet.class, "storeInputAndWaypoints", anyString(), eq(waypointMock));
 
     when(response.getWriter()).thenReturn(writer);
@@ -118,6 +118,7 @@ public class WaypointQueryServletPostTest {
     ArrayList<Coordinate> comparison = new ArrayList<Coordinate>();
     comparison.add(DAISY);
     comparison.add(CLOVER);
+    comparison.add(BELLFLOWER);
     assertEquals(waypointMock, comparison);
   }
 
