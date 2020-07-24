@@ -89,6 +89,8 @@ function calcRoute(directionsService, directionsRenderer, start, end, waypoints)
     directionsService.route(request, function(result, status) {
         if (status == 'OK') {
             directionsRenderer.setDirections(result);
+        } else {
+            alert(`Could not display directions: ${status}`);
         }
     });
 }
