@@ -83,6 +83,7 @@ function calcRoute(directionsService, directionsRenderer, start, end, waypoints)
         origin: start,
         destination: end,
         waypoints: waypointsData,
+        optimizeWaypoints: true,
         travelMode: 'WALKING'
     };
     directionsService.route(request, function(result, status) {
