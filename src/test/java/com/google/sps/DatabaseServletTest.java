@@ -27,41 +27,41 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class DatabaseServletTest {
-    public static final String EXPECTED_EXIST = "{\"latitude\": 41.848653, \"longitude\": -87.629454,  \"common_name\": {\"name\": \"daisy\"}}\n";
-    public static final String EXPECTED_NOT_EXIST = "{}\n";
-    @Test
-    public void testServletFeatureInDatabase() throws Exception {
-        HttpServletRequest request = mock(HttpServletRequest.class);       
-        HttpServletResponse response = mock(HttpServletResponse.class);    
+  public static final String EXPECTED_EXIST = "{\"latitude\": 41.848653, \"longitude\": -87.629454,  \"common_name\": {\"name\": \"daisy\"}}\n";
+  public static final String EXPECTED_NOT_EXIST = "{}\n";
+  @Test
+  public void testServletFeatureInDatabase() throws Exception {
+    HttpServletRequest request = mock(HttpServletRequest.class);       
+    HttpServletResponse response = mock(HttpServletResponse.class);    
 
-        when(request.getParameter("q")).thenReturn("daisy");
+    when(request.getParameter("q")).thenReturn("daisy");
 
-        StringWriter stringWriter = new StringWriter();
-        PrintWriter writer = new PrintWriter(stringWriter);
-        when(response.getWriter()).thenReturn(writer);
+    StringWriter stringWriter = new StringWriter();
+    PrintWriter writer = new PrintWriter(stringWriter);
+    when(response.getWriter()).thenReturn(writer);
 
-        new DatabaseServlet().doGet(request, response);
+    new DatabaseServlet().doGet(request, response);
 
-        verify(request, atLeast(1)).getParameter("q"); // only if you want to verify q was called
-        writer.flush(); // it may not have been flushed yet...
-        assertEquals(stringWriter.toString(), EXPECTED_EXIST);
-    }
+    verify(request, atLeast(1)).getParameter("q"); // only if you want to verify q was called
+    writer.flush(); // it may not have been flushed yet...
+    assertEquals(stringWriter.toString(), EXPECTED_EXIST);
+  }
 
-    @Test
-    public void testServletFeatureNotInDatabase() throws Exception {
-        HttpServletRequest request = mock(HttpServletRequest.class);       
-        HttpServletResponse response = mock(HttpServletResponse.class);    
+  @Test
+  public void testServletFeatureNotInDatabase() throws Exception {
+    HttpServletRequest request = mock(HttpServletRequest.class);       
+    HttpServletResponse response = mock(HttpServletResponse.class);    
 
-        when(request.getParameter("q")).thenReturn("nothing");
+    when(request.getParameter("q")).thenReturn("nothing");
 
-        StringWriter stringWriter = new StringWriter();
-        PrintWriter writer = new PrintWriter(stringWriter);
-        when(response.getWriter()).thenReturn(writer);
+    StringWriter stringWriter = new StringWriter();
+    PrintWriter writer = new PrintWriter(stringWriter);
+    when(response.getWriter()).thenReturn(writer);
 
-        new DatabaseServlet().doGet(request, response);
+    new DatabaseServlet().doGet(request, response);
 
-        verify(request, atLeast(1)).getParameter("q"); // only if you want to verify q was called
-        writer.flush(); // it may not have been flushed yet...
-        assertEquals(stringWriter.toString(), EXPECTED_NOT_EXIST);
-    }
+    verify(request, atLeast(1)).getParameter("q"); // only if you want to verify q was called
+    writer.flush(); // it may not have been flushed yet...
+    assertEquals(stringWriter.toString(), EXPECTED_NOT_EXIST);
+  }
 }
