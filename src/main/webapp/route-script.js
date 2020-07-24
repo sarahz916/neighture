@@ -49,7 +49,7 @@ function createMapWithDirections(start, end, waypoints) {
     directionsRenderer.setMap(map);
     calcRoute(directionsService, directionsRenderer, start, end, waypoints);
     generateURL (start, end, waypoints);
-    generateURL(start, end, waypoints)
+    writeToAssociatedText();
 }
 
 /**
@@ -105,4 +105,15 @@ function generateURL(start, end, waypoints){
     globalURL = globalURL.split(" ").join("") //need to get rid of white space for link to work
     URLcontainer.innerHTML = '<a href ='+ globalURL  + '>' + globalURL + '</a>';
 }
+
+/**
+ * Fetches the last text-input from /route-store to display with the map.
+ */
+async function writeToAssociatedText(){
+    const response = await fetch("/text-store");
+    const storedtext = await response.json();
+    const associatedTextEl = document.getElementById('associated-text');
+    associatedTextEl.innerText = "You entered:" + storedtext[0];
+}
+
 

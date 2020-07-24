@@ -66,9 +66,11 @@ public class WaypointQueryServlet extends HttpServlet {
       if (location != null) {
         waypoints.add(location);
       }
-    }
-    // Store input text and waypoint in datastore.
+    }   
+    // Store input text and waypoint in datastore. Only if waypoints are not empty.
     storeInputAndWaypoints(input, waypoints);
+
+ 
     // Redirect back to the index page.
     response.sendRedirect("/index.html");
   }
@@ -124,6 +126,8 @@ public class WaypointQueryServlet extends HttpServlet {
     Entity RouteEntity = new Entity("Route");
     RouteEntity.setProperty("text", textInput);
     String json = new Gson().toJson(waypoints);
+    long timestamp = System.currentTimeMillis();
+    RouteEntity.setProperty("timestamp", timestamp);
     // Store as a json string because Coordinates are unsupported.
     RouteEntity.setProperty("waypoints", json);
     // Store Route.
