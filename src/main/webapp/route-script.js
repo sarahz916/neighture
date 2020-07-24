@@ -49,7 +49,10 @@ function createMapWithDirections(start, end, waypoints) {
     directionsRenderer.setMap(map);
     calcRoute(directionsService, directionsRenderer, start, end, waypoints);
     generateURL (start, end, waypoints);
-    writeToAssociatedText();
+    if (waypoints.length != 0){
+        writeToAssociatedText();
+    }
+    
 }
 
 /**
@@ -113,7 +116,10 @@ function generateURL(start, end, waypoints){
 async function writeToAssociatedText(){
     const response = await fetch("/text-store");
     const storedtext = await response.json();
+    // /text-store has all the input text sorted by most recent first.
     const associatedTextEl = document.getElementById('associated-text');
+    // To get the most recent entered term, get first element of array
+    // of all input text. 
     associatedTextEl.innerText = "You entered: " + storedtext[0];
 }
 
