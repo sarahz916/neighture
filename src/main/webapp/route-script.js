@@ -62,7 +62,7 @@ async function getWaypoints() {
 }
 
 /**
- * Given a DirectionsService object, DirectionsRenderer object, and a center coordinate, create a Google Map.
+ * Given a center coordinate, create a Google Map.
  */
 function initMap(center) {
     let mapOptions = {
@@ -83,6 +83,7 @@ function calcRoute(directionsService, directionsRenderer, start, end, waypoints)
         origin: start,
         destination: end,
         waypoints: waypointsData,
+        optimizeWaypoints: true,
         travelMode: 'WALKING'
     };
     directionsService.route(request, function(result, status) {
