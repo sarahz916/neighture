@@ -45,7 +45,6 @@ public class WaypointQueryServlet extends HttpServlet {
     // Return last stored waypoints
     response.setContentType("application/json");
     String json = new Gson().toJson(waypoints);
-    System.out.println(json);
     response.getWriter().println(json);
 
     // After the map is made, we can get rid of the old waypoints
@@ -55,12 +54,10 @@ public class WaypointQueryServlet extends HttpServlet {
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
     String input = request.getParameter("text-input");
-    System.out.println(input);
     // Parse out feature requests from input
     String[] featureQueries = input.split(";");
     for (String feature : featureQueries) {
       feature = feature.toLowerCase().trim();
-      System.out.println(feature);
       // Make call to database
       Coordinate location = sendGET(feature);
       if (location != null) {
@@ -69,7 +66,6 @@ public class WaypointQueryServlet extends HttpServlet {
     }   
     // Store input text and waypoint in datastore.
     storeInputAndWaypoints(input, waypoints);
-
  
     // Redirect back to the index page.
     response.sendRedirect("/index.html");
@@ -84,7 +80,6 @@ public class WaypointQueryServlet extends HttpServlet {
     con.setRequestMethod("GET");
     con.setRequestProperty("User-Agent", "Mozilla/5.0");
     int responseCode = con.getResponseCode();
-    System.out.println("GET Response Code :: " + responseCode);
     if (responseCode == HttpURLConnection.HTTP_OK) { // success
       BufferedReader in = new BufferedReader(new InputStreamReader(
               con.getInputStream()));
@@ -93,12 +88,11 @@ public class WaypointQueryServlet extends HttpServlet {
 
 
       while ((inputLine = in.readLine()) != null) {
-          response.append(inputLine);
+        response.append(inputLine);
       }
       in.close();
 
       // print result
-      System.out.println(response.toString());
       String responseString = response.toString();
       if (responseString.equals("{}")) {
           return null;
@@ -112,7 +106,6 @@ public class WaypointQueryServlet extends HttpServlet {
       return featureCoordinate;
     } 
     else {
-      System.out.println("GET request didn't work");
       return null;
     }
   }

@@ -30,6 +30,7 @@ import org.junit.runners.JUnit4;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.api.mockito.expectation.PowerMockitoStubber;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -69,7 +70,7 @@ public class WaypointQueryServletPostTest {
     waypointMock = new ArrayList<Coordinate>();
   }
 
-  @Test
+  @Test // Empty input
   public void testServletPostEmpty() throws Exception {
     // Set the private variable values here by reflection.
     ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
@@ -81,6 +82,98 @@ public class WaypointQueryServletPostTest {
     servlet.doPost(request, response);
     verify(request, atLeast(1)).getParameter("text-input");
     assertEquals(waypointMock, new ArrayList<Coordinate>());
+  }
+
+  @Test // Post a query with one waypoint description
+  public void testServletPostOne() throws Exception {
+    // Set the private variable values here by reflection.
+    ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
+    when(request.getParameter("text-input")).thenReturn("daisy");
+    PowerMockito.doReturn(DAISY).when(WaypointQueryServlet.class, "sendGET", anyString());
+    PowerMockito.doNothing().when(WaypointQueryServlet.class, "storeInputAndWaypoints", anyString(), eq(waypointMock));
+
+    when(response.getWriter()).thenReturn(writer);
+    servlet.doPost(request, response);
+    verify(request, atLeast(1)).getParameter("text-input");
+
+    // Create answer to compare against
+    ArrayList<Coordinate> comparison = new ArrayList<Coordinate>();
+    comparison.add(DAISY);
+    assertEquals(waypointMock, comparison);
+  }
+
+  @Test // Post a query with multiple waypoint descriptions
+  public void testServletPostMultiple() throws Exception {
+    // Set the private variable values here by reflection.
+    ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
+    when(request.getParameter("text-input")).thenReturn("daisy;clover");
+    ((PowerMockitoStubber) PowerMockito.doReturn(DAISY, CLOVER)).when(WaypointQueryServlet.class, "sendGET", anyString());
+    PowerMockito.doNothing().when(WaypointQueryServlet.class, "storeInputAndWaypoints", anyString(), eq(waypointMock));
+
+    when(response.getWriter()).thenReturn(writer);
+    servlet.doPost(request, response);
+    verify(request, atLeast(1)).getParameter("text-input");
+
+    // Create answer to compare against
+    ArrayList<Coordinate> comparison = new ArrayList<Coordinate>();
+    comparison.add(DAISY);
+    comparison.add(CLOVER);
+    assertEquals(waypointMock, comparison);
+  }
+
+  @Test // Post a query with a waypoint description that isn't in the database
+  public void testServletPostBadInput() throws Exception {
+    // Set the private variable values here by reflection.
+    ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
+    when(request.getParameter("text-input")).thenReturn("daisy;wrong");
+    ((PowerMockitoStubber) PowerMockito.doReturn(DAISY,null)).when(WaypointQueryServlet.class, "sendGET", anyString());
+    PowerMockito.doNothing().when(WaypointQueryServlet.class, "storeInputAndWaypoints", anyString(), eq(waypointMock));
+
+    when(response.getWriter()).thenReturn(writer);
+    servlet.doPost(request, response);
+    verify(request, atLeast(1)).getParameter("text-input");
+
+    // Create answer to compare against
+    ArrayList<Coordinate> comparison = new ArrayList<Coordinate>();
+    comparison.add(DAISY);
+    assertEquals(waypointMock, comparison);
+  }
+
+  @Test // Post a query with waypoint descriptions separated by a lot of spacing
+  public void testServletPostLotsOfSpacing() throws Exception {
+    // Set the private variable values here by reflection.
+    ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
+    when(request.getParameter("text-input")).thenReturn("   daisy;    clover   ");
+    ((PowerMockitoStubber) PowerMockito.doReturn(DAISY,CLOVER)).when(WaypointQueryServlet.class, "sendGET", anyString());
+    PowerMockito.doNothing().when(WaypointQueryServlet.class, "storeInputAndWaypoints", anyString(), eq(waypointMock));
+
+    when(response.getWriter()).thenReturn(writer);
+    servlet.doPost(request, response);
+    verify(request, atLeast(1)).getParameter("text-input");
+
+    // Create answer to compare against
+    ArrayList<Coordinate> comparison = new ArrayList<Coordinate>();
+    comparison.add(DAISY);
+    comparison.add(CLOVER);
+    assertEquals(waypointMock, comparison);
+  }
+
+  @Test // Post a query with a waypoint description with different letter cases
+  public void testServletPostDifferentCases() throws Exception {
+    // Set the private variable values here by reflection.
+    ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
+    when(request.getParameter("text-input")).thenReturn("DAisY");
+    ((PowerMockitoStubber) PowerMockito.doReturn(DAISY)).when(WaypointQueryServlet.class, "sendGET", anyString());
+    PowerMockito.doNothing().when(WaypointQueryServlet.class, "storeInputAndWaypoints", anyString(), eq(waypointMock));
+
+    when(response.getWriter()).thenReturn(writer);
+    servlet.doPost(request, response);
+    verify(request, atLeast(1)).getParameter("text-input");
+
+    // Create answer to compare against
+    ArrayList<Coordinate> comparison = new ArrayList<Coordinate>();
+    comparison.add(DAISY);
+    assertEquals(waypointMock, comparison);
   }
 
   //TODO: test one, multiple, bad input, lots of spacing, uppercase/not all lowercase
