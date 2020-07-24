@@ -34,15 +34,15 @@ public final class Route {
     */
     public Route(Point start, Point end, Collection<Point> waypoints) {
         if (start == null) {
-            throw new IllegalArgumentException("title cannot be null");
+            throw new IllegalArgumentException("start cannot be null");
         }
 
         if (end == null) {
-            throw new IllegalArgumentException("when cannot be null");
+            throw new IllegalArgumentException("end cannot be null");
         }
 
         if (waypoints == null) {
-            throw new IllegalArgumentException("attendees cannot be null. Use empty array instead.");
+            throw new IllegalArgumentException("waypoints cannot be null. Use empty array instead.");
         }
 
         this.start.setLocation(start);
