@@ -22,6 +22,9 @@ function createDropDowns() {
       dropDownEl.appendChild(createCheckBoxSet(set));
     })
   });
+  submitEl = document.createElement("input");
+  submitEl.setAttribute("type", submit);
+  document.getElementById('select-points').appendChild(submitEl);
 }
 
 /** Creates an element that has Name of set and checkpoints of coordinates */
