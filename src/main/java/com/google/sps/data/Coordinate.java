@@ -46,4 +46,24 @@ public final class Coordinate {
   public String getLabel() {
     return label;
   }
+
+  @Override
+  public boolean equals(Object other) {
+    // If the object is compared with itself then return true   
+    if (other == this) { 
+        return true; 
+    } 
+
+    /* Check if other is an instance of Coordinate or not 
+      "null instanceof [type]" also returns false */
+    if (!(other instanceof Coordinate)) { 
+        return false; 
+    } 
+      
+    // typecast other to Coordinate so that we can compare data members  
+    Coordinate otherCoordinate = (Coordinate) other; 
+      
+    // Compare the data members and return accordingly 
+    return (x.equals(otherCoordinate.getX()) && y.equals(otherCoordinate.getY()) && label.equals(otherCoordinate.getLabel()));
+  }
 }

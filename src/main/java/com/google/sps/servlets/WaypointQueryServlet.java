@@ -87,7 +87,7 @@ public class WaypointQueryServlet extends HttpServlet {
   private static ArrayList<Coordinate> sendGET(String feature, String label) throws IOException {
     ArrayList<Coordinate> coordinates = new ArrayList<Coordinate>();
     //URL obj = new URL("https://neighborhood-nature.appspot.com/database?q=" + feature);
-    URL obj = new URL("https://8080-af2a4787-4123-40c0-af0f-badc13738d9d.us-west1.cloudshell.dev/database?q=" + feature);
+    URL obj = new URL("http://localhost:8080/database?q=" + feature);
     HttpURLConnection con = (HttpURLConnection) obj.openConnection();
     con.setRequestMethod("GET");
     con.setRequestProperty("User-Agent", "Mozilla/5.0");
@@ -105,13 +105,14 @@ public class WaypointQueryServlet extends HttpServlet {
 
       // Turn the response into a Coordinate
       String responseString = response.toString();
+      System.out.println(responseString);
       JSONArray allWaypoints = new JSONArray(responseString);
       int index = 0;
       while (!allWaypoints.isNull(index)) {
         JSONObject observation = allWaypoints.getJSONObject(index);
         Double x = observation.getDouble("longitude");
         Double y = observation.getDouble("latitude");
-        Coordinate featureCoordinate = new Coordinate(x, y, feature);
+        Coordinate featureCoordinate = new Coordinate(x, y, label);
         coordinates.add(featureCoordinate);
         index += 1;
       }
