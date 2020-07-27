@@ -24,7 +24,7 @@ function createDropDowns() {
   });
 }
 
-/** Creates an element that has Name of set and DropDown menu of coordinates */
+/** Creates an element that has Name of set and checkpoints of coordinates */
 function createCheckBoxSet(set) {
   const setName = set[0].label;
   const returnDiv = document.createElement('div');
@@ -37,7 +37,7 @@ function createCheckBoxSet(set) {
   return returnDiv;
 }
 
-/** Creates an option element that has the lat and long as text */
+/** Creates an checkbox element with label */
 function createCheckBoxEl(choice){
     const checkBoxEl = document.createElement('input');
     checkBoxEl.setAttribute("type", "checkbox");
