@@ -2,59 +2,86 @@
 <html>
   <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Neighborhood Nature</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
 
     <script defer src="route-script.js"></script>
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBaBCxBuGqZx0IGQ4lb9eKrICwU8Rduz3c"></script>
       
   </head>
   <nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
-  <a class="navbar-brand" href="index.html">N N</a>
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-  <div class="collapse navbar-collapse" id="navbarNav">
-    <ul class="navbar-nav">
-      <li class="nav-item active">
-        <a class="nav-link" href="index.html"> Welcome <span class="sr-only">(current)</span></a>
-      </li>
-      </ul>
-  </div>
-</nav>
+    <a class="navbar-brand" href="index.html">N N</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item active">
+                <a class="nav-link" href="index.html"> Welcome <span class="sr-only">(current)</span></a>
+            </li>
+        </ul>
+    </div>
+  </nav>
   <body>
-    <div id="content" >
-      <h1> Neighborhood Nature </h1>
-      <h2> Prototype </h2>
-      <p> Enter clover, daisy, or bellflower.Can put in multiple terms with 
-          ';' as seperated. <br>
-          <i> Example: clover; daisy </i>
-      </p>
-    <form action="/query" method="POST" id ="form">
-
-      <p>Enter text:</p>
-      <!--TODO (zous): Put in character/word limit on text box. -->
-      <!--TODO: try to have a feedback form-->
-      <textarea name="text-input"></textarea>
-      <p> Enter zip code of where you want to navigate: </p>
-      <input type="number" name="zip-code">
-      <br/>
-      <input type="submit" id="submit"/>   
-      
-    </form>
     
-    <p id="associated-text"> </p>
+    <div class="container-fliud">
+        <div id="header">
+        <div class="row">
+            <h1> Neighborhood Nature </h1>
+        </div>
+        </div>
+        <div class="row">
+            <div class="col-1">
+            </div>
+            <div class="col-3">
+            <h3> Step 1: </h3>
+            <p> 
+            Enter clover, daisy, or bellflower.Can put in multiple terms with 
+            ';' as seperated. <br>
+            <i> Example: clover; daisy </i>
+            </p>
+            <form action="/query" method="POST" id ="form">
 
-    <div id="map"></div>
+                <p>Enter text:</p>
+                <!--TODO (zous): Put in character/word limit on text box. -->
+                <!--TODO: try to have a feedback form-->
+                <textarea name="text-input"></textarea>
+                <p> Enter zip code of where you want to navigate: </p>
+                <input type="number" name="zip-code">
+                <br/>
+                <input type="submit" id="submit"/>   
+            </form>
 
-    <div id="legend"></div>
-    
-    <div id ="globalURL"></div> 
+            </div>
+            <div class="col-3">
+                <h3> Step 2: </h3>
+                <p> 
+                Use dropdown menus to clarify some points:
+                </p>
+                <
+
+            </div>
+            <div class="col-4">
+                <!--Displays for information after query is processed. -->
+                <h3> Step 3: </h3>
+                <p id="associated-text"> </p>
+
+                <div id="map"></div>
+
+                <div id="legend"></div>
+                
+                <div id ="globalURL"></div> 
+            </div>
+            <div class="col-1">
+            </div>
+        </div>
+    </div>
     <br>
-  </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
   </body>
 </html>
+
