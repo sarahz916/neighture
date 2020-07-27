@@ -12,23 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-document.getElementById('form').addEventListener('submit', createDropDowns());
+//document.getElementById('form').addEventListener('submit', createDropDowns());
 /** Fetches routes from the server and adds them to the DOM. */
 function createDropDowns() {
+  submitEl = document.createElement("input");
+  submitEl.setAttribute("type", "submit");
   //fetch array of arrays from /query
   fetch('/query').then(response => response.json()).then((dropDowns) => {
     const dropDownEl = document.getElementById('select-points');
     dropDowns.forEach((set) => {
       dropDownEl.appendChild(createCheckBoxSet(set));
     })
+    dropDownEl.appendChild(submitEl);
   });
-  submitEl = document.createElement("input");
-  submitEl.setAttribute("type", submit);
-  document.getElementById('select-points').appendChild(submitEl);
+
 }
 
 /** Creates an element that has Name of set and checkpoints of coordinates */
 function createCheckBoxSet(set) {
+  console.log(set);
   const setName = set[0].label;
   const returnDiv = document.createElement('div');
   const CheckBoxTitle = document.createElement('h4');
