@@ -5,9 +5,37 @@
   width: 650px;
 }
 
-#map {
+#header {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  width: 650px;
+}
+
+.map {
   border: thin solid black;
   height: 500px;
   width: 500px;
 }
 
+#route-list {
+  list-style-type: none;
+}
+
+.route {
+  border: thin solid black;
+  display: flex;
+  margin: 10px;
+  padding: 10px;
+  width: 300px;
+}
+
+.route span {
+  flex-grow: 1;
+}
+
+#legend {
+    padding: 3px;
+    width: 500px;
+    border: thin solid black;
+}

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 package com.google.sps.servlets;
-
+import com.google.sps.Coordinate;
 import java.net.HttpURLConnection;
 import java.net.URL; 
 import com.google.cloud.language.v1.Document;
@@ -34,6 +34,11 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
 import com.google.gson.Gson;
+import com.google.sps.data.StoredRoute;
+import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
+
+
 
 /** Servlet that returns comment data */
 @WebServlet(
@@ -46,19 +51,25 @@ public class RouteStoreServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
      // Show all the generated routes stored. 
-    Query query = new Query("Route");
+    Query query = new Query("Route").addSort("timestamp", SortDirection.DESCENDING);
 
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     PreparedQuery results = datastore.prepare(query);
-    ArrayList<String> Inputs = new ArrayList<>();
+    ArrayList<StoredRoute> routes = new ArrayList<>();
     for (Entity entity : results.asIterable()) {
-       Inputs.add((String) entity.getProperty("text"));
-       Inputs.add((String) entity.getProperty("waypoints"));
+      long id = entity.getKey().getId();
+      String text = (String) entity.getProperty("text");
+      String waypointsJson = (String) entity.getProperty("waypoints");
+      Type coordListType = new TypeToken<ArrayList<Coordinate>>(){}.getType();
+      ArrayList<Coordinate> waypoints = new Gson().fromJson(waypointsJson, coordListType);
+
+      StoredRoute route = new StoredRoute(id, text, waypoints);
+      routes.add(route);
     }
     Gson gson = new Gson();
 
     response.setContentType("application/json");
-    response.getWriter().println(gson.toJson(Inputs));
+    response.getWriter().println(gson.toJson(routes));
   }
 
 }
