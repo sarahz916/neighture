@@ -21,9 +21,17 @@ window.onload = function setup() {
 
 document.getElementById('form').addEventListener('submit', createPointInfoMap());
 
+/**
+ * Get waypoints from the servlet and map each cluster of waypoints on the map in a different marker color.
+ */
 async function createPointInfoMap() {
     var res = await getWaypoints();
     let waypoints = convertWaypointstoLatLng(res);
+    
+    // Make oe marker for each waypoint, in a different color.
+    for (let [label, pt] of Object.entries(waypoints)) {
+        console.log(pt);
+    }
 }
 
 /**
