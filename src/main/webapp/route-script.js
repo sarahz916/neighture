@@ -136,7 +136,7 @@ function initMap(center) {
     zoom: 4,
     center: center
     }
-    return new google.maps.Map(document.getElementById('map'), mapOptions);
+    return new google.maps.Map(document.getElementById('route-map'), mapOptions);
 }
 
 /**
