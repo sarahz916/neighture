@@ -26,3 +26,9 @@
 .route span {
   flex-grow: 1;
 }
+
+#legend {
+    padding: 3px;
+    width: 500px;
+    border: thin solid black;
+}
