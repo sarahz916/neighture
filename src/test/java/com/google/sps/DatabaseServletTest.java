@@ -27,8 +27,8 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class DatabaseServletTest {
-  public static final String EXPECTED_EXIST = "{\"latitude\": 41.848653, \"longitude\": -87.629454,  \"common_name\": {\"name\": \"daisy\"}}\n";
-  public static final String EXPECTED_NOT_EXIST = "{}\n";
+  public static final String EXPECTED_EXIST = "[{\"latitude\": 41.848653, \"longitude\": -87.629454,  \"common_name\": {\"name\": \"daisy\"}}]\n";
+  public static final String EXPECTED_NOT_EXIST = "[]\n";
   @Test
   public void testServletFeatureInDatabase() throws Exception {
     HttpServletRequest request = mock(HttpServletRequest.class);       
