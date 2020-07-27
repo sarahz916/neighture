@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
 
+    <script defer src="pointselect-script.js"></script>
     <script defer src="route-script.js"></script>
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBaBCxBuGqZx0IGQ4lb9eKrICwU8Rduz3c"></script>
       
@@ -49,7 +50,9 @@
                 <!--TODO: try to have a feedback form-->
                 <textarea name="text-input"></textarea>
                 <p> Enter zip code of where you want to navigate: </p>
+                <!--
                 <input type="number" name="zip-code">
+                -->
                 <br/>
                 <input type="submit" id="submit"/>  
             </form>
@@ -60,9 +63,10 @@
             <div class="col-3">
                 <h3> Step 2: </h3>
                 <p> 
-                Use dropdown menus to clarify some points:
+                Use checkboxes to clarify some points:
                 </p>
-                <
+                
+                <form id="select-points"><form>
 
             </div>
             <div class="col-4">
