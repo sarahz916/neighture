@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//document.getElementById('form').addEventListener('submit', createDropDowns());
+document.getElementById('form').addEventListener('submit', createCheckBoxes());
 /** Fetches routes from the server and adds them to the DOM. */
-function createDropDowns() {
+function createCheckBoxes() {
   submitEl = document.createElement("input");
   submitEl.setAttribute("type", "submit");
   //fetch array of arrays from /query
@@ -30,7 +30,6 @@ function createDropDowns() {
 
 /** Creates an element that has Name of set and checkpoints of coordinates */
 function createCheckBoxSet(set) {
-  console.log(set);
   const setName = set[0].label;
   const returnDiv = document.createElement('div');
   const CheckBoxTitle = document.createElement('h4');
