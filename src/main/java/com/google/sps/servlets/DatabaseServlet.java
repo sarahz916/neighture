@@ -48,6 +48,13 @@ public class DatabaseServlet extends HttpServlet {
     myMap.put("clover", "{\"latitude\": 41.855967, \"longitude\": -87.635604, \"common_name\": {\"name\": \"clover\"}}");
     myMap.put("daisy", "{\"latitude\": 41.848653, \"longitude\": -87.629454,  \"common_name\": {\"name\": \"daisy\"}}");
     myMap.put("bellflower", "{\"latitude\": 41.843539, \"longitude\": -87.647480,  \"common_name\": {\"name\": \"bellflower\"}}");
+    myMap.put("tulip", "{\"latitude\": 41.855223, \"longitude\": -87.631930,  \"common_name\": {\"name\": \"tulip\"}}");
+    myMap.put("mushroom", "{\"latitude\": 41.898864, \"longitude\": -87.622965,  \"common_name\": {\"name\": \"mushroom\"}}");
+    myMap.put("violet", "{\"latitude\": 41.898912, \"longitude\": -87.642910  \"common_name\": {\"name\": \"violet\"}}");
+    myMap.put("park", "{\"latitude\": 41.897427, \"longitude\": -87.618877  \"common_name\": {\"name\": \"park\"}}");
+    myMap.put("sunflower", "{\"latitude\": 41.897451, \"longitude\": -87.619934  \"common_name\": {\"name\": \"sunflower\"}}");
+    myMap.put("tree", "{\"latitude\": 41.897116, \"longitude\": -87.622348  \"common_name\": {\"name\": \"tree\"}}");
+    myMap.put("lichen", "{\"latitude\": 41.897219, \"longitude\": -87.622235  \"common_name\": {\"name\": \"lichen\"}}");
     return myMap;
   }
 }
