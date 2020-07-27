@@ -16,6 +16,7 @@ package com.google.sps;
 import com.google.sps.Coordinate;
 import com.google.gson.Gson;
 import org.json.JSONObject;  
+import org.json.JSONArray;  
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -38,7 +39,7 @@ import com.google.appengine.api.datastore.Entity;
   */
 @WebServlet("/query")
 public class WaypointQueryServlet extends HttpServlet {
-  private ArrayList<Coordinate> waypoints = new ArrayList<Coordinate>();
+  private ArrayList<ArrayList<Coordinate>> waypoints = new ArrayList<ArrayList<Coordinate>>();
 
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -55,14 +56,23 @@ public class WaypointQueryServlet extends HttpServlet {
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
     String input = request.getParameter("text-input");
     // Parse out feature requests from input
-    String[] featureQueries = input.split(";");
-    for (String feature : featureQueries) {
-      feature = feature.toLowerCase().trim();
-      // Make call to database
-      Coordinate location = sendGET(feature);
-      if (location != null) {
-        waypoints.add(location);
+    String[] waypointQueries = input.split(";");
+    for (String waypointQuery : waypointQueries) {
+      waypointQuery = waypointQuery.toLowerCase().trim();
+      ArrayList<Coordinate> potentialCoordinates = new ArrayList<Coordinate>();
+      String[] featureQueries = waypointQuery.split(",");
+
+      for (int i = 0; i < featureQueries.length; i++) {
+        String feature = featureQueries[i].toLowerCase().trim();
+        // Make call to database
+        ArrayList<Coordinate> locations = sendGET(feature, waypointQuery);
+        if (i == 0) {
+          potentialCoordinates.addAll(locations);
+        } else {
+          potentialCoordinates.retainAll(locations);
+        }
       }
+      waypoints.add(potentialCoordinates);
     }   
     // Store input text and waypoint in datastore.
     storeInputAndWaypoints(input, waypoints);
@@ -74,8 +84,10 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Sends a request for the input feature to the database
     * Returns the Coordinate matching the input feature 
     */ 
-  private static Coordinate sendGET(String feature) throws IOException {
-    URL obj = new URL("https://neighborhood-nature.appspot.com/database?q=" + feature);
+  private static ArrayList<Coordinate> sendGET(String feature, String label) throws IOException {
+    ArrayList<Coordinate> coordinates = new ArrayList<Coordinate>();
+    //URL obj = new URL("https://neighborhood-nature.appspot.com/database?q=" + feature);
+    URL obj = new URL("https://8080-af2a4787-4123-40c0-af0f-badc13738d9d.us-west1.cloudshell.dev/database?q=" + feature);
     HttpURLConnection con = (HttpURLConnection) obj.openConnection();
     con.setRequestMethod("GET");
     con.setRequestProperty("User-Agent", "Mozilla/5.0");
@@ -86,35 +98,34 @@ public class WaypointQueryServlet extends HttpServlet {
       String inputLine;
       StringBuffer response = new StringBuffer();
 
-
       while ((inputLine = in.readLine()) != null) {
         response.append(inputLine);
       }
       in.close();
 
-      // print result
-      String responseString = response.toString();
-      if (responseString.equals("{}")) {
-          return null;
-      }
-
       // Turn the response into a Coordinate
-      JSONObject jsonObject = new JSONObject(responseString);
-      Double x = jsonObject.getDouble("longitude");
-      Double y = jsonObject.getDouble("latitude");
-      Coordinate featureCoordinate = new Coordinate(x, y, feature);
-      return featureCoordinate;
-    } 
-    else {
-      return null;
+      String responseString = response.toString();
+      JSONArray allWaypoints = new JSONArray(responseString);
+      int index = 0;
+      while (!allWaypoints.isNull(index)) {
+        JSONObject observation = allWaypoints.getJSONObject(index);
+        Double x = observation.getDouble("longitude");
+        Double y = observation.getDouble("latitude");
+        Coordinate featureCoordinate = new Coordinate(x, y, feature);
+        coordinates.add(featureCoordinate);
+        index += 1;
+      }
+    } else {
+      System.out.println("GET request didn't work");
     }
+    return coordinates;
   }
 
 
   /** Stores input text and waypoints in a RouteEntity in datastore.
     * Returns nothing.
     */ 
-  private static void storeInputAndWaypoints(String textInput, ArrayList<Coordinate> waypoints){
+  private static void storeInputAndWaypoints(String textInput, ArrayList<ArrayList<Coordinate>> waypoints){
     Entity RouteEntity = new Entity("Route");
     RouteEntity.setProperty("text", textInput);
     String json = new Gson().toJson(waypoints);
