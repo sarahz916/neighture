@@ -74,15 +74,18 @@ function addNewLegendElem(parent, text) {
  */
 async function createWaypointLegend(route, waypointsWithLabels) {
     let legend = document.getElementById('legend');
-    addNewLegendElem(legend, '1: start');
+    let marker = 'A';
+    addNewLegendElem(legend, `${marker}: start`);
     let i;
     for (i = 0; i < route.legs.length - 1; i++) {
         let pt = route.legs[i].end_location;
         let label = getLabelFromLatLng(pt, waypointsWithLabels);
-        addNewLegendElem(legend, `${i + 2}: ${label}`);
+        marker = String.fromCharCode(marker.charCodeAt(0) + 1);
+        addNewLegendElem(legend, `${marker}: ${label}`);
     }
     let end = route.legs[route.legs.length - 1].end_location;
-    addNewLegendElem(legend, `${i + 2}: end`);
+    marker = String.fromCharCode(marker.charCodeAt(0) + 1);
+    addNewLegendElem(legend, `${marker}: end`);
 }
 
 /**
