@@ -35,6 +35,7 @@ async function createMapWithWaypoints() {
     });
     calcRoute(directionsService, directionsRenderer, start, end, waypoints);
     generateURL (start, end, waypoints);
+    writeToAssociatedText();
 }
 
 /**
