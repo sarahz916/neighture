@@ -11,3 +11,24 @@
   width: 500px;
 }
 
+#route-list {
+  list-style-type: none;
+}
+
+.route {
+  border: thin solid black;
+  display: flex;
+  margin: 10px;
+  padding: 10px;
+  width: 300px;
+}
+
+.route span {
+  flex-grow: 1;
+}
+
+#legend {
+    padding: 3px;
+    width: 500px;
+    border: thin solid black;
+}

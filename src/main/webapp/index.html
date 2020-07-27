@@ -23,9 +23,6 @@
       <li class="nav-item active">
         <a class="nav-link" href="index.html"> Welcome <span class="sr-only">(current)</span></a>
       </li>
-      <li class="nav-item">
-        <a class="nav-link" href="signin.html"> Login </a>
-      </li>
       </ul>
   </div>
 </nav>
@@ -43,14 +40,21 @@
       <!--TODO (zous): Put in character/word limit on text box. -->
       <!--TODO: try to have a feedback form-->
       <textarea name="text-input"></textarea>
+      <p> Enter zip code of where you want to navigate: </p>
+      <input type="number" name="zip-code">
       <br/>
       <input type="submit" id="submit"/>   
       
     </form>
-    <!--TODO(zous): display text with map-->
+    
+    <p id="associated-text"> </p>
+
     <div id="map"></div>
+
+    <div id="legend"></div>
     
     <div id ="globalURL"></div> 
+    <br>
   </div>
   </body>
 </html>

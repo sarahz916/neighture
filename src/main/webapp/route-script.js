@@ -62,21 +62,27 @@ function calcRoute(directionsService, directionsRenderer, start, end, waypoints)
     });
 }
 
+function addNewLegendElem(parent, text) {
+    let newElem = document.createElement('p');
+    newElem.textContent = text;
+    parent.appendChild(newElem);
+}
+
 /**
  * Given a generated route and a JSON object containing waypoint locations with their labels as inputted
  * by the user, create a legend that maps a marker on the map to corresponding user input.
  */
 async function createWaypointLegend(route, waypointsWithLabels) {
-    let start = route.legs[0].start_location;
-    console.log('1: start');
+    let legend = document.getElementById('legend');
+    addNewLegendElem(legend, '1: start');
     let i;
     for (i = 0; i < route.legs.length - 1; i++) {
         let pt = route.legs[i].end_location;
         let label = getLabelFromLatLng(pt, waypointsWithLabels);
-        console.log(`${i + 2}: ${label}`);
+        addNewLegendElem(legend, `${i + 2}: ${label}`);
     }
     let end = route.legs[route.legs.length - 1].end_location;
-    console.log(`${i + 2}: end`);
+    addNewLegendElem(legend, `${i + 2}: end`);
 }
 
 /**
@@ -143,3 +149,15 @@ function generateURL(start, end, waypoints){
     URLcontainer.innerHTML = '<a href ='+ globalURL  + '>' + globalURL + '</a>';
 }
 
+/**
+ * Fetches the last text-input from /route-store to display with the map.
+ */
+async function writeToAssociatedText(){
+    const response = await fetch("/text-store");
+    const storedtext = await response.json();
+    // /text-store has all the input text sorted by most recent first.
+    const associatedTextEl = document.getElementById('associated-text');
+    // To get the most recent entered term, get first element of array
+    // of all input text. 
+    associatedTextEl.innerText = "You entered: " + storedtext[0];
+}
