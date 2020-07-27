@@ -36,7 +36,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(WaypointQueryServlet.class)
-public class WaypointQueryServletPostTest {
+public class WaypointQueryServletPostTestm {
   public static final Coordinate DAISY = new Coordinate(-87.629454, 41.848653, "daisy");
   public static final Coordinate CLOVER = new Coordinate(-87.635604, 41.855967, "clover");
   public static final Coordinate BELLFLOWER = new Coordinate(-87.64748, 41.843539, "bellflower");
