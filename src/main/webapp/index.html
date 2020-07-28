@@ -49,11 +49,8 @@
                 <!--TODO (zous): Put in character/word limit on text box. -->
                 <!--TODO: try to have a feedback form-->
                 <textarea name="text-input"></textarea>
-                <p> Enter zip code of where you want to navigate: </p>
-                <!--
-                <input type="number" name="zip-code">
-                -->
-                <br/>
+
+                <br>
                 <input type="submit" id="submit"/>  
             </form>
 
@@ -64,7 +61,9 @@
                 Use checkboxes to clarify some points:
                 </p>
                 
-                <form id="select-points"><form>
+                <form action="/chosen-waypoints" method="POST" id="select-points">
+                
+                <form>
 
                 <div id="point-map" class="map"></div>
 

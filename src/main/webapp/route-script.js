@@ -66,15 +66,12 @@ function createPointInfoMap(waypoints) {
 
 /** Fetches routes from the server and adds them to the DOM. */
 function createCheckBoxes(dropDowns) {
-  submitEl = document.createElement("input");
-  submitEl.setAttribute("type", "submit");
   //fetch array of arrays from /query
   //let dropDowns = await getWaypoints();
   const dropDownEl = document.getElementById('select-points');
   dropDowns.forEach((set) => {
     dropDownEl.appendChild(createCheckBoxSet(set));
   });
-  dropDownEl.appendChild(submitEl);
 }
 
 /** Creates an element that has Name of set and checkpoints of coordinates */
@@ -96,6 +93,7 @@ function createCheckBoxEl(choice){
     checkBoxEl.setAttribute("type", "checkbox");
     const checkBoxValue = JSON.stringify(choice);
     checkBoxEl.setAttribute("value", checkBoxValue);
+    checkBoxEl.setAttribute("name", checkBoxValue);
     const checkBoxLabel = document.createElement('label');
     checkBoxLabel.innerText = checkBoxValue;
     const labelAndBox = document.createElement('div');
