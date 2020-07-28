@@ -27,9 +27,7 @@ document.getElementById('select-points').addEventListener('submit', createMapWit
  */
 async function createMapWithWaypoints() {
     var res = await getChosenPoints();
-    console.log(res);
     let waypoints = convertWaypointstoLatLng(res);
-    console.log(waypoints);
     let start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
     let end = new google.maps.LatLng(41.850033, -87.5500523); // hardcoded end; will get from user later
     let map = initMap(start, 'route-map');
@@ -146,7 +144,6 @@ function calcRoute(directionsService, directionsRenderer, start, end, waypoints)
     var waypointsWithLabels = waypoints;
     let waypointsData = [];
     waypoints.forEach((pts, label) => pts.forEach(pt => waypointsData.push({ location: pt })));
-    console.log(waypointsData);
     let request = {
         origin: start,
         destination: end,
@@ -179,6 +176,8 @@ async function createWaypointLegend(route, waypointsWithLabels) {
     let marker = 'A';
     addNewLegendElem(legend, `${marker}: start`);
     let i;
+    // For each leg of the route, find the label of the end point
+    // and add it to the page.
     for (i = 0; i < route.legs.length - 1; i++) {
         let pt = route.legs[i].end_location;
         let label = getLabelFromLatLng(pt, waypointsWithLabels);
@@ -195,14 +194,16 @@ async function createWaypointLegend(route, waypointsWithLabels) {
  * return the label matching the given LatLng object.
  */
 function getLabelFromLatLng(pt, waypointsWithLabels) {
-    for (let [waypoint, label] of Object.entries(waypointsWithLabels)) {
+    for (let [label, waypoints] of waypointsWithLabels.entries()) {
         // Calculate the difference between the lat/long of the points and 
         // check if its within a certain range.
-        let latDiff = Math.abs(waypoint.lat() - pt.lat());
-        let lngDiff = Math.abs(waypoint.lng() - pt.lng());
-        const range = 0.001;
-        if (latDiff < range && lngDiff < range) {
-            return label;
+        for (let waypoint of waypoints) {
+            let latDiff = Math.abs(waypoint.lat() - pt.lat());
+            let lngDiff = Math.abs(waypoint.lng() - pt.lng());
+            const range = 0.001;
+            if (latDiff < range && lngDiff < range) {
+                return label;
+            }
         }
     }
     return '';
@@ -231,6 +232,7 @@ function convertWaypointstoLatLng(waypoints) {
      let latlngWaypoints = new Map();
      for (let pt of waypoints) {
         let waypoint = new google.maps.LatLng(pt.y, pt.x);
+        // If the given label doesn't exist in the map, add it.
         if (!latlngWaypoints.has(pt.label)) {
             latlngWaypoints.set(pt.label, [waypoint]);
         } else {
