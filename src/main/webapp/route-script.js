@@ -97,7 +97,6 @@ function createPointInfoMap(waypoints) {
 
 /** Fetches routes from the server and adds them to the DOM. */
 function createCheckBoxes(dropDowns) {
-  //fetch array of arrays from /query
   submitEl = document.createElement("input");
   submitEl.setAttribute("type", "submit");
   submitEl.setAttribute('id', 'submit-checkbox');
