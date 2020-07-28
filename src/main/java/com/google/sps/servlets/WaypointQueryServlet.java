@@ -15,8 +15,12 @@
 package com.google.sps;
 import com.google.sps.Coordinate;
 import com.google.gson.Gson;
+import com.google.appengine.api.datastore.DatastoreService;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
 import org.json.JSONObject;  
 import org.json.JSONArray;  
+import org.apache.commons.math3.util.Precision;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -29,9 +33,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;  
 import java.util.ArrayList;
-import com.google.appengine.api.datastore.DatastoreService;
-import com.google.appengine.api.datastore.DatastoreServiceFactory;
-import com.google.appengine.api.datastore.Entity;
 
 /** Servlet that handles the user's query by parsing out
   * the waypoint queries and their matching coordinates in 
@@ -111,7 +112,11 @@ public class WaypointQueryServlet extends HttpServlet {
       while (!allWaypoints.isNull(index)) {
         JSONObject observation = allWaypoints.getJSONObject(index);
         Double x = observation.getDouble("longitude");
+        x = Math.round(x * 6000.0)/6000.0;
         Double y = observation.getDouble("latitude");
+        y = Math.round(y * 6000.0)/6000.0;
+        System.out.println(x);
+        System.out.println(y);
         Coordinate featureCoordinate = new Coordinate(x, y, label);
         coordinates.add(featureCoordinate);
         index += 1;
