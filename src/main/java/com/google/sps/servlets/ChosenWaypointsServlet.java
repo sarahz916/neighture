@@ -38,31 +38,31 @@ public class ChosenWaypointsServlet extends HttpServlet {
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     // Set response content type
-    response.setContentType("application/json");
+        response.setContentType("application/json");
 
-    Enumeration paramNames = request.getParameterNames();
+        Enumeration paramNames = request.getParameterNames();
 
-    while(paramNames.hasMoreElements()) {
-    String responseString = (String)paramNames.nextElement();
-    JSONObject jsonObject = new JSONObject(responseString);
-    System.out.println(jsonObject);
-    Double x = jsonObject.getDouble("x");
-    Double y = jsonObject.getDouble("y");
-    String feature = jsonObject.getString("label");
-    Coordinate featureCoordinate = new Coordinate(x, y, feature);
-    waypoints.add(featureCoordinate);
-    }
-    String json = new Gson().toJson(waypoints);
-    response.getWriter().println(json);
+        while(paramNames.hasMoreElements()) {
+            String responseString = (String)paramNames.nextElement();
+            JSONObject jsonObject = new JSONObject(responseString);
+            System.out.println(jsonObject);
+            Double x = jsonObject.getDouble("x");
+            Double y = jsonObject.getDouble("y");
+            String feature = jsonObject.getString("label");
+            Coordinate featureCoordinate = new Coordinate(x, y, feature);
+            waypoints.add(featureCoordinate);
+        }
+        String json = new Gson().toJson(waypoints);
+        response.getWriter().println(json);
 
-    // After the map is made, we can get rid of the old waypoints
-    waypoints.clear();
+        // After the map is made, we can get rid of the old waypoints
+        waypoints.clear();
     }
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    doGet(request, response);
-    response.sendRedirect("/index.html");
+        doGet(request, response);
+        response.sendRedirect("/index.html");
     }
 
 }
