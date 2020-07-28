@@ -56,12 +56,13 @@ public class ChosenWaypointsServlet extends HttpServlet {
     response.getWriter().println(json);
 
     // After the map is made, we can get rid of the old waypoints
-    //waypoints.clear();
+    waypoints.clear();
     }
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
     doGet(request, response);
+    response.sendRedirect("/index.html");
     }
 
 }
