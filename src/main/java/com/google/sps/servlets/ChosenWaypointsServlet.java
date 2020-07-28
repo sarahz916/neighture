@@ -40,6 +40,15 @@ public class ChosenWaypointsServlet extends HttpServlet {
     // Set response content type
         response.setContentType("application/json");
 
+        String json = new Gson().toJson(waypoints);
+        response.getWriter().println(json);
+
+        // After the map is made, we can get rid of the old waypoints
+        waypoints.clear();
+    }
+
+    @Override
+    public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         Enumeration paramNames = request.getParameterNames();
 
         while(paramNames.hasMoreElements()) {
@@ -52,16 +61,6 @@ public class ChosenWaypointsServlet extends HttpServlet {
             Coordinate featureCoordinate = new Coordinate(x, y, feature);
             waypoints.add(featureCoordinate);
         }
-        String json = new Gson().toJson(waypoints);
-        response.getWriter().println(json);
-
-        // After the map is made, we can get rid of the old waypoints
-        waypoints.clear();
-    }
-
-    @Override
-    public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        doGet(request, response);
         response.sendRedirect("/index.html");
     }
 
