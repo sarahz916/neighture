@@ -19,19 +19,89 @@ window.onload = function setup() {
     initMap(chicago, 'point-map');
 }
 
-document.getElementById('form').addEventListener('submit', createPointInfoMap());
+document.getElementById('form').addEventListener('submit', setupUserChoices());
+
+async function setupUserChoices() {
+    let res = await getWaypoints();
+    let waypoints = convertWaypointstoLatLng(res);
+    createPointInfoMap(waypoints);
+    createCheckBoxes(res);
+}
 
 /**
  * Get waypoints from the servlet and map each cluster of waypoints on the map in a different marker color.
  */
-async function createPointInfoMap() {
-    var res = await getWaypoints();
-    let waypoints = convertWaypointstoLatLng(res);
-    
-    // Make oe marker for each waypoint, in a different color.
-    for (let [label, pt] of Object.entries(waypoints)) {
-        console.log(pt);
+function createPointInfoMap(waypoints) {
+    var chicago = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
+    let map = initMap(chicago, 'point-map');
+    map.setZoom(10);
+
+    // 25 fill colors for markers (max number of waypoints is 25)
+    const FILL_COLORS = ["#FF0000", '#F1C40F', '#3498DB', '#154360', '#D1F2EB', '#D7BDE2', '#DC7633', 
+                         '#145A32', '#641E16', '#5B2C6F', '#F1948A', '#FF00FF', '#C0C0C0', '#808080',
+                         '#000000', '#33FF39', '#F5D3ED', '#D3F5F4', '#7371DE', '#110EEC', '#FFAA72',
+                         '#F8F000', '#F8006D', '#AB0500', '#2DC4BB'
+                        ];
+
+    // Make one marker for each waypoint, in a different color.
+    for (let i = 0; i < Object.entries(waypoints).length; i++) {
+        let [label, cluster] = Object.entries(waypoints)[i];
+        for (let pt of cluster) {
+            let markerOpts = {
+            map: map,
+            position: pt,
+            label: label,
+            icon: {
+                path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                fillColor: FILL_COLORS[i],
+                fillOpacity: 100,
+                scale: 5,
+                strokeWeight: 2
+            }
+        };
+        let marker = new google.maps.Marker(markerOpts);
+        }
     }
+}
+
+/** Fetches routes from the server and adds them to the DOM. */
+function createCheckBoxes(dropDowns) {
+  submitEl = document.createElement("input");
+  submitEl.setAttribute("type", "submit");
+  //fetch array of arrays from /query
+  //let dropDowns = await getWaypoints();
+  const dropDownEl = document.getElementById('select-points');
+  dropDowns.forEach((set) => {
+    dropDownEl.appendChild(createCheckBoxSet(set));
+  });
+  dropDownEl.appendChild(submitEl);
+}
+
+/** Creates an element that has Name of set and checkpoints of coordinates */
+function createCheckBoxSet(set) {
+  const setName = set[0].label;
+  const returnDiv = document.createElement('div');
+  const CheckBoxTitle = document.createElement('h4');
+  CheckBoxTitle.innerText = setName;
+  returnDiv.appendChild(CheckBoxTitle);
+  set.forEach((choice)=>{
+      returnDiv.appendChild(createCheckBoxEl(choice))
+  })
+  return returnDiv;
+}
+
+/** Creates an checkbox element with label */
+function createCheckBoxEl(choice){
+    const checkBoxEl = document.createElement('input');
+    checkBoxEl.setAttribute("type", "checkbox");
+    const checkBoxValue = JSON.stringify(choice);
+    checkBoxEl.setAttribute("value", checkBoxValue);
+    const checkBoxLabel = document.createElement('label');
+    checkBoxLabel.innerText = checkBoxValue;
+    const labelAndBox = document.createElement('div');
+    labelAndBox.appendChild(checkBoxEl);
+    labelAndBox.appendChild(checkBoxLabel);
+    return labelAndBox;
 }
 
 /**
@@ -126,9 +196,13 @@ function getLabelFromLatLng(pt, waypointsWithLabels) {
  */
 function convertWaypointstoLatLng(waypoints) {
      let latlngWaypoints = {};
-     for (let pt of waypoints) {
-        let waypoint = new google.maps.LatLng(pt.y, pt.x);
-        latlngWaypoints[pt.label] = waypoint;
+     for (let cluster of waypoints) {
+         pts = [];
+         for (let pt of cluster) {
+            let waypoint = new google.maps.LatLng(pt.y, pt.x);
+            pts.push(waypoint);
+         }
+         latlngWaypoints[cluster[0].label] = pts;
     }
     return latlngWaypoints;
 }
