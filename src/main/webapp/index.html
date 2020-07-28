@@ -27,16 +27,17 @@
   </nav>
   <body>
     
+
     <div class="container-fliud">
         <div id="header">
         <div class="row">
             <h1> Neighborhood Nature </h1>
         </div>
         </div>
-        <div class="row">
-            <div class="col-1">
+        <div class="d-flex flex-row">
+            <div class="p-1">
             </div>
-            <div class="col-3">
+            <div class="p-3">
             <h3> Step 1: </h3>
             <p> 
             Enter clover, daisy, or bellflower.Can put in multiple terms with 
@@ -55,20 +56,20 @@
             </form>
 
             </div>
-            <div class="col-3">
+            <div class="p-3">
                 <h3> Step 2: </h3>
                 <p> 
                 Use checkboxes to clarify some points:
                 </p>
                 
                 <form action="/chosen-waypoints" method="POST" id="select-points">
-                
+
                 <form>
 
                 <div id="point-map" class="map"></div>
 
             </div>
-            <div class="col-4">
+            <div class="p-4">
                 <!--Displays for information after query is processed. -->
                 <h3> Step 3: </h3>
                 <p id="associated-text"> </p>
@@ -79,7 +80,7 @@
                 
                 <div id ="globalURL"></div> 
             </div>
-            <div class="col-1">
+            <div class="p-1">
             </div>
         </div>
     </div>
