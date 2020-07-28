@@ -100,6 +100,7 @@ function createCheckBoxes(dropDowns) {
   submitEl = document.createElement("input");
   submitEl.setAttribute("type", "submit");
   submitEl.setAttribute('id', 'submit-checkbox');
+
   const dropDownEl = document.getElementById('select-points');
   dropDowns.forEach((set) => {
     dropDownEl.appendChild(createCheckBoxSet(set));
