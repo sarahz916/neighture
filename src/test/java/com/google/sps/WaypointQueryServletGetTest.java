@@ -14,6 +14,7 @@
 
 package com.google.sps;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -31,16 +32,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @RunWith(JUnit4.class)
-public class WaypointQueryServletGetTestm {
-  public static final Coordinate DAISY = new Coordinate(-87.629454, 41.848653, "daisy");
-  public static final Coordinate CLOVER = new Coordinate(-87.635604, 41.855967, "clover");
-  public static final Coordinate BELLFLOWER = new Coordinate(-87.64748, 41.843539, "bellflower");
-  public static final String EXPECTED_MULTIPLE = "[{\"x\":-87.629454,\"y\":41.848653,\"label\":\"daisy\"},{\"x\":-87.635604,\"y\":41.855967,\"label\":\"clover\"},{\"x\":-87.64748,\"y\":41.843539,\"label\":\"bellflower\"}]\n";
-  public static final String EXPECTED_ONE = "[{\"x\":-87.629454,\"y\":41.848653,\"label\":\"daisy\"}]\n";
+public class WaypointQueryServletGetTest {
+  public static final ArrayList<Coordinate> DAISY = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.629454, 41.848653, "daisy")));
+  public static final ArrayList<Coordinate> CLOVER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.635604, 41.855967, "clover")));
+  public static final ArrayList<Coordinate> BELLFLOWER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.64748, 41.843539, "bellflower")));
+  public static final String EXPECTED_MULTIPLE = "[[{\"x\":-87.629454,\"y\":41.848653,\"label\":\"daisy\"}],[{\"x\":-87.635604,\"y\":41.855967,\"label\":\"clover\"}],[{\"x\":-87.64748,\"y\":41.843539,\"label\":\"bellflower\"}]]\n";
+  public static final String EXPECTED_ONE = "[[{\"x\":-87.629454,\"y\":41.848653,\"label\":\"daisy\"}]]\n";
   public static final String EXPECTED_EMPTY = "[]\n";
   
   @Mock (name = "waypoints")
-  ArrayList<Coordinate> waypointMock;
+  ArrayList<ArrayList<Coordinate>> waypointMock;
   @Mock
   HttpServletRequest request;
   @Mock
@@ -63,7 +64,7 @@ public class WaypointQueryServletGetTestm {
     writer = new PrintWriter(stringWriter);
 
     // Propagate private variable with data
-    waypointMock = new ArrayList<Coordinate>();
+    waypointMock = new ArrayList<ArrayList<Coordinate>>();
   }
 
   @Test

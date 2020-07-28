@@ -14,6 +14,7 @@
 
 package com.google.sps;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -36,17 +37,15 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(WaypointQueryServlet.class)
-public class WaypointQueryServletPostTestm {
-  public static final Coordinate DAISY = new Coordinate(-87.629454, 41.848653, "daisy");
-  public static final Coordinate CLOVER = new Coordinate(-87.635604, 41.855967, "clover");
-  public static final Coordinate BELLFLOWER = new Coordinate(-87.64748, 41.843539, "bellflower");
-  public static final String EXPECTED_MULTIPLE = "[{\"x\":-87.629454,\"y\":41.848653,\"label\":\"daisy\"},{\"x\":-87.635604,\"y\":41.855967,\"label\":\"clover\"},{\"x\":-87.64748,\"y\":41.843539,\"label\":\"bellflower\"}]\n";
-  public static final String EXPECTED_ONE = "[{\"x\":-87.629454,\"y\":41.848653,\"label\":\"daisy\"}]\n";
-  public static final String EXPECTED_EMPTY = "[]\n";
+public class WaypointQueryServletPostTest {
+  public static final ArrayList<Coordinate> DAISY = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.629454, 41.848653, "daisy")));
+  public static final ArrayList<Coordinate> CLOVER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.635604, 41.855967, "clover")));
+  public static final ArrayList<Coordinate> BELLFLOWER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.64748, 41.843539, "bellflower")));
+  public static final ArrayList<Coordinate> NOTHING = new ArrayList<Coordinate>();
   private WaypointQueryServlet servlet;
   
   @Mock (name = "waypoints")
-  ArrayList<Coordinate> waypointMock;
+  ArrayList<ArrayList<Coordinate>> waypointMock;
   @Mock
   HttpServletRequest request;
   @Mock
@@ -67,7 +66,7 @@ public class WaypointQueryServletPostTestm {
     writer = new PrintWriter(stringWriter);
 
     // Propagate private variable with data
-    waypointMock = new ArrayList<Coordinate>();
+    waypointMock = new ArrayList<ArrayList<Coordinate>>();
   }
 
   @Test // Empty input
@@ -75,13 +74,15 @@ public class WaypointQueryServletPostTestm {
     // Set the private variable values here by reflection.
     ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
     when(request.getParameter("text-input")).thenReturn("");
-    PowerMockito.doReturn(null).when(WaypointQueryServlet.class, "sendGET", anyString());
+    PowerMockito.doReturn(NOTHING).when(WaypointQueryServlet.class, "sendGET", anyString(), anyString());
     PowerMockito.doNothing().when(WaypointQueryServlet.class, "storeInputAndWaypoints", anyString(), eq(waypointMock));
 
     when(response.getWriter()).thenReturn(writer);
     servlet.doPost(request, response);
     verify(request, atLeast(1)).getParameter("text-input");
-    assertEquals(waypointMock, new ArrayList<Coordinate>());
+    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
+    comparison.add(NOTHING);
+    assertEquals(waypointMock, comparison);
   }
 
   @Test // Post a query with one waypoint description
@@ -89,7 +90,7 @@ public class WaypointQueryServletPostTestm {
     // Set the private variable values here by reflection.
     ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
     when(request.getParameter("text-input")).thenReturn("daisy");
-    PowerMockito.doReturn(DAISY).when(WaypointQueryServlet.class, "sendGET", anyString());
+    PowerMockito.doReturn(DAISY).when(WaypointQueryServlet.class, "sendGET", anyString(), anyString());
     PowerMockito.doNothing().when(WaypointQueryServlet.class, "storeInputAndWaypoints", anyString(), eq(waypointMock));
 
     when(response.getWriter()).thenReturn(writer);
@@ -97,7 +98,7 @@ public class WaypointQueryServletPostTestm {
     verify(request, atLeast(1)).getParameter("text-input");
 
     // Create answer to compare against
-    ArrayList<Coordinate> comparison = new ArrayList<Coordinate>();
+    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
     comparison.add(DAISY);
     assertEquals(waypointMock, comparison);
   }
@@ -107,7 +108,7 @@ public class WaypointQueryServletPostTestm {
     // Set the private variable values here by reflection.
     ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
     when(request.getParameter("text-input")).thenReturn("daisy;clover;bellflower");
-    ((PowerMockitoStubber) PowerMockito.doReturn(DAISY, CLOVER, BELLFLOWER)).when(WaypointQueryServlet.class, "sendGET", anyString());
+    ((PowerMockitoStubber) PowerMockito.doReturn(DAISY, CLOVER, BELLFLOWER)).when(WaypointQueryServlet.class, "sendGET", anyString(), anyString());
     PowerMockito.doNothing().when(WaypointQueryServlet.class, "storeInputAndWaypoints", anyString(), eq(waypointMock));
 
     when(response.getWriter()).thenReturn(writer);
@@ -115,7 +116,7 @@ public class WaypointQueryServletPostTestm {
     verify(request, atLeast(1)).getParameter("text-input");
 
     // Create answer to compare against
-    ArrayList<Coordinate> comparison = new ArrayList<Coordinate>();
+    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
     comparison.add(DAISY);
     comparison.add(CLOVER);
     comparison.add(BELLFLOWER);
@@ -127,7 +128,7 @@ public class WaypointQueryServletPostTestm {
     // Set the private variable values here by reflection.
     ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
     when(request.getParameter("text-input")).thenReturn("daisy;wrong");
-    ((PowerMockitoStubber) PowerMockito.doReturn(DAISY,null)).when(WaypointQueryServlet.class, "sendGET", anyString());
+    ((PowerMockitoStubber) PowerMockito.doReturn(DAISY, NOTHING)).when(WaypointQueryServlet.class, "sendGET", anyString(), anyString());
     PowerMockito.doNothing().when(WaypointQueryServlet.class, "storeInputAndWaypoints", anyString(), eq(waypointMock));
 
     when(response.getWriter()).thenReturn(writer);
@@ -135,8 +136,9 @@ public class WaypointQueryServletPostTestm {
     verify(request, atLeast(1)).getParameter("text-input");
 
     // Create answer to compare against
-    ArrayList<Coordinate> comparison = new ArrayList<Coordinate>();
+    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
     comparison.add(DAISY);
+    comparison.add(NOTHING);
     assertEquals(waypointMock, comparison);
   }
 
@@ -145,7 +147,7 @@ public class WaypointQueryServletPostTestm {
     // Set the private variable values here by reflection.
     ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
     when(request.getParameter("text-input")).thenReturn("   daisy;    clover   ");
-    ((PowerMockitoStubber) PowerMockito.doReturn(DAISY,CLOVER)).when(WaypointQueryServlet.class, "sendGET", anyString());
+    ((PowerMockitoStubber) PowerMockito.doReturn(DAISY,CLOVER)).when(WaypointQueryServlet.class, "sendGET", anyString(), anyString());
     PowerMockito.doNothing().when(WaypointQueryServlet.class, "storeInputAndWaypoints", anyString(), eq(waypointMock));
 
     when(response.getWriter()).thenReturn(writer);
@@ -153,7 +155,7 @@ public class WaypointQueryServletPostTestm {
     verify(request, atLeast(1)).getParameter("text-input");
 
     // Create answer to compare against
-    ArrayList<Coordinate> comparison = new ArrayList<Coordinate>();
+    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
     comparison.add(DAISY);
     comparison.add(CLOVER);
     assertEquals(waypointMock, comparison);
@@ -164,7 +166,7 @@ public class WaypointQueryServletPostTestm {
     // Set the private variable values here by reflection.
     ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
     when(request.getParameter("text-input")).thenReturn("DAisY");
-    ((PowerMockitoStubber) PowerMockito.doReturn(DAISY)).when(WaypointQueryServlet.class, "sendGET", anyString());
+    ((PowerMockitoStubber) PowerMockito.doReturn(DAISY)).when(WaypointQueryServlet.class, "sendGET", anyString(), anyString());
     PowerMockito.doNothing().when(WaypointQueryServlet.class, "storeInputAndWaypoints", anyString(), eq(waypointMock));
 
     when(response.getWriter()).thenReturn(writer);
@@ -172,12 +174,10 @@ public class WaypointQueryServletPostTestm {
     verify(request, atLeast(1)).getParameter("text-input");
 
     // Create answer to compare against
-    ArrayList<Coordinate> comparison = new ArrayList<Coordinate>();
+    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
     comparison.add(DAISY);
     assertEquals(waypointMock, comparison);
   }
-
-  //TODO: test one, multiple, bad input, lots of spacing, uppercase/not all lowercase
 
   @After
   public void after() {
