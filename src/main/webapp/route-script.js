@@ -19,11 +19,44 @@ window.onload = function setup() {
     initMap(chicago, 'point-map');
 }
 
-document.getElementById('form').addEventListener('submit', setupUserChoices());
+document.getElementById('text-form').addEventListener('submit', setupUserChoices());
+document.getElementById('select-points').addEventListener('submit', createMapWithWaypoints());
 
+/**
+ * Create a route and map from a waypoint entered by the user.
+ */
+async function createMapWithWaypoints() {
+    var res = await getChosenPoints();
+    console.log(res);
+    let waypoints = convertWaypointstoLatLng(res);
+    console.log(waypoints);
+    let start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
+    let end = new google.maps.LatLng(41.850033, -87.5500523); // hardcoded end; will get from user later
+    let map = initMap(start, 'route-map');
+    let directionsService = new google.maps.DirectionsService();
+    let directionsRenderer = new google.maps.DirectionsRenderer({
+        map: map
+    });
+    calcRoute(directionsService, directionsRenderer, start, end, waypoints);
+    generateURL (start, end, waypoints);
+    writeToAssociatedText();
+}
+
+/**
+ * Fetch the checked waypoints from the chosen-waypoints servlet.
+ */
+async function getChosenPoints() {
+    let res = await fetch('/chosen-waypoints');
+    let waypoints = await res.json();
+    return waypoints;
+}
+
+/**
+ * Set up the two left-hand panels of the page that allow the user to choose what they want in their route.
+ */
 async function setupUserChoices() {
     let res = await getWaypoints();
-    let waypoints = convertWaypointstoLatLng(res);
+    let waypoints = convertWaypointClusterstoLatLng(res);
     createPointInfoMap(waypoints);
     createCheckBoxes(res);
 }
@@ -67,11 +100,14 @@ function createPointInfoMap(waypoints) {
 /** Fetches routes from the server and adds them to the DOM. */
 function createCheckBoxes(dropDowns) {
   //fetch array of arrays from /query
-  //let dropDowns = await getWaypoints();
+  submitEl = document.createElement("input");
+  submitEl.setAttribute("type", "submit");
+  submitEl.setAttribute('id', 'submit-checkbox');
   const dropDownEl = document.getElementById('select-points');
   dropDowns.forEach((set) => {
     dropDownEl.appendChild(createCheckBoxSet(set));
   });
+  dropDownEl.appendChild(submitEl);
 }
 
 /** Creates an element that has Name of set and checkpoints of coordinates */
@@ -103,31 +139,14 @@ function createCheckBoxEl(choice){
 }
 
 /**
- * Create a route and map from a waypoint entered by the user.
- */
-async function createMapWithWaypoints() {
-    var res = await getWaypoints();
-    let waypoints = convertWaypointstoLatLng(res);
-    let start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
-    let end = new google.maps.LatLng(41.850033, -87.5500523); // hardcoded end; will get from user later
-    let map = initMap(start, 'route-map');
-    let directionsService = new google.maps.DirectionsService();
-    let directionsRenderer = new google.maps.DirectionsRenderer({
-        map: map
-    });
-    calcRoute(directionsService, directionsRenderer, start, end, waypoints);
-    generateURL (start, end, waypoints);
-    writeToAssociatedText();
-}
-
-/**
  * Given a DirectionsService object, a DirectionsRenderer object, start/end coordinates and a list
  * of waypoint coordinates, generate a route using the Google Maps API.
  */
 function calcRoute(directionsService, directionsRenderer, start, end, waypoints) {
     var waypointsWithLabels = waypoints;
     let waypointsData = [];
-    Object.entries(waypoints).forEach(pt => waypointsData.push({ location: pt[1] }));
+    waypoints.forEach((pts, label) => pts.forEach(pt => waypointsData.push({ location: pt })));
+    console.log(waypointsData);
     let request = {
         origin: start,
         destination: end,
@@ -176,7 +195,7 @@ async function createWaypointLegend(route, waypointsWithLabels) {
  * return the label matching the given LatLng object.
  */
 function getLabelFromLatLng(pt, waypointsWithLabels) {
-    for (let [label, waypoint] of Object.entries(waypointsWithLabels)) {
+    for (let [waypoint, label] of Object.entries(waypointsWithLabels)) {
         // Calculate the difference between the lat/long of the points and 
         // check if its within a certain range.
         let latDiff = Math.abs(waypoint.lat() - pt.lat());
@@ -190,9 +209,9 @@ function getLabelFromLatLng(pt, waypointsWithLabels) {
 }
 
 /**
- * Convert waypoints in JSON form returned by servlet to Google Maps LatLng objects.
+ * Convert waypoint clusters in JSON form returned by servlet to Google Maps LatLng objects.
  */
-function convertWaypointstoLatLng(waypoints) {
+function convertWaypointClusterstoLatLng(waypoints) {
      let latlngWaypoints = {};
      for (let cluster of waypoints) {
          pts = [];
@@ -201,6 +220,22 @@ function convertWaypointstoLatLng(waypoints) {
             pts.push(waypoint);
          }
          latlngWaypoints[cluster[0].label] = pts;
+    }
+    return latlngWaypoints;
+}
+
+/**
+ * Convert waypoints in JSON form returned by servlet to Google Maps LatLng objects.
+ */
+function convertWaypointstoLatLng(waypoints) {
+     let latlngWaypoints = new Map();
+     for (let pt of waypoints) {
+        let waypoint = new google.maps.LatLng(pt.y, pt.x);
+        if (!latlngWaypoints.has(pt.label)) {
+            latlngWaypoints.set(pt.label, [waypoint]);
+        } else {
+            latlngWaypoints.get(pt.label).push(waypoint);
+        }
     }
     return latlngWaypoints;
 }
