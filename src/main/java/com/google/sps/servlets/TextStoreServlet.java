@@ -46,7 +46,7 @@ public class TextStoreServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
      // Show all the generated routes stored. 
-    Query query = new Query("Route");
+    Query query = new Query("Route").addSort("timestamp", SortDirection.DESCENDING);
 
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     PreparedQuery results = datastore.prepare(query);
