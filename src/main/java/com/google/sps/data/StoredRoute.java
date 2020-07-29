@@ -21,9 +21,9 @@ public final class StoredRoute {
 
   private final long id;
   private final String text;
-  private final ArrayList<Coordinate> waypoints;
+  private final ArrayList<ArrayList<Coordinate>> waypoints;
 
-  public StoredRoute(long id, String text, ArrayList<Coordinate> waypoints) {
+  public StoredRoute(long id, String text, ArrayList<ArrayList<Coordinate>> waypoints) {
     this.id = id;
     this.text = text;
     this.waypoints = waypoints;

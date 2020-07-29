@@ -30,38 +30,43 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
 
-/** Servlet that returns checkbox data */
+/** Servlet that scans for which checkboxes are checked and returns the selected
+  * waypoints as Coordinates. Returns a JSON String of ArrayList<Coordinates>
+  */ 
 @WebServlet("/chosen-waypoints")
 public class ChosenWaypointsServlet extends HttpServlet {
     private ArrayList<Coordinate> waypoints = new ArrayList<Coordinate>();
     
+    /** Returns a JSON String of ArrayList<Coordinates>.
+    *   Then clears ArrayList of waypoints. 
+    */ 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     // Set response content type
         response.setContentType("application/json");
 
-        Enumeration paramNames = request.getParameterNames();
-
-        while(paramNames.hasMoreElements()) {
-            String responseString = (String)paramNames.nextElement();
-            JSONObject jsonObject = new JSONObject(responseString);
-            System.out.println(jsonObject);
-            Double x = jsonObject.getDouble("x");
-            Double y = jsonObject.getDouble("y");
-            String feature = jsonObject.getString("label");
-            Coordinate featureCoordinate = new Coordinate(x, y, feature);
-            waypoints.add(featureCoordinate);
-        }
         String json = new Gson().toJson(waypoints);
         response.getWriter().println(json);
 
         // After the map is made, we can get rid of the old waypoints
         waypoints.clear();
     }
-
+    /** Scans the checkbox form for checked coordinates and appends that to waypoints. 
+    */ 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        doGet(request, response);
+        Enumeration paramNames = request.getParameterNames();
+
+        while(paramNames.hasMoreElements()) {
+            // Name of checkbox is JSON String of Coordinate Object
+            String responseString = (String)paramNames.nextElement();
+            JSONObject jsonObject = new JSONObject(responseString);
+            Double x = jsonObject.getDouble("x");
+            Double y = jsonObject.getDouble("y");
+            String feature = jsonObject.getString("label");
+            Coordinate featureCoordinate = new Coordinate(x, y, feature);
+            waypoints.add(featureCoordinate);
+        }
         response.sendRedirect("/index.html");
     }
 
