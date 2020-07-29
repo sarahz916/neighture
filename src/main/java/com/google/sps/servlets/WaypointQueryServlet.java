@@ -87,8 +87,8 @@ public class WaypointQueryServlet extends HttpServlet {
     */ 
   private static ArrayList<Coordinate> sendGET(String feature, String label) throws IOException {
     ArrayList<Coordinate> coordinates = new ArrayList<Coordinate>();
-    //URL obj = new URL("https://neighborhood-nature.appspot.com/database?q=" + feature);
-    URL obj = new URL("http://localhost:8080/database?q=" + feature);
+    URL obj = new URL("https://neighborhood-nature.appspot.com/database?q=" + feature);
+    //URL obj = new URL("http://localhost:8080/database?q=" + feature);
     HttpURLConnection con = (HttpURLConnection) obj.openConnection();
     con.setRequestMethod("GET");
     con.setRequestProperty("User-Agent", "Mozilla/5.0");
