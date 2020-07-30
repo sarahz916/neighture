@@ -68,16 +68,16 @@ public class WaypointQueryServlet extends HttpServlet {
     String input = request.getParameter("text-input");
     //analyzeSyntaxText(input);
     // Parse out feature requests from input
-    String[] waypointQueries = input.split(";");
+    String[] waypointQueries = input.split("[;.?!]+");
     for (String waypointQuery : waypointQueries) {
       waypointQuery = waypointQuery.toLowerCase().trim();
       ArrayList<Coordinate> potentialCoordinates = new ArrayList<Coordinate>();
-      String[] featureQueries = waypointQuery.split(",");
+      String[] featureQueries = waypointQuery.split("[, ]+");
 
       for (int i = 0; i < featureQueries.length; i++) {
         String feature = featureQueries[i].toLowerCase().trim();
         // Make call to database
-        ArrayList<Coordinate> locations = sendGET(feature, waypointQuery);
+        ArrayList<Coordinate> locations = fetchFromDatabase(feature, waypointQuery);
         if (i == 0) {
           potentialCoordinates.addAll(locations);
         } else if (!locations.isEmpty()) {
@@ -139,8 +139,18 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Sends a request for the input feature to the database
     * Returns the Coordinate matching the input feature 
     */ 
-  private static ArrayList<Coordinate> sendGET(String feature, String label) throws IOException {
-    ArrayList<Coordinate> coordinates = new ArrayList<Coordinate>();
+  private static ArrayList<Coordinate> fetchFromDatabase(String feature, String label) throws IOException {
+    String json = sendGET(feature);
+    if (json != null) {
+      return jsonToCoordinates(json, label);
+    }
+    return new ArrayList<Coordinate>();
+  }
+
+  /** Sends a request for the input feature to the database and returns 
+    * a JSON of the features
+    */ 
+  private static String sendGET(String feature) throws IOException {
     URL obj = new URL("https://neighborhood-nature.appspot.com/database?q=" + feature);
     //URL obj = new URL("http://localhost:8080/database?q=" + feature);
     HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -157,14 +167,11 @@ public class WaypointQueryServlet extends HttpServlet {
         response.append(inputLine);
       }
       in.close();
-
-      // Turn the response into a Coordinate
-      String responseString = response.toString();
-      coordinates = jsonToCoordinates(responseString, label);
+      return response.toString();
     } else {
       System.out.println("GET request didn't work");
+      return null;
     }
-    return coordinates;
   }
 
   /** Turns a JSON string into an arraylist of coordinates
@@ -176,9 +183,9 @@ public class WaypointQueryServlet extends HttpServlet {
     while (!allWaypoints.isNull(index)) {
       JSONObject observation = allWaypoints.getJSONObject(index);
       Double x = observation.getDouble("longitude");
-      x = Math.round(x * 6000.0)/6000.0;
+      x = Math.round(x * 25000.0)/25000.0;
       Double y = observation.getDouble("latitude");
-      y = Math.round(y * 6000.0)/6000.0;
+      y = Math.round(y * 25000.0)/25000.0;
       Coordinate featureCoordinate = new Coordinate(x, y, label);
       coordinates.add(featureCoordinate);
       index += 1;
