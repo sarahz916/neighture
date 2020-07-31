@@ -70,6 +70,16 @@ public class WaypointQueryServlet extends HttpServlet {
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
     String input = request.getParameter("text-input");
+    getLocations(input);
+ 
+    // Redirect back to the index page.
+    response.sendRedirect("/index.html");
+  }
+
+  /** Using the input text, fetches waypoints from the database to be 
+    * used by the frontend
+    */
+  private void getLocations(String input) throws IOException {
     //analyzeSyntaxText(input);
     // Parse out feature requests from input
     ArrayList<ArrayList<String>> featureRequests = processInputText(input);
@@ -91,9 +101,6 @@ public class WaypointQueryServlet extends HttpServlet {
     }   
     // Store input text and waypoint in datastore.
     storeInputAndWaypoints(input, waypoints);
- 
-    // Redirect back to the index page.
-    response.sendRedirect("/index.html");
   }
 
   /** Parses the input string to separate out all the features
