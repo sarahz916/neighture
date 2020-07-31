@@ -72,17 +72,15 @@ public class WaypointQueryServlet extends HttpServlet {
     String input = request.getParameter("text-input");
     //analyzeSyntaxText(input);
     // Parse out feature requests from input
-    String[] waypointQueries = input.split("[;.?!+]+");
-    for (String waypointQuery : waypointQueries) {
-      waypointQuery = waypointQuery.toLowerCase().trim();
+    ArrayList<ArrayList<String>> featureRequests = processInputText(input);
+    for (ArrayList<String> featureRequest : featureRequests) {
+      String waypointQuery = featureRequest.get(0);
       ArrayList<Coordinate> potentialCoordinates = new ArrayList<Coordinate>();
-      String[] featureQueries = waypointQuery.split("[, ]+");
-
-      for (int i = 0; i < featureQueries.length; i++) {
-        String feature = featureQueries[i].toLowerCase().trim();
+      for (int i = 1; i < featureRequest.size(); i++) {
+        String feature = featureRequest.get(i);
         // Make call to database
         ArrayList<Coordinate> locations = fetchFromDatabase(feature, waypointQuery);
-        if (i == 0) {
+        if (i == 1) {
           potentialCoordinates.addAll(locations);
         } else if (!locations.isEmpty()) {
           potentialCoordinates.retainAll(locations);
@@ -96,6 +94,26 @@ public class WaypointQueryServlet extends HttpServlet {
  
     // Redirect back to the index page.
     response.sendRedirect("/index.html");
+  }
+
+  /** Parses the input string to separate out all the features
+    * For each arraylist of strings, the first element is the general waypoint query
+    */
+  private static ArrayList<ArrayList<String>> processInputText(String input) {
+    ArrayList<ArrayList<String>> allFeatures = new ArrayList<ArrayList<String>>();
+    String[] waypointQueries = input.split("[;.?!+]+");
+    for (String waypointQuery : waypointQueries) {
+      waypointQuery = waypointQuery.toLowerCase().trim();
+      ArrayList<String> featuresOneWaypoint = new ArrayList<String>();
+      featuresOneWaypoint.add(waypointQuery);
+      String[] featureQueries = waypointQuery.split("[, ]+");
+      for (int i = 0; i < featureQueries.length; i++) {
+        String feature = featureQueries[i].toLowerCase().trim();
+        featuresOneWaypoint.add(feature);
+      }
+      allFeatures.add(featuresOneWaypoint);
+    }
+    return allFeatures;
   }
 
   /** from the string {@code text}. */
