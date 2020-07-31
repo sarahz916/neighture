@@ -16,21 +16,14 @@ package com.google.sps.servlets;
 
 import java.net.HttpURLConnection;
 import java.net.URL; 
-import com.google.cloud.language.v1.Document;
-import com.google.appengine.api.datastore.FetchOptions;
-import com.google.appengine.api.users.UserService;
-import com.google.appengine.api.users.UserServiceFactory;
-import com.google.appengine.api.datastore.DatastoreService;
-import com.google.appengine.api.datastore.DatastoreServiceFactory;
-import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.PreparedQuery;
-import com.google.appengine.api.datastore.Query;
-import com.google.appengine.api.datastore.Query.SortDirection;
+import com.google.appengine.api.datastore.*;
+import com.google.appengine.api.datastore.Query.*;
 import java.io.IOException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
 import com.google.gson.Gson;
@@ -45,19 +38,27 @@ public class TextStoreServlet extends HttpServlet {
      
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-     // Show all the generated routes stored. 
-    Query query = new Query("Route").addSort("timestamp", SortDirection.DESCENDING);
+    HttpSession currentSession = request.getSession();
+    String currSessionID = currentSession.getId();
+    String textinput = getTextInputforSession(currSessionID);
+    response.setContentType("text/plain");
+    response.getWriter().println(textinput);
+  }
 
+  private String getTextInputforSession(String currSessionID){
+    //Retrieve text-input for that session.
+    Filter sesionFilter =
+    new FilterPredicate("session-id", FilterOperator.EQUAL, currSessionID);
+    // sort by most recent query for session ID
+    Query query = 
+            new Query("Route")
+                .setFilter(sesionFilter)
+                .addSort("timestamp", SortDirection.DESCENDING);
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-    PreparedQuery results = datastore.prepare(query);
-    ArrayList<String> Inputs = new ArrayList<>();
-    for (Entity entity : results.asIterable()) {
-       Inputs.add((String) entity.getProperty("text"));
-    }
-    Gson gson = new Gson();
-
-    response.setContentType("application/json");
-    response.getWriter().println(gson.toJson(Inputs));
+    List results = datastore.prepare(query).asList(FetchOptions.Builder.withLimit(1));
+    Entity MostRecentStore = (Entity) results.get(0);
+    String text = (String) MostRecentStore.getProperty("text");
+    return text;
   }
 
 }

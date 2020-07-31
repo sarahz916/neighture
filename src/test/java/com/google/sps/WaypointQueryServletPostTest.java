@@ -77,7 +77,7 @@ public class WaypointQueryServletPostTest {
 
     // Propagate private variable with data
     waypointMock = new ArrayList<ArrayList<Coordinate>>();
-    ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
+    //ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
 
     stringWriter = new StringWriter();
     writer = new PrintWriter(stringWriter);
@@ -119,13 +119,7 @@ public class WaypointQueryServletPostTest {
   @Test // Post a query with multiple waypoint descriptions
   public void testServletPostMultiple() throws Exception {
     when(request.getParameter("text-input")).thenReturn("daisy;clover;bellflower");
-<<<<<<< HEAD
-    ((PowerMockitoStubber) PowerMockito.doReturn(DAISY, CLOVER, BELLFLOWER)).when(WaypointQueryServlet.class, "sendGET", anyString(), anyString());
-    PowerMockito.doNothing().when(WaypointQueryServlet.class, "storeInputAndWaypoints", anyString(),anyString(), eq(waypointMock));
-=======
     ((PowerMockitoStubber) PowerMockito.doReturn(DAISY, CLOVER, BELLFLOWER)).when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
->>>>>>> fc5fbbde8d12b5f84708ec2ca0532f7a41568228
-
     servlet.doPost(request, response);
     verify(request, atLeast(1)).getParameter("text-input");
 

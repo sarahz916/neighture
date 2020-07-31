@@ -32,8 +32,19 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;  
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Calendar;
+import java.text.DecimalFormat;
 
+// Imports the Google Cloud client library
+import com.google.cloud.language.v1.Document;
+import com.google.cloud.language.v1.Document.Type;
+import com.google.cloud.language.v1.LanguageServiceClient;
+import com.google.cloud.language.v1.AnalyzeSyntaxRequest;
+import com.google.cloud.language.v1.AnalyzeSyntaxResponse;
+import com.google.cloud.language.v1.EncodingType;
+import com.google.cloud.language.v1.Token;
 
 /** Servlet that handles the user's query by parsing out
   * the waypoint queries and their matching coordinates in 
@@ -41,13 +52,37 @@ import java.util.*;
   */
 @WebServlet("/query")
 public class WaypointQueryServlet extends HttpServlet {
-  //ThreadSafe suggestion: make it a map with session as the key. Put it into DataStore actually as retrieve?
-  
-  //TODO FORCE START NEW SESSION
+  // The maximum number of coordinates will be an optional input by the user, with 5 as the default
+  private static int maxNumberCoordinates = 5;
+
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     HttpSession currentSession = request.getSession();
     String currSessionID = currentSession.getId();
+    String waypointsJSONstring = getQueryResultsforSession(currSessionID);
+    
+    // Return last stored waypoints
+    response.setContentType("application/json");
+    response.getWriter().println(waypointsJSONstring);
+  }
+
+  @Override
+  public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    HttpSession currentSession = request.getSession();
+    String currSessionID = currentSession.getId();
+
+    String input = request.getParameter("text-input");
+    ArrayList<List<Coordinate>> waypoints = getLocations(input);
+    // Store input text and waypoint in datastore.
+    storeInputAndWaypoints(currSessionID, input, waypoints);
+    // Redirect back to the index page.
+    response.sendRedirect("/index.html");
+  }
+
+    /** Uses the Session ID to retrieve waypoints from datastore
+    * Returns waypoints in JSON String format
+    */
+  private String getQueryResultsforSession(String currSessionID){
     //Retrieve Waypoints for that session.
     Filter sesionFilter =
     new FilterPredicate("session-id", FilterOperator.EQUAL, currSessionID);
@@ -60,55 +95,129 @@ public class WaypointQueryServlet extends HttpServlet {
     List results = datastore.prepare(query).asList(FetchOptions.Builder.withLimit(1));
     Entity MostRecentStore = (Entity) results.get(0);
     String waypointsJSONstring = (String) MostRecentStore.getProperty("waypoints");
-    //for (Entity entity : results.asIterable()) {
-      //waypointsJSONstring = (String) entity.getProperty("waypoints");
-      //break;
-    //}
-    
-    // Return last stored waypoints
-    response.setContentType("application/json");
-    //String json = new Gson().toJson(waypoints);
-    response.getWriter().println(waypointsJSONstring);
-
+    return waypointsJSONstring;
   }
 
-  @Override
-  public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    HttpSession currentSession = request.getSession();
-    String currSessionID = currentSession.getId();
-    ArrayList<ArrayList<Coordinate>> waypoints = new ArrayList<ArrayList<Coordinate>>();
-    String input = request.getParameter("text-input");
+  /** Using the input text, fetches waypoints from the database to be 
+    * used by the frontend. Returns possible waypoints. 
+    */
+  private ArrayList<List<Coordinate>> getLocations(String input) throws IOException {
+    //analyzeSyntaxText(input);
     // Parse out feature requests from input
-    String[] waypointQueries = input.split(";");
-    for (String waypointQuery : waypointQueries) {
-      waypointQuery = waypointQuery.toLowerCase().trim();
+    ArrayList<ArrayList<String>> featureRequests = processInputText(input);
+    ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();
+    for (ArrayList<String> featureRequest : featureRequests) {
+      String waypointQuery = featureRequest.get(0);
       ArrayList<Coordinate> potentialCoordinates = new ArrayList<Coordinate>();
-      String[] featureQueries = waypointQuery.split(",");
-
-      for (int i = 0; i < featureQueries.length; i++) {
-        String feature = featureQueries[i].toLowerCase().trim();
+      for (int i = 1; i < featureRequest.size(); i++) {
+        String feature = featureRequest.get(i);
         // Make call to database
-        ArrayList<Coordinate> locations = sendGET(feature, waypointQuery);
-        if (i == 0) {
+        ArrayList<Coordinate> locations = fetchFromDatabase(feature, waypointQuery);
+        if (i == 1) {
           potentialCoordinates.addAll(locations);
-        } else {
+        } else if (!locations.isEmpty()) {
           potentialCoordinates.retainAll(locations);
         }
       }
-      waypoints.add(potentialCoordinates);
+      List<Coordinate> locations = potentialCoordinates.subList(0, Math.min(maxNumberCoordinates, potentialCoordinates.size()));
+      waypoints.add(locations);
     }   
-    // Store input text and waypoint in datastore.
-    storeInputAndWaypoints(currSessionID, input, waypoints);
- 
-    // Redirect back to the index page.
-    response.sendRedirect("/index.html");
+    return waypoints;
+  }
+
+  /** Parses the input string to separate out all the features
+    * For each arraylist of strings, the first element is the general waypoint query
+    */
+  private static ArrayList<ArrayList<String>> processInputText(String input) {
+    ArrayList<ArrayList<String>> allFeatures = new ArrayList<ArrayList<String>>();
+    String[] waypointQueries = input.split("[;.?!+]+");
+    for (String waypointQuery : waypointQueries) {
+      waypointQuery = waypointQuery.toLowerCase().trim();
+      ArrayList<String> featuresOneWaypoint = new ArrayList<String>();
+      featuresOneWaypoint.add(waypointQuery);
+      String[] featureQueries = waypointQuery.split("[, ]+");
+      for (int i = 0; i < featureQueries.length; i++) {
+        String feature = featureQueries[i].toLowerCase().trim();
+        featuresOneWaypoint.add(feature);
+      }
+      allFeatures.add(featuresOneWaypoint);
+    }
+    return allFeatures;
+  }
+
+  /** from the string {@code text}. */
+  public static List<Token> analyzeSyntaxText(String text) throws IOException {
+    // [START language_syntax_text]
+    // Instantiate the Language client com.google.cloud.language.v1.LanguageServiceClient
+    try (LanguageServiceClient language = LanguageServiceClient.create()) {
+      Document doc = Document.newBuilder().setContent(text).setType(Type.PLAIN_TEXT).build();
+      AnalyzeSyntaxRequest request =
+          AnalyzeSyntaxRequest.newBuilder()
+              .setDocument(doc)
+              .setEncodingType(EncodingType.UTF16)
+              .build();
+      // analyze the syntax in the given text
+      AnalyzeSyntaxResponse response = language.analyzeSyntax(request);
+      // print the response
+      for (Token token : response.getTokensList()) {
+        System.out.printf("\tText: %s\n", token.getText().getContent());
+        System.out.printf("\tBeginOffset: %d\n", token.getText().getBeginOffset());
+        System.out.printf("Lemma: %s\n", token.getLemma());
+        System.out.printf("PartOfSpeechTag: %s\n", token.getPartOfSpeech().getTag());
+        System.out.printf("\tAspect: %s\n", token.getPartOfSpeech().getAspect());
+        System.out.printf("\tCase: %s\n", token.getPartOfSpeech().getCase());
+        System.out.printf("\tForm: %s\n", token.getPartOfSpeech().getForm());
+        System.out.printf("\tGender: %s\n", token.getPartOfSpeech().getGender());
+        System.out.printf("\tMood: %s\n", token.getPartOfSpeech().getMood());
+        System.out.printf("\tNumber: %s\n", token.getPartOfSpeech().getNumber());
+        System.out.printf("\tPerson: %s\n", token.getPartOfSpeech().getPerson());
+        System.out.printf("\tProper: %s\n", token.getPartOfSpeech().getProper());
+        System.out.printf("\tReciprocity: %s\n", token.getPartOfSpeech().getReciprocity());
+        System.out.printf("\tTense: %s\n", token.getPartOfSpeech().getTense());
+        System.out.printf("\tVoice: %s\n", token.getPartOfSpeech().getVoice());
+        System.out.println("DependencyEdge");
+        System.out.printf("\tHeadTokenIndex: %d\n", token.getDependencyEdge().getHeadTokenIndex());
+        System.out.printf("\tLabel: %s\n\n", token.getDependencyEdge().getLabel());
+      }
+      return response.getTokensList();
+    } catch (IOException e) {
+      System.out.println("Something went wrong");
+      System.out.println(e);
+      return new ArrayList<Token>();
+    }
+    // [END language_syntax_text]
   }
 
   /** Sends a request for the input feature to the database
     * Returns the Coordinate matching the input feature 
     */ 
-  private static ArrayList<Coordinate> sendGET(String feature, String label) throws IOException {
-    ArrayList<Coordinate> coordinates = new ArrayList<Coordinate>();
+  private static ArrayList<Coordinate> fetchFromDatabase(String feature, String label) throws IOException {
+    String startDate = getStartDate();
+    String json = sendGET(feature);
+    if (json != null) {
+      return jsonToCoordinates(json, label);
+    }
+    return new ArrayList<Coordinate>();
+  }
+
+  /** Returns the date a year ago in string form
+    * Note: not used in tests (mocked out)
+    */
+  private static String getStartDate() {
+    Calendar previousYear = Calendar.getInstance();
+    previousYear.add(Calendar.YEAR, -1);
+    DecimalFormat formatter = new DecimalFormat("00"); // To allow leading 0s
+    String yearAsString = formatter.format(previousYear.get(Calendar.YEAR));
+    String monthAsString = formatter.format(previousYear.get(Calendar.MONTH));
+    String dayAsString = formatter.format(previousYear.get(Calendar.DATE));
+    String dateString = yearAsString + "-" + monthAsString + "-" + dayAsString;
+    return dateString;
+  }
+
+  /** Sends a request for the input feature to the database and returns 
+    * a JSON of the features
+    */ 
+  private static String sendGET(String feature) throws IOException {
     //URL obj = new URL("https://neighborhood-nature.appspot.com/database?q=" + feature);
     URL obj = new URL("http://localhost:8080/database?q=" + feature);
     HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -119,41 +228,42 @@ public class WaypointQueryServlet extends HttpServlet {
       BufferedReader in = new BufferedReader(new InputStreamReader(
               con.getInputStream()));
       String inputLine;
-      StringBuffer response = new StringBuffer();
+      StringBuffer response = new StringBuffer(); 
 
       while ((inputLine = in.readLine()) != null) {
         response.append(inputLine);
       }
       in.close();
-
-      // Turn the response into a Coordinate
-      String responseString = response.toString();
-      System.out.println(responseString);
-      JSONArray allWaypoints = new JSONArray(responseString);
-      int index = 0;
-      while (!allWaypoints.isNull(index)) {
-        JSONObject observation = allWaypoints.getJSONObject(index);
-        Double x = observation.getDouble("longitude");
-        x = Math.round(x * 6000.0)/6000.0;
-        Double y = observation.getDouble("latitude");
-        y = Math.round(y * 6000.0)/6000.0;
-        System.out.println(x);
-        System.out.println(y);
-        Coordinate featureCoordinate = new Coordinate(x, y, label);
-        coordinates.add(featureCoordinate);
-        index += 1;
-      }
+      return response.toString();
     } else {
       System.out.println("GET request didn't work");
+      return null;
+    }
+  }
+
+  /** Turns a JSON string into an arraylist of coordinates
+    */
+  private static ArrayList<Coordinate> jsonToCoordinates(String json, String label) {
+    ArrayList<Coordinate> coordinates = new ArrayList<Coordinate>();
+    JSONArray allWaypoints = new JSONArray(json);
+    int index = 0;
+    while (!allWaypoints.isNull(index)) {
+      JSONObject observation = allWaypoints.getJSONObject(index);
+      Double x = observation.getDouble("longitude");
+      x = Math.round(x * 25000.0)/25000.0;
+      Double y = observation.getDouble("latitude");
+      y = Math.round(y * 25000.0)/25000.0;
+      Coordinate featureCoordinate = new Coordinate(x, y, label);
+      coordinates.add(featureCoordinate);
+      index += 1;
     }
     return coordinates;
   }
 
-
   /** Stores input text and waypoints in a RouteEntity in datastore.
     * Returns nothing.
     */ 
-  private static void storeInputAndWaypoints(String currSessionID, String textInput, ArrayList<ArrayList<Coordinate>> waypoints){
+  private static void storeInputAndWaypoints(String currSessionID, String textInput, ArrayList<List<Coordinate>> waypoints){
     Entity RouteEntity = new Entity("Route");
     RouteEntity.setProperty("session-id", currSessionID);
     RouteEntity.setProperty("text", textInput);
