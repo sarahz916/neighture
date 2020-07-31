@@ -28,14 +28,17 @@ import java.util.ArrayList;
 import java.util.List;
 import com.google.gson.Gson;
 
-/** Servlet that returns comment data */
+/** Servlet that returns text input data */
 @WebServlet(
     name = "TextStore",
     description = "TextStore: accesses text input",
     urlPatterns = "/text-store"
 )
 public class TextStoreServlet extends HttpServlet {
-     
+
+  /** Looks up text input from Route Entites by Session ID in datastore.
+  *   Returns text of most recent input-text from session ID. 
+  */ 
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     HttpSession currentSession = request.getSession();
@@ -44,7 +47,11 @@ public class TextStoreServlet extends HttpServlet {
     response.setContentType("text/plain");
     response.getWriter().println(textinput);
   }
-
+ 
+ 
+  /** Looks up text input from Route Entites by Session ID in datastore.
+  *   Returns text of most recent input-text from session ID. 
+  */ 
   private String getTextInputforSession(String currSessionID){
     //Retrieve text-input for that session.
     Filter sesionFilter =
