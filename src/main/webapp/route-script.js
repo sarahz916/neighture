@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+
 window.onload = function setup() {
     // Inialize and create a map with no directions on it when the page is reloaded.
     var chicago = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
@@ -95,16 +96,18 @@ function createPointInfoMap(waypoints) {
     }
 }
 
-/** Fetches routes from the server and adds them to the DOM. */
-function createCheckBoxes(dropDowns) {
+//TODO: create already checked boxes for labels with only one choice.
+/** Takes ArrayList<ArrayList<Coordinates>> and creates checkboxes grouped by labels */
+function createCheckBoxes(waypointChoices) {
   submitEl = document.createElement("input");
   submitEl.setAttribute("type", "submit");
   submitEl.setAttribute('id', 'submit-checkbox');
-  const dropDownEl = document.getElementById('select-points');
-  dropDowns.forEach((set) => {
-    dropDownEl.appendChild(createCheckBoxSet(set));
+
+  const waypointChoiceEl = document.getElementById('select-points');
+  waypointChoices.forEach((set) => {
+    waypointChoiceEl.appendChild(createCheckBoxSet(set));
   });
-  dropDownEl.appendChild(submitEl);
+  waypointChoiceEl.appendChild(submitEl);
 }
 
 /** Creates an element that has Name of set and checkpoints of coordinates */
