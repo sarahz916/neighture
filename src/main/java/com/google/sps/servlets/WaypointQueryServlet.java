@@ -53,6 +53,7 @@ import com.google.cloud.language.v1.Token;
 @WebServlet("/query")
 public class WaypointQueryServlet extends HttpServlet {
   private ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();
+  // The maximum number of coordinates will be an optional input by the user, with 5 as the default
   private static int maxNumberCoordinates = 5;
 
   @Override
