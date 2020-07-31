@@ -151,8 +151,8 @@ public class WaypointQueryServlet extends HttpServlet {
     * a JSON of the features
     */ 
   private static String sendGET(String feature) throws IOException {
-    URL obj = new URL("https://neighborhood-nature.appspot.com/database?q=" + feature);
-    //URL obj = new URL("http://localhost:8080/database?q=" + feature);
+    //URL obj = new URL("https://neighborhood-nature.appspot.com/database?q=" + feature);
+    URL obj = new URL("http://localhost:8080/database?q=" + feature);
     HttpURLConnection con = (HttpURLConnection) obj.openConnection();
     con.setRequestMethod("GET");
     con.setRequestProperty("User-Agent", "Mozilla/5.0");
