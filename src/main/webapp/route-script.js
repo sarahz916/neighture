@@ -20,7 +20,7 @@ window.onload = function setup() {
     initMap(chicago, 'point-map');
 }
 
-document.getElementById('text-form').addEventListener('submit', setupUserChoices());
+document.getElementById('text-git statform').addEventListener('submit', setupUserChoices());
 document.getElementById('select-points').addEventListener('submit', createMapWithWaypoints());
 
 /**
@@ -195,7 +195,14 @@ async function createWaypointLegend(route, waypointsWithLabels) {
     totalDuration += route.legs[route.legs.length - 1].duration.value;
     marker = String.fromCharCode(marker.charCodeAt(0) + 1);
     addNewLegendElem(legend, `${marker}: end`);
+    addDistanceTimeToLegend(legend, totalDistance, totalDuration);
+}
 
+/**
+ * Given the total distance and time of a route, convert the numbers to more useful metrics
+ * and add them to the legend to display to the user.
+ */
+function addDistanceTimeToLegend(legend, totalDistance, totalDuration) {
     // Convert totalDistance and totalDuration to more helpful metrics.
     totalDistance = Math.round(convertMetersToMiles(totalDistance) * 10) / 10;
     totalDuration = Math.round(convertSecondsToHours(totalDuration) * 10) / 10;
@@ -208,16 +215,24 @@ async function createWaypointLegend(route, waypointsWithLabels) {
     addNewLegendElem(legend, `Total Route Duration: ${totalDuration} ${durationMetric}`);
 }
 
+/**
+ * Convert a distance in meters to miles.
+ */
 function convertMetersToMiles(distance) {
     const CONVERSION = 0.000621371;
     return distance * CONVERSION;
 }
-
+/**
+ * Convert a time in seconds to hours.
+ */
 function convertSecondsToHours(time) {
     const CONVERSION = 3600;
     return time / CONVERSION;
 }
 
+/**
+ * Convert a time in hours to minutes.
+ */
 function convertHoursToMinutes(time) {
     const CONVERSION = 60;
     return time / CONVERSION;
