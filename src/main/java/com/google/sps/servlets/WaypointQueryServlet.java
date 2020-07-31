@@ -15,9 +15,8 @@
 package com.google.sps;
 import com.google.sps.Coordinate;
 import com.google.gson.Gson;
-import com.google.appengine.api.datastore.DatastoreService;
-import com.google.appengine.api.datastore.DatastoreServiceFactory;
-import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.*;
+import com.google.appengine.api.datastore.Query.*;
 import org.json.JSONObject;  
 import org.json.JSONArray;  
 import org.apache.commons.math3.util.Precision;
@@ -26,13 +25,15 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;  
-import java.util.ArrayList;
+import java.util.*;
+
 
 /** Servlet that handles the user's query by parsing out
   * the waypoint queries and their matching coordinates in 
@@ -40,21 +41,42 @@ import java.util.ArrayList;
   */
 @WebServlet("/query")
 public class WaypointQueryServlet extends HttpServlet {
-  private ArrayList<ArrayList<Coordinate>> waypoints = new ArrayList<ArrayList<Coordinate>>();
-
+  //ThreadSafe suggestion: make it a map with session as the key. Put it into DataStore actually as retrieve?
+  
+  //TODO FORCE START NEW SESSION
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    HttpSession currentSession = request.getSession();
+    String currSessionID = currentSession.getId();
+    //Retrieve Waypoints for that session.
+    Filter sesionFilter =
+    new FilterPredicate("session-id", FilterOperator.EQUAL, currSessionID);
+    // sort by most recent query for session ID
+    Query query = 
+            new Query("Route")
+                .setFilter(sesionFilter)
+                .addSort("timestamp", SortDirection.DESCENDING);
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+    List results = datastore.prepare(query).asList(FetchOptions.Builder.withLimit(1));
+    Entity MostRecentStore = (Entity) results.get(0);
+    String waypointsJSONstring = (String) MostRecentStore.getProperty("waypoints");
+    //for (Entity entity : results.asIterable()) {
+      //waypointsJSONstring = (String) entity.getProperty("waypoints");
+      //break;
+    //}
+    
     // Return last stored waypoints
     response.setContentType("application/json");
-    String json = new Gson().toJson(waypoints);
-    response.getWriter().println(json);
+    //String json = new Gson().toJson(waypoints);
+    response.getWriter().println(waypointsJSONstring);
 
-    // After the map is made, we can get rid of the old waypoints
-    waypoints.clear();
   }
 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    HttpSession currentSession = request.getSession();
+    String currSessionID = currentSession.getId();
+    ArrayList<ArrayList<Coordinate>> waypoints = new ArrayList<ArrayList<Coordinate>>();
     String input = request.getParameter("text-input");
     // Parse out feature requests from input
     String[] waypointQueries = input.split(";");
@@ -76,7 +98,7 @@ public class WaypointQueryServlet extends HttpServlet {
       waypoints.add(potentialCoordinates);
     }   
     // Store input text and waypoint in datastore.
-    storeInputAndWaypoints(input, waypoints);
+    storeInputAndWaypoints(currSessionID, input, waypoints);
  
     // Redirect back to the index page.
     response.sendRedirect("/index.html");
@@ -87,8 +109,8 @@ public class WaypointQueryServlet extends HttpServlet {
     */ 
   private static ArrayList<Coordinate> sendGET(String feature, String label) throws IOException {
     ArrayList<Coordinate> coordinates = new ArrayList<Coordinate>();
-    URL obj = new URL("https://neighborhood-nature.appspot.com/database?q=" + feature);
-    //URL obj = new URL("http://localhost:8080/database?q=" + feature);
+    //URL obj = new URL("https://neighborhood-nature.appspot.com/database?q=" + feature);
+    URL obj = new URL("http://localhost:8080/database?q=" + feature);
     HttpURLConnection con = (HttpURLConnection) obj.openConnection();
     con.setRequestMethod("GET");
     con.setRequestProperty("User-Agent", "Mozilla/5.0");
@@ -131,8 +153,9 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Stores input text and waypoints in a RouteEntity in datastore.
     * Returns nothing.
     */ 
-  private static void storeInputAndWaypoints(String textInput, ArrayList<ArrayList<Coordinate>> waypoints){
+  private static void storeInputAndWaypoints(String currSessionID, String textInput, ArrayList<ArrayList<Coordinate>> waypoints){
     Entity RouteEntity = new Entity("Route");
+    RouteEntity.setProperty("session-id", currSessionID);
     RouteEntity.setProperty("text", textInput);
     String json = new Gson().toJson(waypoints);
     long timestamp = System.currentTimeMillis();

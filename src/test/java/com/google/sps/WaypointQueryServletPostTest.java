@@ -54,11 +54,14 @@ public class WaypointQueryServletPostTest {
   StringWriter stringWriter;
   @Mock
   PrintWriter writer;
+  @Mock
+  HttpSession session;
 
   @Before
   public void before() {
     request = mock(HttpServletRequest.class);       
     response = mock(HttpServletResponse.class);  
+    session = request.getSession();
     servlet = PowerMockito.spy(new WaypointQueryServlet());
     PowerMockito.mockStatic(WaypointQueryServlet.class);
 
@@ -109,7 +112,7 @@ public class WaypointQueryServletPostTest {
     ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
     when(request.getParameter("text-input")).thenReturn("daisy;clover;bellflower");
     ((PowerMockitoStubber) PowerMockito.doReturn(DAISY, CLOVER, BELLFLOWER)).when(WaypointQueryServlet.class, "sendGET", anyString(), anyString());
-    PowerMockito.doNothing().when(WaypointQueryServlet.class, "storeInputAndWaypoints", anyString(), eq(waypointMock));
+    PowerMockito.doNothing().when(WaypointQueryServlet.class, "storeInputAndWaypoints", anyString(),anyString(), eq(waypointMock));
 
     when(response.getWriter()).thenReturn(writer);
     servlet.doPost(request, response);
