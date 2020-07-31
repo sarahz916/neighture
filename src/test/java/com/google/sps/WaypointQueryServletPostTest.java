@@ -82,6 +82,7 @@ public class WaypointQueryServletPostTest {
 
     PowerMockito.doReturn(null).when(WaypointQueryServlet.class, "analyzeSyntaxText", anyString());
     PowerMockito.doNothing().when(WaypointQueryServlet.class, "storeInputAndWaypoints", anyString(), eq(waypointMock));
+    PowerMockito.doReturn(null).when(WaypointQueryServlet.class, "getStartDate");
   }
 
   /* UNIT TESTS */

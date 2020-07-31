@@ -34,6 +34,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;  
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Calendar;
+import java.text.DecimalFormat;
 
 // Imports the Google Cloud client library
 import com.google.cloud.language.v1.Document;
@@ -50,7 +52,8 @@ import com.google.cloud.language.v1.Token;
   */
 @WebServlet("/query")
 public class WaypointQueryServlet extends HttpServlet {
-  private ArrayList<ArrayList<Coordinate>> waypoints = new ArrayList<ArrayList<Coordinate>>();
+  private ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();
+  private static int maxNumberCoordinates = 5;
 
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -68,7 +71,7 @@ public class WaypointQueryServlet extends HttpServlet {
     String input = request.getParameter("text-input");
     //analyzeSyntaxText(input);
     // Parse out feature requests from input
-    String[] waypointQueries = input.split("[;.?!]+");
+    String[] waypointQueries = input.split("[;.?!+]+");
     for (String waypointQuery : waypointQueries) {
       waypointQuery = waypointQuery.toLowerCase().trim();
       ArrayList<Coordinate> potentialCoordinates = new ArrayList<Coordinate>();
@@ -84,7 +87,8 @@ public class WaypointQueryServlet extends HttpServlet {
           potentialCoordinates.retainAll(locations);
         }
       }
-      waypoints.add(potentialCoordinates);
+      List<Coordinate> locations = potentialCoordinates.subList(0, Math.min(maxNumberCoordinates, potentialCoordinates.size()));
+      waypoints.add(locations);
     }   
     // Store input text and waypoint in datastore.
     storeInputAndWaypoints(input, waypoints);
@@ -140,6 +144,7 @@ public class WaypointQueryServlet extends HttpServlet {
     * Returns the Coordinate matching the input feature 
     */ 
   private static ArrayList<Coordinate> fetchFromDatabase(String feature, String label) throws IOException {
+    String startDate = getStartDate();
     String json = sendGET(feature);
     if (json != null) {
       return jsonToCoordinates(json, label);
@@ -147,12 +152,26 @@ public class WaypointQueryServlet extends HttpServlet {
     return new ArrayList<Coordinate>();
   }
 
+  /** Returns the date a year ago in string form
+    * Note: not used in tests (mocked out)
+    */
+  private static String getStartDate() {
+    Calendar previousYear = Calendar.getInstance();
+    previousYear.add(Calendar.YEAR, -1);
+    DecimalFormat formatter = new DecimalFormat("00"); // To allow leading 0s
+    String yearAsString = formatter.format(previousYear.get(Calendar.YEAR));
+    String monthAsString = formatter.format(previousYear.get(Calendar.MONTH));
+    String dayAsString = formatter.format(previousYear.get(Calendar.DATE));
+    String dateString = yearAsString + "-" + monthAsString + "-" + dayAsString;
+    return dateString;
+  }
+
   /** Sends a request for the input feature to the database and returns 
     * a JSON of the features
     */ 
   private static String sendGET(String feature) throws IOException {
-    URL obj = new URL("https://neighborhood-nature.appspot.com/database?q=" + feature);
-    //URL obj = new URL("http://localhost:8080/database?q=" + feature);
+    //URL obj = new URL("https://neighborhood-nature.appspot.com/database?q=" + feature);
+    URL obj = new URL("http://localhost:8080/database?q=" + feature);
     HttpURLConnection con = (HttpURLConnection) obj.openConnection();
     con.setRequestMethod("GET");
     con.setRequestProperty("User-Agent", "Mozilla/5.0");
@@ -196,7 +215,7 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Stores input text and waypoints in a RouteEntity in datastore.
     * Returns nothing.
     */ 
-  private static void storeInputAndWaypoints(String textInput, ArrayList<ArrayList<Coordinate>> waypoints){
+  private static void storeInputAndWaypoints(String textInput, ArrayList<List<Coordinate>> waypoints){
     Entity RouteEntity = new Entity("Route");
     RouteEntity.setProperty("text", textInput);
     String json = new Gson().toJson(waypoints);
