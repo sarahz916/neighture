@@ -89,23 +89,24 @@ public class WaypointQueryServlet extends HttpServlet {
     for (ArrayList<String> waypointQueries : featureRequests) {
       String waypointQuery = waypointQueries.get(0);
       ArrayList<Coordinate> potentialCoordinates = new ArrayList<Coordinate>();
-      int first = 1;
-      for (int i = first; i < waypointQueries.size(); i++) {
+      // first is the arraylist index of the first feature in the database
+      for (int first = 1, i = 1; i < waypointQueries.size(); i++, first++) {
         String featureRequest = waypointQueries.get(i);
         // Check if feature request is a number
         if (PATTERN.matcher(featureRequest).matches()) {
           maxNumberCoordinates = Integer.parseInt(featureRequest);
-          first++;
         } else if (featureRequest.equals("all") || featureRequest.equals("every")) {
           maxNumberCoordinates = Integer.MAX_VALUE;
-          first++;
         } else {
           // Make call to database
           ArrayList<Coordinate> locations = fetchFromDatabase(featureRequest, waypointQuery);
-          if (i == first) {
-            potentialCoordinates.addAll(locations);
-          } else if (!locations.isEmpty()) {
-            potentialCoordinates.retainAll(locations);
+          if (!locations.isEmpty()) { // The feature is in the database
+            if (i == first) {
+              potentialCoordinates.addAll(locations);
+              first = 0; // We don't need to worry about it anymore since at least one feature was found!
+            } else {
+              potentialCoordinates.retainAll(locations);
+            }
           }
         }
       }
