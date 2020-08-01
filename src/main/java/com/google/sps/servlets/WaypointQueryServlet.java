@@ -35,7 +35,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Calendar;
+import java.util.regex.Pattern;
 import java.text.DecimalFormat;
+import java.text.Normalizer;
 
 // Imports the Google Cloud client library
 import com.google.cloud.language.v1.Document;
@@ -54,7 +56,9 @@ import com.google.cloud.language.v1.Token;
 public class WaypointQueryServlet extends HttpServlet {
   private ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();
   // The maximum number of coordinates will be an optional input by the user, with 5 as the default
-  private static int maxNumberCoordinates = 5;
+  public static int DEFAULT_MAX_NUMBER_COORDINATES = 5;
+  private int maxNumberCoordinates = DEFAULT_MAX_NUMBER_COORDINATES;
+  private static final Pattern PATTERN = Pattern.compile("^\\d+$"); // Improves performance by avoiding compile of pattern in every method call
 
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -80,23 +84,33 @@ public class WaypointQueryServlet extends HttpServlet {
     * used by the frontend
     */
   private void getLocations(String input) throws IOException {
-    //analyzeSyntaxText(input);
     // Parse out feature requests from input
     ArrayList<ArrayList<String>> featureRequests = processInputText(input);
-    for (ArrayList<String> featureRequest : featureRequests) {
-      String waypointQuery = featureRequest.get(0);
+    for (ArrayList<String> waypointQueries : featureRequests) {
+      String waypointQuery = waypointQueries.get(0);
       ArrayList<Coordinate> potentialCoordinates = new ArrayList<Coordinate>();
-      for (int i = 1; i < featureRequest.size(); i++) {
-        String feature = featureRequest.get(i);
-        // Make call to database
-        ArrayList<Coordinate> locations = fetchFromDatabase(feature, waypointQuery);
-        if (i == 1) {
-          potentialCoordinates.addAll(locations);
-        } else if (!locations.isEmpty()) {
-          potentialCoordinates.retainAll(locations);
+      int first = 1;
+      for (int i = first; i < waypointQueries.size(); i++) {
+        String featureRequest = waypointQueries.get(i);
+        // Check if feature request is a number
+        if (PATTERN.matcher(featureRequest).matches()) {
+          maxNumberCoordinates = Integer.parseInt(featureRequest);
+          first++;
+        } else if (featureRequest.equals("all") || featureRequest.equals("every")) {
+          maxNumberCoordinates = Integer.MAX_VALUE;
+          first++;
+        } else {
+          // Make call to database
+          ArrayList<Coordinate> locations = fetchFromDatabase(featureRequest, waypointQuery);
+          if (i == first) {
+            potentialCoordinates.addAll(locations);
+          } else if (!locations.isEmpty()) {
+            potentialCoordinates.retainAll(locations);
+          }
         }
       }
       List<Coordinate> locations = potentialCoordinates.subList(0, Math.min(maxNumberCoordinates, potentialCoordinates.size()));
+      maxNumberCoordinates = DEFAULT_MAX_NUMBER_COORDINATES;
       waypoints.add(locations);
     }   
     // Store input text and waypoint in datastore.
@@ -107,13 +121,14 @@ public class WaypointQueryServlet extends HttpServlet {
     * For each arraylist of strings, the first element is the general waypoint query
     */
   private static ArrayList<ArrayList<String>> processInputText(String input) {
+    input = Normalizer.normalize(input, Normalizer.Form.NFKD);
     ArrayList<ArrayList<String>> allFeatures = new ArrayList<ArrayList<String>>();
     String[] waypointQueries = input.split("[;.?!+]+");
     for (String waypointQuery : waypointQueries) {
       waypointQuery = waypointQuery.toLowerCase().trim();
       ArrayList<String> featuresOneWaypoint = new ArrayList<String>();
       featuresOneWaypoint.add(waypointQuery);
-      String[] featureQueries = waypointQuery.split("[, ]+");
+      String[] featureQueries = waypointQuery.split("[,\\s]+");
       for (int i = 0; i < featureQueries.length; i++) {
         String feature = featureQueries[i].toLowerCase().trim();
         featuresOneWaypoint.add(feature);
@@ -121,49 +136,6 @@ public class WaypointQueryServlet extends HttpServlet {
       allFeatures.add(featuresOneWaypoint);
     }
     return allFeatures;
-  }
-
-  /** from the string {@code text}. */
-  public static List<Token> analyzeSyntaxText(String text) throws IOException {
-    // [START language_syntax_text]
-    // Instantiate the Language client com.google.cloud.language.v1.LanguageServiceClient
-    try (LanguageServiceClient language = LanguageServiceClient.create()) {
-      Document doc = Document.newBuilder().setContent(text).setType(Type.PLAIN_TEXT).build();
-      AnalyzeSyntaxRequest request =
-          AnalyzeSyntaxRequest.newBuilder()
-              .setDocument(doc)
-              .setEncodingType(EncodingType.UTF16)
-              .build();
-      // analyze the syntax in the given text
-      AnalyzeSyntaxResponse response = language.analyzeSyntax(request);
-      // print the response
-      for (Token token : response.getTokensList()) {
-        System.out.printf("\tText: %s\n", token.getText().getContent());
-        System.out.printf("\tBeginOffset: %d\n", token.getText().getBeginOffset());
-        System.out.printf("Lemma: %s\n", token.getLemma());
-        System.out.printf("PartOfSpeechTag: %s\n", token.getPartOfSpeech().getTag());
-        System.out.printf("\tAspect: %s\n", token.getPartOfSpeech().getAspect());
-        System.out.printf("\tCase: %s\n", token.getPartOfSpeech().getCase());
-        System.out.printf("\tForm: %s\n", token.getPartOfSpeech().getForm());
-        System.out.printf("\tGender: %s\n", token.getPartOfSpeech().getGender());
-        System.out.printf("\tMood: %s\n", token.getPartOfSpeech().getMood());
-        System.out.printf("\tNumber: %s\n", token.getPartOfSpeech().getNumber());
-        System.out.printf("\tPerson: %s\n", token.getPartOfSpeech().getPerson());
-        System.out.printf("\tProper: %s\n", token.getPartOfSpeech().getProper());
-        System.out.printf("\tReciprocity: %s\n", token.getPartOfSpeech().getReciprocity());
-        System.out.printf("\tTense: %s\n", token.getPartOfSpeech().getTense());
-        System.out.printf("\tVoice: %s\n", token.getPartOfSpeech().getVoice());
-        System.out.println("DependencyEdge");
-        System.out.printf("\tHeadTokenIndex: %d\n", token.getDependencyEdge().getHeadTokenIndex());
-        System.out.printf("\tLabel: %s\n\n", token.getDependencyEdge().getLabel());
-      }
-      return response.getTokensList();
-    } catch (IOException e) {
-      System.out.println("Something went wrong");
-      System.out.println(e);
-      return new ArrayList<Token>();
-    }
-    // [END language_syntax_text]
   }
 
   /** Sends a request for the input feature to the database
