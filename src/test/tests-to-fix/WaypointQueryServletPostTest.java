@@ -64,17 +64,20 @@ public class WaypointQueryServletPostTest {
   StringWriter stringWriter;
   @Mock
   PrintWriter writer;
+  @Mock
+  HttpSession session;
 
   @Before
   public void before() throws Exception {
     request = mock(HttpServletRequest.class);       
     response = mock(HttpServletResponse.class);  
+    session = request.getSession();
     servlet = PowerMockito.spy(new WaypointQueryServlet());
     PowerMockito.mockStatic(WaypointQueryServlet.class);
 
     // Propagate private variable with data
     waypointMock = new ArrayList<ArrayList<Coordinate>>();
-    ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
+    //ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
 
     stringWriter = new StringWriter();
     writer = new PrintWriter(stringWriter);
@@ -116,7 +119,6 @@ public class WaypointQueryServletPostTest {
   public void testServletPostMultiple() throws Exception {
     when(request.getParameter("text-input")).thenReturn("daisy;clover;bellflower");
     ((PowerMockitoStubber) PowerMockito.doReturn(DAISY, CLOVER, BELLFLOWER)).when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
-
     servlet.doPost(request, response);
     verify(request, atLeast(1)).getParameter("text-input");
 
