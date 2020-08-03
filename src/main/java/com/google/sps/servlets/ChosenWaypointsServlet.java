@@ -38,8 +38,8 @@ import java.util.*;
 @WebServlet("/chosen-waypoints")
 public class ChosenWaypointsServlet extends HttpServlet {
     
-    /** Returns a JSON String of ArrayList<Coordinates>.
-    *   Then clears ArrayList of waypoints. 
+    /** Goes through datastore to find most recent Direction Entity associated with SessionID.
+    *   Returns the waypoints ArrayList<Coordinates> as a JSON String in response. 
     */ 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -53,10 +53,11 @@ public class ChosenWaypointsServlet extends HttpServlet {
     }
 
     /** Scans the checkbox form for checked coordinates and appends that to waypoints. 
+    *   Waypoints if stored in Datastore as a Direction Entity associated with session ID.
     */ 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        //TODO: should we throw exceptions/error if there are no checked checkboxes
+        //TODO (zous): should we throw exceptions/error if there are no checked checkboxes
         ArrayList<Coordinate> waypoints = getWaypointsfromRequest(request);
         // Store input text and waypoint in datastore.
         HttpSession currentSession = request.getSession();
@@ -66,6 +67,9 @@ public class ChosenWaypointsServlet extends HttpServlet {
         response.sendRedirect("/index.html");
     }
 
+    /** Scans the checkbox form for checked coordinates and appends that to waypoints. 
+    *   Returns waypoints as ArrayList<Coordinates>
+    */ 
     private ArrayList<Coordinate> getWaypointsfromRequest(HttpServletRequest request){
         Enumeration paramNames = request.getParameterNames();
         ArrayList<Coordinate> waypoints = new ArrayList<Coordinate>();
@@ -97,7 +101,10 @@ public class ChosenWaypointsServlet extends HttpServlet {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         datastore.put(DirectionEntity);
     }
-    
+
+    /** Filters through  Direction Entities to find the one for currSessionID.
+    * Returns the choosen waypoints as a JSON String.
+    */     
     private String getQueryResultsforSession(String currSessionID){
         //Retrieve Waypoints for that session.
         Filter sesionFilter =
