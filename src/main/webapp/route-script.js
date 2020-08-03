@@ -81,15 +81,15 @@ function createPointInfoMap(waypoints) {
         let letter = 'A';
         for (let pt of cluster) {
             let markerOpts = {
-            map: map,
-            position: pt,
-            label: letter,
-            icon: {
-                path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-                fillColor: FILL_COLORS[i % MAX_WAYPOINTS],
-                fillOpacity: 100,
-                scale: 5,
-                strokeWeight: 2
+                map: map,
+                position: pt,
+                label: letter,
+                icon: {
+                    path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                    fillColor: FILL_COLORS[i % MAX_WAYPOINTS],
+                    fillOpacity: 100,
+                    scale: 5,
+                    strokeWeight: 2
                 }
             };
             let marker = new google.maps.Marker(markerOpts);
@@ -121,8 +121,11 @@ function createCheckBoxSet(set, color) {
   const colorbox = createColorBoxElem(color);
   returnDiv.appendChild(CheckBoxTitle);
   returnDiv.appendChild(colorbox);
+
+  let letter = 'A';
   set.forEach((choice)=>{
-      returnDiv.appendChild(createCheckBoxEl(choice))
+      returnDiv.appendChild(createCheckBoxEl(choice, letter))
+      letter = String.fromCharCode(letter.charCodeAt(0) + 1); // update the marker letter label to the next letter
   })
   return returnDiv;
 }
@@ -139,14 +142,14 @@ function createColorBoxElem(color) {
 }
 
 /** Creates an checkbox element with label */
-function createCheckBoxEl(choice){
+function createCheckBoxEl(choice, label){
     const checkBoxEl = document.createElement('input');
     checkBoxEl.setAttribute("type", "checkbox");
     const checkBoxValue = JSON.stringify(choice);
     checkBoxEl.setAttribute("value", checkBoxValue);
     checkBoxEl.setAttribute("name", checkBoxValue);
     const checkBoxLabel = document.createElement('label');
-    checkBoxLabel.innerText = checkBoxValue;
+    checkBoxLabel.innerText = label;
     const labelAndBox = document.createElement('div');
     labelAndBox.appendChild(checkBoxEl);
     labelAndBox.appendChild(checkBoxLabel);
