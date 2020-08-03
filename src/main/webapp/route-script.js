@@ -12,6 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 25 fill colors for markers (max number of waypoints is 25)
+const FILL_COLORS = ["#FF0000", '#F1C40F', '#3498DB', '#154360', '#D1F2EB', '#D7BDE2', '#DC7633', 
+                    '#145A32', '#641E16', '#5B2C6F', '#F1948A', '#FF00FF', '#C0C0C0', '#808080',
+                    '#000000', '#33FF39', '#F5D3ED', '#D3F5F4', '#7371DE', '#110EEC', '#FFAA72',
+                    '#F8F000', '#F8006D', '#AB0500', '#2DC4BB'
+                    ];
+const MAX_WAYPOINTS = 25;
 
 window.onload = function setup() {
     // Inialize and create a map with no directions on it when the page is reloaded.
@@ -68,13 +75,6 @@ function createPointInfoMap(waypoints) {
     let map = initMap(chicago, 'point-map');
     map.setZoom(10);
 
-    // 25 fill colors for markers (max number of waypoints is 25)
-    const FILL_COLORS = ["#FF0000", '#F1C40F', '#3498DB', '#154360', '#D1F2EB', '#D7BDE2', '#DC7633', 
-                         '#145A32', '#641E16', '#5B2C6F', '#F1948A', '#FF00FF', '#C0C0C0', '#808080',
-                         '#000000', '#33FF39', '#F5D3ED', '#D3F5F4', '#7371DE', '#110EEC', '#FFAA72',
-                         '#F8F000', '#F8006D', '#AB0500', '#2DC4BB'
-                        ];
-
     // Make one marker for each waypoint, in a different color.
     for (let i = 0; i < Object.entries(waypoints).length; i++) {
         let [label, cluster] = Object.entries(waypoints)[i];
@@ -85,7 +85,7 @@ function createPointInfoMap(waypoints) {
             label: label,
             icon: {
                 path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-                fillColor: FILL_COLORS[i],
+                fillColor: FILL_COLORS[i % MAX_WAYPOINTS],
                 fillOpacity: 100,
                 scale: 5,
                 strokeWeight: 2
@@ -104,23 +104,39 @@ function createCheckBoxes(waypointChoices) {
   submitEl.setAttribute('id', 'submit-checkbox');
 
   const waypointChoiceEl = document.getElementById('select-points');
-  waypointChoices.forEach((set) => {
-    waypointChoiceEl.appendChild(createCheckBoxSet(set));
-  });
+//   waypointChoices.forEach((set) => {
+//     waypointChoiceEl.appendChild(createCheckBoxSet(set));
+//   });
+  for (let i = 0; i < waypointChoices.length; i++) {
+      waypointChoiceEl.appendChild(createCheckBoxSet(waypointChoices[i], FILL_COLORS[i % MAX_WAYPOINTS]));
+  }
   waypointChoiceEl.appendChild(submitEl);
 }
 
 /** Creates an element that has Name of set and checkpoints of coordinates */
-function createCheckBoxSet(set) {
+function createCheckBoxSet(set, color) {
   const setName = set[0].label;
   const returnDiv = document.createElement('div');
   const CheckBoxTitle = document.createElement('h4');
   CheckBoxTitle.innerText = setName;
+  const colorbox = createColorBoxElem(color);
   returnDiv.appendChild(CheckBoxTitle);
+  returnDiv.appendChild(colorbox);
   set.forEach((choice)=>{
       returnDiv.appendChild(createCheckBoxEl(choice))
   })
   return returnDiv;
+}
+
+/**
+ * Create an box-shaped element filled with the given color.
+ */
+function createColorBoxElem(color) {
+  const colorbox = document.createElement('div');
+  colorbox.style.height = '20px';
+  colorbox.style.width = '20px';
+  colorbox.style.backgroundColor = color;
+  return colorbox;
 }
 
 /** Creates an checkbox element with label */
