@@ -78,20 +78,22 @@ function createPointInfoMap(waypoints) {
     // Make one marker for each waypoint, in a different color.
     for (let i = 0; i < Object.entries(waypoints).length; i++) {
         let [label, cluster] = Object.entries(waypoints)[i];
+        let letter = 'A';
         for (let pt of cluster) {
             let markerOpts = {
             map: map,
             position: pt,
-            label: label,
+            label: letter,
             icon: {
                 path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
                 fillColor: FILL_COLORS[i % MAX_WAYPOINTS],
                 fillOpacity: 100,
                 scale: 5,
                 strokeWeight: 2
-            }
-        };
-        let marker = new google.maps.Marker(markerOpts);
+                }
+            };
+            let marker = new google.maps.Marker(markerOpts);
+            letter = String.fromCharCode(letter.charCodeAt(0) + 1); // update the marker letter label to the next letter
         }
     }
 }
@@ -104,9 +106,6 @@ function createCheckBoxes(waypointChoices) {
   submitEl.setAttribute('id', 'submit-checkbox');
 
   const waypointChoiceEl = document.getElementById('select-points');
-//   waypointChoices.forEach((set) => {
-//     waypointChoiceEl.appendChild(createCheckBoxSet(set));
-//   });
   for (let i = 0; i < waypointChoices.length; i++) {
       waypointChoiceEl.appendChild(createCheckBoxSet(waypointChoices[i], FILL_COLORS[i % MAX_WAYPOINTS]));
   }
