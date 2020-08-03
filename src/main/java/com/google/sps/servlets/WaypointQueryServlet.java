@@ -15,9 +15,8 @@
 package com.google.sps;
 import com.google.sps.Coordinate;
 import com.google.gson.Gson;
-import com.google.appengine.api.datastore.DatastoreService;
-import com.google.appengine.api.datastore.DatastoreServiceFactory;
-import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.*;
+import com.google.appengine.api.datastore.Query.*;
 import org.json.JSONObject;  
 import org.json.JSONArray;  
 import org.apache.commons.math3.util.Precision;
@@ -26,6 +25,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -54,7 +54,6 @@ import com.google.cloud.language.v1.Token;
   */
 @WebServlet("/query")
 public class WaypointQueryServlet extends HttpServlet {
-  private ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();
   // The maximum number of coordinates will be an optional input by the user, with 5 as the default
   public static int DEFAULT_MAX_NUMBER_COORDINATES = 5;
   private int maxNumberCoordinates = DEFAULT_MAX_NUMBER_COORDINATES;
@@ -62,30 +61,55 @@ public class WaypointQueryServlet extends HttpServlet {
 
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    HttpSession currentSession = request.getSession();
+    String currSessionID = currentSession.getId();
+    String waypointsJSONstring = getQueryResultsforSession(currSessionID);
+    
     // Return last stored waypoints
     response.setContentType("application/json");
-    String json = new Gson().toJson(waypoints);
-    response.getWriter().println(json);
-
-    // After the map is made, we can get rid of the old waypoints
-    waypoints.clear();
+    response.getWriter().println(waypointsJSONstring);
   }
 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    HttpSession currentSession = request.getSession();
+    String currSessionID = currentSession.getId();
+
     String input = request.getParameter("text-input");
-    getLocations(input);
- 
+    ArrayList<List<Coordinate>> waypoints = getLocations(input);
+    // Store input text and waypoint in datastore so same session ID can retrieve later.
+    storeInputAndWaypoints(currSessionID, input, waypoints);
     // Redirect back to the index page.
     response.sendRedirect("/index.html");
   }
 
+    /** Uses the Session ID to retrieve waypoints from datastore
+    * Returns waypoints in JSON String format
+    */
+  private String getQueryResultsforSession(String currSessionID){
+    //Retrieve Waypoints for that session.
+    Filter sesionFilter =
+    new FilterPredicate("session-id", FilterOperator.EQUAL, currSessionID);
+    // sort by most recent query for session ID
+    Query query = 
+            new Query("Route")
+                .setFilter(sesionFilter)
+                .addSort("timestamp", SortDirection.DESCENDING);
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+    List results = datastore.prepare(query).asList(FetchOptions.Builder.withLimit(1));
+    Entity MostRecentStore = (Entity) results.get(0);
+    String waypointsJSONstring = (String) MostRecentStore.getProperty("waypoints");
+    return waypointsJSONstring;
+  }
+
   /** Using the input text, fetches waypoints from the database to be 
-    * used by the frontend
+    * used by the frontend. Returns possible waypoints. 
     */
   private void getLocations(String input) throws IOException {
     // Parse out feature requests from input
     ArrayList<ArrayList<String>> featureRequests = processInputText(input);
+    ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();    
+
     for (ArrayList<String> waypointQueries : featureRequests) {
       String waypointQuery = waypointQueries.get(0);
       ArrayList<Coordinate> potentialCoordinates = new ArrayList<Coordinate>();
@@ -114,8 +138,7 @@ public class WaypointQueryServlet extends HttpServlet {
       maxNumberCoordinates = DEFAULT_MAX_NUMBER_COORDINATES;
       waypoints.add(locations);
     }   
-    // Store input text and waypoint in datastore.
-    storeInputAndWaypoints(input, waypoints);
+    return waypoints;
   }
 
   /** Parses the input string to separate out all the features
@@ -214,8 +237,9 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Stores input text and waypoints in a RouteEntity in datastore.
     * Returns nothing.
     */ 
-  private static void storeInputAndWaypoints(String textInput, ArrayList<List<Coordinate>> waypoints){
+  private static void storeInputAndWaypoints(String currSessionID, String textInput, ArrayList<List<Coordinate>> waypoints){
     Entity RouteEntity = new Entity("Route");
+    RouteEntity.setProperty("session-id", currSessionID);
     RouteEntity.setProperty("text", textInput);
     String json = new Gson().toJson(waypoints);
     long timestamp = System.currentTimeMillis();

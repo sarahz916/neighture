@@ -31,6 +31,7 @@ import org.junit.runners.JUnit4;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+//Check DataStore instead of waypoints
 @RunWith(JUnit4.class)
 public class WaypointQueryServletGetTest {
   public static final ArrayList<Coordinate> DAISY = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.629454, 41.848653, "daisy")));
