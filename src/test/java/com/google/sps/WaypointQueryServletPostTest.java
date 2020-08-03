@@ -80,7 +80,6 @@ public class WaypointQueryServletPostTest {
     writer = new PrintWriter(stringWriter);
     when(response.getWriter()).thenReturn(writer);
 
-    PowerMockito.doReturn(null).when(WaypointQueryServlet.class, "analyzeSyntaxText", anyString());
     PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "processInputText", anyString());
     PowerMockito.doNothing().when(WaypointQueryServlet.class, "storeInputAndWaypoints", anyString(), eq(waypointMock));
     PowerMockito.doReturn(null).when(WaypointQueryServlet.class, "getStartDate");
