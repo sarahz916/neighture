@@ -15,9 +15,11 @@
 package com.google.sps;
 import com.google.sps.Coordinate;
 import com.google.gson.Gson;
-import org.json.JSONObject;
 import com.google.appengine.api.datastore.*;
-import com.google.appengine.api.datastore.Query.*;  
+import com.google.appengine.api.datastore.Query.*;
+import org.json.JSONObject;  
+import org.json.JSONArray;  
+import org.apache.commons.math3.util.Precision;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -30,19 +32,35 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;  
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Calendar;
+import java.util.regex.Pattern;
+import java.text.DecimalFormat;
+import java.text.Normalizer;
 
-/** Servlet that scans for which checkboxes are checked and returns the selected
-  * waypoints as Coordinates. Returns a JSON String of ArrayList<Coordinates>
-  */ 
-@WebServlet("/chosen-waypoints")
-public class ChosenWaypointsServlet extends HttpServlet {
-    
-    /** Goes through datastore to find most recent Direction Entity associated with SessionID.
-    *   Returns the waypoints ArrayList<Coordinates> as a JSON String in response. 
-    */ 
-    @Override
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+// Imports the Google Cloud client library
+import com.google.cloud.language.v1.Document;
+import com.google.cloud.language.v1.Document.Type;
+import com.google.cloud.language.v1.LanguageServiceClient;
+import com.google.cloud.language.v1.AnalyzeSyntaxRequest;
+import com.google.cloud.language.v1.AnalyzeSyntaxResponse;
+import com.google.cloud.language.v1.EncodingType;
+import com.google.cloud.language.v1.Token;
+
+/** Servlet that handles the user's query by parsing out
+  * the waypoint queries and their matching coordinates in 
+  * the database.
+  */
+@WebServlet("/query")
+public class WaypointQueryServlet extends HttpServlet {
+  // The maximum number of coordinates will be an optional input by the user, with 5 as the default
+  public static int DEFAULT_MAX_NUMBER_COORDINATES = 5;
+  private int maxNumberCoordinates = DEFAULT_MAX_NUMBER_COORDINATES;
+  private static final Pattern PATTERN = Pattern.compile("^\\d+$"); // Improves performance by avoiding compile of pattern in every method call
+
+  @Override
+  public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     HttpSession currentSession = request.getSession();
     String currSessionID = currentSession.getId();
     String waypointsJSONstring = getQueryResultsforSession(currSessionID);
@@ -50,76 +68,185 @@ public class ChosenWaypointsServlet extends HttpServlet {
     // Return last stored waypoints
     response.setContentType("application/json");
     response.getWriter().println(waypointsJSONstring);
-    }
+  }
 
-    /** Scans the checkbox form for checked coordinates and appends that to waypoints. 
-    *   Waypoints if stored in Datastore as a Direction Entity associated with session ID.
-    */ 
-    @Override
-    public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        //TODO (zous): should we throw exceptions/error if there are no checked checkboxes
-        ArrayList<Coordinate> waypoints = getWaypointsfromRequest(request);
-        // Store input text and waypoint in datastore.
-        HttpSession currentSession = request.getSession();
-        String currSessionID = currentSession.getId();
-        storeInputAndWaypoints(currSessionID, waypoints);
-        // Redirect back to the index page.
-        response.sendRedirect("/index.html");
-    }
+  @Override
+  public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    HttpSession currentSession = request.getSession();
+    String currSessionID = currentSession.getId();
 
-    /** Scans the checkbox form for checked coordinates and appends that to waypoints. 
-    *   Returns waypoints as ArrayList<Coordinates>
-    */ 
-    private ArrayList<Coordinate> getWaypointsfromRequest(HttpServletRequest request){
-        Enumeration paramNames = request.getParameterNames();
-        ArrayList<Coordinate> waypoints = new ArrayList<Coordinate>();
-        while(paramNames.hasMoreElements()) {
-            // Name of checkbox is JSON String of Coordinate Object
-            String responseString = (String)paramNames.nextElement();
-            JSONObject jsonObject = new JSONObject(responseString);
-            Double x = jsonObject.getDouble("x");
-            Double y = jsonObject.getDouble("y");
-            String feature = jsonObject.getString("label");
-            Coordinate featureCoordinate = new Coordinate(x, y, feature);
-            waypoints.add(featureCoordinate);
+    String input = request.getParameter("text-input");
+    ArrayList<List<Coordinate>> waypoints = getLocations(input);
+    // Store input text and waypoint in datastore so same session ID can retrieve later.
+    storeInputAndWaypoints(currSessionID, input, waypoints);
+    // Redirect back to the index page.
+    response.sendRedirect("/index.html");
+  }
+
+    /** Uses the Session ID to retrieve waypoints from datastore
+    * Returns waypoints in JSON String format
+    */
+  private String getQueryResultsforSession(String currSessionID){
+    //Retrieve Waypoints for that session.
+    Filter sesionFilter =
+    new FilterPredicate("session-id", FilterOperator.EQUAL, currSessionID);
+    // sort by most recent query for session ID
+    Query query = 
+            new Query("Route")
+                .setFilter(sesionFilter)
+                .addSort("timestamp", SortDirection.DESCENDING);
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+    List results = datastore.prepare(query).asList(FetchOptions.Builder.withLimit(1));
+    Entity MostRecentStore = (Entity) results.get(0);
+    String waypointsJSONstring = (String) MostRecentStore.getProperty("waypoints");
+    return waypointsJSONstring;
+  }
+
+  /** Using the input text, fetches waypoints from the database to be 
+    * used by the frontend. Returns possible waypoints. 
+    */
+  private void getLocations(String input) throws IOException {
+    // Parse out feature requests from input
+    ArrayList<ArrayList<String>> featureRequests = processInputText(input);
+    ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();    
+    for (ArrayList<String> waypointQueries : featureRequests) {
+      String waypointQuery = waypointQueries.get(0);
+      ArrayList<Coordinate> potentialCoordinates = new ArrayList<Coordinate>();
+      // first is the arraylist index of the first feature in the database
+      for (int first = 1, i = 1; i < waypointQueries.size(); i++, first++) {
+        String featureRequest = waypointQueries.get(i);
+        // Check if feature request is a number
+        if (PATTERN.matcher(featureRequest).matches()) {
+          maxNumberCoordinates = Integer.parseInt(featureRequest);
+        } else if (featureRequest.equals("all") || featureRequest.equals("every")) {
+          maxNumberCoordinates = Integer.MAX_VALUE;
+        } else {
+          // Make call to database
+          ArrayList<Coordinate> locations = fetchFromDatabase(featureRequest, waypointQuery);
+          if (!locations.isEmpty()) { // The feature is in the database
+            if (i == first) {
+              potentialCoordinates.addAll(locations);
+              first = 0; // We don't need to worry about it anymore since at least one feature was found!
+            } else {
+              potentialCoordinates.retainAll(locations);
+            }
+          }
         }
-        return waypoints;
-    }
+      }
+      List<Coordinate> locations = potentialCoordinates.subList(0, Math.min(maxNumberCoordinates, potentialCoordinates.size()));
+      maxNumberCoordinates = DEFAULT_MAX_NUMBER_COORDINATES;
+      waypoints.add(locations);
+    }   
+    return waypoints;
+  }
 
-     /** Stores input text and waypoints in a DirectionEntity in datastore.
+  /** Parses the input string to separate out all the features
+    * For each arraylist of strings, the first element is the general waypoint query
+    */
+  private static ArrayList<ArrayList<String>> processInputText(String input) {
+    input = Normalizer.normalize(input, Normalizer.Form.NFKD);
+    ArrayList<ArrayList<String>> allFeatures = new ArrayList<ArrayList<String>>();
+    String[] waypointQueries = input.split("[;.?!+]+");
+    for (String waypointQuery : waypointQueries) {
+      waypointQuery = waypointQuery.toLowerCase().trim();
+      ArrayList<String> featuresOneWaypoint = new ArrayList<String>();
+      featuresOneWaypoint.add(waypointQuery);
+      String[] featureQueries = waypointQuery.split("[,\\s]+");
+      for (int i = 0; i < featureQueries.length; i++) {
+        String feature = featureQueries[i].toLowerCase().trim();
+        featuresOneWaypoint.add(feature);
+      }
+      allFeatures.add(featuresOneWaypoint);
+    }
+    return allFeatures;
+  }
+
+  /** Sends a request for the input feature to the database
+    * Returns the Coordinate matching the input feature 
+    */ 
+  private static ArrayList<Coordinate> fetchFromDatabase(String feature, String label) throws IOException {
+    String startDate = getStartDate();
+    String json = sendGET(feature);
+    if (json != null) {
+      return jsonToCoordinates(json, label);
+    }
+    return new ArrayList<Coordinate>();
+  }
+
+  /** Returns the date a year ago in string form
+    * Note: not used in tests (mocked out)
+    */
+  private static String getStartDate() {
+    Calendar previousYear = Calendar.getInstance();
+    previousYear.add(Calendar.YEAR, -1);
+    DecimalFormat formatter = new DecimalFormat("00"); // To allow leading 0s
+    String yearAsString = formatter.format(previousYear.get(Calendar.YEAR));
+    String monthAsString = formatter.format(previousYear.get(Calendar.MONTH));
+    String dayAsString = formatter.format(previousYear.get(Calendar.DATE));
+    String dateString = yearAsString + "-" + monthAsString + "-" + dayAsString;
+    return dateString;
+  }
+
+  /** Sends a request for the input feature to the database and returns 
+    * a JSON of the features
+    */ 
+  private static String sendGET(String feature) throws IOException {
+    //URL obj = new URL("https://neighborhood-nature.appspot.com/database?q=" + feature);
+    URL obj = new URL("http://localhost:8080/database?q=" + feature);
+    HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+    con.setRequestMethod("GET");
+    con.setRequestProperty("User-Agent", "Mozilla/5.0");
+    int responseCode = con.getResponseCode();
+    if (responseCode == HttpURLConnection.HTTP_OK) { // success
+      BufferedReader in = new BufferedReader(new InputStreamReader(
+              con.getInputStream()));
+      String inputLine;
+      StringBuffer response = new StringBuffer(); 
+
+      while ((inputLine = in.readLine()) != null) {
+        response.append(inputLine);
+      }
+      in.close();
+      return response.toString();
+    } else {
+      System.out.println("GET request didn't work");
+      return null;
+    }
+  }
+
+  /** Turns a JSON string into an arraylist of coordinates
+    */
+  private static ArrayList<Coordinate> jsonToCoordinates(String json, String label) {
+    ArrayList<Coordinate> coordinates = new ArrayList<Coordinate>();
+    JSONArray allWaypoints = new JSONArray(json);
+    int index = 0;
+    while (!allWaypoints.isNull(index)) {
+      JSONObject observation = allWaypoints.getJSONObject(index);
+      Double x = observation.getDouble("longitude");
+      x = Math.round(x * 25000.0)/25000.0;
+      Double y = observation.getDouble("latitude");
+      y = Math.round(y * 25000.0)/25000.0;
+      Coordinate featureCoordinate = new Coordinate(x, y, label);
+      coordinates.add(featureCoordinate);
+      index += 1;
+    }
+    return coordinates;
+  }
+
+  /** Stores input text and waypoints in a RouteEntity in datastore.
     * Returns nothing.
     */ 
-    private static void storeInputAndWaypoints(String currSessionID, ArrayList<Coordinate> waypoints){
-        Entity DirectionEntity = new Entity("Direction");
-        DirectionEntity.setProperty("session-id", currSessionID);
-        String json = new Gson().toJson(waypoints);
-        long timestamp = System.currentTimeMillis();
-        DirectionEntity.setProperty("timestamp", timestamp);
-        // Store as a json string because Coordinates are unsupported.
-        DirectionEntity.setProperty("waypoints", json);
-        // Store Direction.
-        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-        datastore.put(DirectionEntity);
-    }
-
-    /** Filters through  Direction Entities to find the one for currSessionID.
-    * Returns the choosen waypoints as a JSON String.
-    */     
-    private String getQueryResultsforSession(String currSessionID){
-        //Retrieve Waypoints for that session.
-        Filter sesionFilter =
-        new FilterPredicate("session-id", FilterOperator.EQUAL, currSessionID);
-        // sort by most recent query for session ID
-        Query query = 
-                new Query("Direction")
-                    .setFilter(sesionFilter)
-                    .addSort("timestamp", SortDirection.DESCENDING);
-        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-        List results = datastore.prepare(query).asList(FetchOptions.Builder.withLimit(1));
-        Entity MostRecentStore = (Entity) results.get(0);
-        String waypointsJSONstring = (String) MostRecentStore.getProperty("waypoints");
-        return waypointsJSONstring;
-    }
-
+  private static void storeInputAndWaypoints(String currSessionID, String textInput, ArrayList<List<Coordinate>> waypoints){
+    Entity RouteEntity = new Entity("Route");
+    RouteEntity.setProperty("session-id", currSessionID);
+    RouteEntity.setProperty("text", textInput);
+    String json = new Gson().toJson(waypoints);
+    long timestamp = System.currentTimeMillis();
+    RouteEntity.setProperty("timestamp", timestamp);
+    // Store as a json string because Coordinates are unsupported.
+    RouteEntity.setProperty("waypoints", json);
+    // Store Route.
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+    datastore.put(RouteEntity);
+  }
 }
-
