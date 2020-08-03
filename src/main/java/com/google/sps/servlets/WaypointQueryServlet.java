@@ -147,11 +147,13 @@ public class WaypointQueryServlet extends HttpServlet {
   private static ArrayList<ArrayList<String>> processInputText(String input) {
     input = Normalizer.normalize(input, Normalizer.Form.NFKD);
     ArrayList<ArrayList<String>> allFeatures = new ArrayList<ArrayList<String>>();
-    String[] waypointQueries = input.split("[;.?!+]+");
+    // Separate on newlines and punctuation: semicolon, period, question mark, exclamation mark, plus sign
+    String[] waypointQueries = input.split("[;.?!+\\n]+");
     for (String waypointQuery : waypointQueries) {
       waypointQuery = waypointQuery.toLowerCase().trim();
       ArrayList<String> featuresOneWaypoint = new ArrayList<String>();
       featuresOneWaypoint.add(waypointQuery);
+      // Separate on commas and spaces
       String[] featureQueries = waypointQuery.split("[,\\s]+");
       for (int i = 0; i < featureQueries.length; i++) {
         String feature = featureQueries[i].toLowerCase().trim();
