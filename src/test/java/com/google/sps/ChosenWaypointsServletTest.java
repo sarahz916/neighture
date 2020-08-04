@@ -23,6 +23,12 @@ import javax.servlet.http.*;
 import org.apache.commons.io.FileUtils;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.google.appengine.api.datastore.DatastoreService;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.Key;
+import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.datastore.Query;
 import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 
@@ -83,7 +89,7 @@ public class ChosenWaypointsServletTest {
     request = mock(HttpServletRequest.class);       
     response = mock(HttpServletResponse.class); 
     session = mock(HttpSession.class); 
-    servlet = PowerMockito.spy(new ChosenWaypointsServlet());
+    servlet = new ChosenWaypointsServlet();
     PowerMockito.mockStatic(ChosenWaypointsServlet.class);
     // Propagate private variable with data
     waypointMock = new ArrayList<Coordinate>();
@@ -92,40 +98,20 @@ public class ChosenWaypointsServletTest {
 
     stringWriter = new StringWriter();
     writer = new PrintWriter(stringWriter);
-    when(response.getWriter()).thenReturn(writer);
+    
 
     String SessionID = "testsession";
     PowerMockito.when(ChosenWaypointsServlet.class, "getSession", request).thenReturn(SessionID);
-    helper.setUp();
   }
 
-  /* UNIT TESTS */
-  @Test // Empty input
-  public void testServletPostEmpty() throws Exception {
-    when(request.getParameterNames()).thenReturn(Collections.enumeration(chosenWaypointsMock));
-    servlet.doPost(request, response);
-    verify(request, atLeast(1)).getParameterNames();
-    servlet.doGet(request, response);
-    assertEquals(EXPECTED_EMPTY, stringWriter.toString());
-  }
-
-  @Test // Post a query with one waypoint description
-  public void testServletPostOne() throws Exception {
+  @Test 
+  public void getWayPointsfromRequestTest(){
     chosenWaypointsMock.add(JSON_STRING_DAISY);
     when(request.getParameterNames()).thenReturn(Collections.enumeration(chosenWaypointsMock));
-    servlet.doPost(request, response);
-    verify(request, atLeast(1)).getParameterNames();
-
-    // Create answer to compare against
+    ArrayList<Coordinate> actual = servlet.getWaypointsfromRequest(request);
     ArrayList<Coordinate> comparison = new ArrayList<Coordinate>();
     comparison.add(DAISY);
-    String compareString = new Gson().toJson(comparison);
-    assertEquals(compareString, stringWriter.toString());
-  }
-
-  @After
-  public void after() {
-    helper.tearDown();
+    assertEquals(comparison, actual);
   }
 
 }
