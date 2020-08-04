@@ -15,9 +15,8 @@
 package com.google.sps;
 import com.google.sps.Coordinate;
 import com.google.gson.Gson;
-import com.google.appengine.api.datastore.DatastoreService;
-import com.google.appengine.api.datastore.DatastoreServiceFactory;
-import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.*;
+import com.google.appengine.api.datastore.Query.*;
 import org.json.JSONObject;  
 import org.json.JSONArray;  
 import org.apache.commons.math3.util.Precision;
@@ -26,6 +25,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -35,7 +35,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Calendar;
+import java.util.regex.Pattern;
 import java.text.DecimalFormat;
+import java.text.Normalizer;
 
 // Imports the Google Cloud client library
 import com.google.cloud.language.v1.Document;
@@ -52,68 +54,107 @@ import com.google.cloud.language.v1.Token;
   */
 @WebServlet("/query")
 public class WaypointQueryServlet extends HttpServlet {
-  private ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();
   // The maximum number of coordinates will be an optional input by the user, with 5 as the default
-  private static int maxNumberCoordinates = 5;
+  public static int DEFAULT_MAX_NUMBER_COORDINATES = 5;
+  private int maxNumberCoordinates = DEFAULT_MAX_NUMBER_COORDINATES;
+  private static final Pattern PATTERN = Pattern.compile("^\\d+$"); // Improves performance by avoiding compile of pattern in every method call
 
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    HttpSession currentSession = request.getSession();
+    String currSessionID = currentSession.getId();
+    String waypointsJSONstring = getQueryResultsforSession(currSessionID);
+    
     // Return last stored waypoints
     response.setContentType("application/json");
-    String json = new Gson().toJson(waypoints);
-    response.getWriter().println(json);
-
-    // After the map is made, we can get rid of the old waypoints
-    waypoints.clear();
+    response.getWriter().println(waypointsJSONstring);
   }
 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    HttpSession currentSession = request.getSession();
+    String currSessionID = currentSession.getId();
+
     String input = request.getParameter("text-input");
-    getLocations(input);
- 
+    ArrayList<List<Coordinate>> waypoints = getLocations(input);
+    // Store input text and waypoint in datastore so same session ID can retrieve later.
+    storeInputAndWaypoints(currSessionID, input, waypoints);
     // Redirect back to the index page.
     response.sendRedirect("/index.html");
   }
 
+    /** Uses the Session ID to retrieve waypoints from datastore
+    * Returns waypoints in JSON String format
+    */
+  private String getQueryResultsforSession(String currSessionID){
+    //Retrieve Waypoints for that session.
+    Filter sesionFilter =
+    new FilterPredicate("session-id", FilterOperator.EQUAL, currSessionID);
+    // sort by most recent query for session ID
+    Query query = 
+            new Query("Route")
+                .setFilter(sesionFilter)
+                .addSort("timestamp", SortDirection.DESCENDING);
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+    List results = datastore.prepare(query).asList(FetchOptions.Builder.withLimit(1));
+    Entity MostRecentStore = (Entity) results.get(0);
+    String waypointsJSONstring = (String) MostRecentStore.getProperty("waypoints");
+    return waypointsJSONstring;
+  }
+
   /** Using the input text, fetches waypoints from the database to be 
-    * used by the frontend
+    * used by the frontend. Returns possible waypoints. 
     */
   private void getLocations(String input) throws IOException {
-    //analyzeSyntaxText(input);
     // Parse out feature requests from input
     ArrayList<ArrayList<String>> featureRequests = processInputText(input);
-    for (ArrayList<String> featureRequest : featureRequests) {
-      String waypointQuery = featureRequest.get(0);
+    ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();    
+
+    for (ArrayList<String> waypointQueries : featureRequests) {
+      String waypointQuery = waypointQueries.get(0);
       ArrayList<Coordinate> potentialCoordinates = new ArrayList<Coordinate>();
-      for (int i = 1; i < featureRequest.size(); i++) {
-        String feature = featureRequest.get(i);
-        // Make call to database
-        ArrayList<Coordinate> locations = fetchFromDatabase(feature, waypointQuery);
-        if (i == 1) {
-          potentialCoordinates.addAll(locations);
-        } else if (!locations.isEmpty()) {
-          potentialCoordinates.retainAll(locations);
+      // first is the arraylist index of the first feature in the database
+      for (int first = 1, i = 1; i < waypointQueries.size(); i++, first++) {
+        String featureRequest = waypointQueries.get(i);
+        // Check if feature request is a number
+        if (PATTERN.matcher(featureRequest).matches()) {
+          maxNumberCoordinates = Integer.parseInt(featureRequest);
+        } else if (featureRequest.equals("all") || featureRequest.equals("every")) {
+          maxNumberCoordinates = Integer.MAX_VALUE;
+        } else {
+          // Make call to database
+          ArrayList<Coordinate> locations = fetchFromDatabase(featureRequest, waypointQuery);
+          if (!locations.isEmpty()) { // The feature is in the database
+            if (i == first) {
+              potentialCoordinates.addAll(locations);
+              first = 0; // We don't need to worry about it anymore since at least one feature was found!
+            } else {
+              potentialCoordinates.retainAll(locations);
+            }
+          }
         }
       }
       List<Coordinate> locations = potentialCoordinates.subList(0, Math.min(maxNumberCoordinates, potentialCoordinates.size()));
+      maxNumberCoordinates = DEFAULT_MAX_NUMBER_COORDINATES;
       waypoints.add(locations);
     }   
-    // Store input text and waypoint in datastore.
-    storeInputAndWaypoints(input, waypoints);
+    return waypoints;
   }
 
   /** Parses the input string to separate out all the features
     * For each arraylist of strings, the first element is the general waypoint query
     */
   private static ArrayList<ArrayList<String>> processInputText(String input) {
+    input = Normalizer.normalize(input, Normalizer.Form.NFKD);
     ArrayList<ArrayList<String>> allFeatures = new ArrayList<ArrayList<String>>();
-    String[] waypointQueries = input.split("[;.?!+]+");
+    // Separate on newlines and punctuation: semicolon, period, question mark, exclamation mark, plus sign
+    String[] waypointQueries = input.split("[;.?!+\\n]+");
     for (String waypointQuery : waypointQueries) {
       waypointQuery = waypointQuery.toLowerCase().trim();
       ArrayList<String> featuresOneWaypoint = new ArrayList<String>();
       featuresOneWaypoint.add(waypointQuery);
-      String[] featureQueries = waypointQuery.split("[, ]+");
+      // Separate on commas and spaces
+      String[] featureQueries = waypointQuery.split("[,\\s]+");
       for (int i = 0; i < featureQueries.length; i++) {
         String feature = featureQueries[i].toLowerCase().trim();
         featuresOneWaypoint.add(feature);
@@ -121,49 +162,6 @@ public class WaypointQueryServlet extends HttpServlet {
       allFeatures.add(featuresOneWaypoint);
     }
     return allFeatures;
-  }
-
-  /** from the string {@code text}. */
-  public static List<Token> analyzeSyntaxText(String text) throws IOException {
-    // [START language_syntax_text]
-    // Instantiate the Language client com.google.cloud.language.v1.LanguageServiceClient
-    try (LanguageServiceClient language = LanguageServiceClient.create()) {
-      Document doc = Document.newBuilder().setContent(text).setType(Type.PLAIN_TEXT).build();
-      AnalyzeSyntaxRequest request =
-          AnalyzeSyntaxRequest.newBuilder()
-              .setDocument(doc)
-              .setEncodingType(EncodingType.UTF16)
-              .build();
-      // analyze the syntax in the given text
-      AnalyzeSyntaxResponse response = language.analyzeSyntax(request);
-      // print the response
-      for (Token token : response.getTokensList()) {
-        System.out.printf("\tText: %s\n", token.getText().getContent());
-        System.out.printf("\tBeginOffset: %d\n", token.getText().getBeginOffset());
-        System.out.printf("Lemma: %s\n", token.getLemma());
-        System.out.printf("PartOfSpeechTag: %s\n", token.getPartOfSpeech().getTag());
-        System.out.printf("\tAspect: %s\n", token.getPartOfSpeech().getAspect());
-        System.out.printf("\tCase: %s\n", token.getPartOfSpeech().getCase());
-        System.out.printf("\tForm: %s\n", token.getPartOfSpeech().getForm());
-        System.out.printf("\tGender: %s\n", token.getPartOfSpeech().getGender());
-        System.out.printf("\tMood: %s\n", token.getPartOfSpeech().getMood());
-        System.out.printf("\tNumber: %s\n", token.getPartOfSpeech().getNumber());
-        System.out.printf("\tPerson: %s\n", token.getPartOfSpeech().getPerson());
-        System.out.printf("\tProper: %s\n", token.getPartOfSpeech().getProper());
-        System.out.printf("\tReciprocity: %s\n", token.getPartOfSpeech().getReciprocity());
-        System.out.printf("\tTense: %s\n", token.getPartOfSpeech().getTense());
-        System.out.printf("\tVoice: %s\n", token.getPartOfSpeech().getVoice());
-        System.out.println("DependencyEdge");
-        System.out.printf("\tHeadTokenIndex: %d\n", token.getDependencyEdge().getHeadTokenIndex());
-        System.out.printf("\tLabel: %s\n\n", token.getDependencyEdge().getLabel());
-      }
-      return response.getTokensList();
-    } catch (IOException e) {
-      System.out.println("Something went wrong");
-      System.out.println(e);
-      return new ArrayList<Token>();
-    }
-    // [END language_syntax_text]
   }
 
   /** Sends a request for the input feature to the database
@@ -241,8 +239,9 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Stores input text and waypoints in a RouteEntity in datastore.
     * Returns nothing.
     */ 
-  private static void storeInputAndWaypoints(String textInput, ArrayList<List<Coordinate>> waypoints){
+  private static void storeInputAndWaypoints(String currSessionID, String textInput, ArrayList<List<Coordinate>> waypoints){
     Entity RouteEntity = new Entity("Route");
+    RouteEntity.setProperty("session-id", currSessionID);
     RouteEntity.setProperty("text", textInput);
     String json = new Gson().toJson(waypoints);
     long timestamp = System.currentTimeMillis();
