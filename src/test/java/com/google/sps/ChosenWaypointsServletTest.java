@@ -104,6 +104,8 @@ public class ChosenWaypointsServletTest {
     PowerMockito.when(ChosenWaypointsServlet.class, "getSession", request).thenReturn(SessionID);
   }
 
+  /** Test function that takes JSON String and returns ArrayList Coordinates. 
+  */  
   @Test 
   public void getWayPointsfromRequestTest(){
     chosenWaypointsMock.add(JSON_STRING_DAISY);
