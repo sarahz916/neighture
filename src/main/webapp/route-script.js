@@ -37,7 +37,7 @@ async function createMapWithWaypoints() {
     var res = await getChosenPoints();
     let waypoints = convertWaypointstoLatLng(res);
     let start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
-    let end = new google.maps.LatLng(41.850033, -87.5500523); // hardcoded end; will get from user later
+    let end = new google.maps.LatLng(41.866940, -87.607105); // hardcoded end; will get from user later
     let map = initMap(start, 'route-map');
     let directionsService = new google.maps.DirectionsService();
     let directionsRenderer = new google.maps.DirectionsRenderer({
@@ -71,32 +71,44 @@ async function setupUserChoices() {
  * Get waypoints from the servlet and map each cluster of waypoints on the map in a different marker color.
  */
 function createPointInfoMap(waypoints) {
-    var chicago = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
-    let map = initMap(chicago, 'point-map');
+    let start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
+    let end = new google.maps.LatLng(41.866940, -87.607105); // hardcoded end; will get from user later
+    let map = initMap(start, 'point-map');
     map.setZoom(10);
+
+    createMarker(map, start, 'start', google.maps.SymbolPath.CIRCLE, 'black');
+    createMarker(map, end, 'end', google.maps.SymbolPath.CIRCLE, 'black');
+
 
     // Make one marker for each waypoint, in a different color.
     for (let i = 0; i < Object.entries(waypoints).length; i++) {
         let [label, cluster] = Object.entries(waypoints)[i];
         let letter = 'A';
         for (let pt of cluster) {
-            let markerOpts = {
-                map: map,
-                position: pt,
-                label: letter,
-                labelAnchor: new google.maps.Point(50, 0),
-                icon: {
-                    path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-                    fillColor: FILL_COLORS[i % MAX_WAYPOINTS],
-                    fillOpacity: 100,
-                    scale: 5,
-                    strokeWeight: 2
-                }
-            };
-            let marker = new google.maps.Marker(markerOpts);
+            createMarker(map, pt, letter, google.maps.SymbolPath.BACKWARD_CLOSED_ARROW, FILL_COLORS[i % MAX_WAYPOINTS]);
             letter = String.fromCharCode(letter.charCodeAt(0) + 1); // update the marker letter label to the next letter
         }
     }
+}
+
+/**
+ * Given options for a custom Google Maps marker, create the marker on the map.
+ */
+function createMarker(map, pos, label, shape, color) {
+    let markerOpts = {
+        animation: google.maps.Animation.DROP,
+        map: map,
+        position: pos,
+        label: label,
+        icon: {
+            path: shape,
+            fillColor: color,
+            fillOpacity: 100,
+            scale: 5,
+            strokeWeight: 2,
+        }
+    };
+    let marker = new google.maps.Marker(markerOpts);
 }
 
 //TODO: create already checked boxes for labels with only one choice.
