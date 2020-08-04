@@ -20,10 +20,7 @@ import com.google.appengine.api.datastore.*;
 import com.google.appengine.api.datastore.Query.*;  
 
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -43,10 +40,11 @@ public class ChosenWaypointsServlet extends HttpServlet {
     */ 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    HttpSession currentSession = request.getSession();
-    String currSessionID = currentSession.getId();
+    String currSessionID = getSession(request);
+   
     String waypointsJSONstring = getQueryResultsforSession(currSessionID);
-    
+    String waypointsJSONstring = "[]";
+    System.out.println("Exception occurred");
     // Return last stored waypoints
     response.setContentType("application/json");
     response.getWriter().println(waypointsJSONstring);
@@ -60,11 +58,16 @@ public class ChosenWaypointsServlet extends HttpServlet {
         //TODO (zous): should we throw exceptions/error if there are no checked checkboxes
         ArrayList<Coordinate> waypoints = getWaypointsfromRequest(request);
         // Store input text and waypoint in datastore.
-        HttpSession currentSession = request.getSession();
-        String currSessionID = currentSession.getId();
+        String currSessionID = getSession(request);
         storeInputAndWaypoints(currSessionID, waypoints);
         // Redirect back to the index page.
         response.sendRedirect("/index.html");
+    }
+
+    private static String getSession(HttpServletRequest request){
+        HttpSession currentSession = request.getSession();
+        String currSessionID = currentSession.getId();
+        return currSessionID;
     }
 
     /** Scans the checkbox form for checked coordinates and appends that to waypoints. 

@@ -13,9 +13,7 @@
 // limitations under the License.
 
 package com.google.sps;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Collections;
+import java.util.*;
 import com.google.gson.Gson;
 
 import static org.junit.Assert.*;
@@ -24,6 +22,9 @@ import java.io.*;
 import javax.servlet.http.*;
 import org.apache.commons.io.FileUtils;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
+import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 
 import org.junit.Test;
 import org.junit.Before;
@@ -42,7 +43,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(ChosenWaypointsServlet.class)
-public class ChosenWaypointsServletPostTest {
+public class ChosenWaypointsServletTest {
   public static final Coordinate DAISY = new Coordinate(-87.629454, 41.848653, "daisy");
   public static final Coordinate CLOVER = new Coordinate(-87.635604, 41.855967, "clover");
   public static final Coordinate BELLFLOWER = new Coordinate(-87.64748, 41.843539, "bellflower");
@@ -54,45 +55,62 @@ public class ChosenWaypointsServletPostTest {
   public static final String JSON_STRING_CLOVER = new Gson().toJson(CLOVER);
   public static final String JSON_STRING_BELLFLOWER = new Gson().toJson(BELLFLOWER);
   
-  
   private ChosenWaypointsServlet servlet;
+  
+
+  private final LocalServiceTestHelper helper =
+      new LocalServiceTestHelper(new LocalDatastoreServiceTestConfig());
   
   @Mock (name = "waypoints")
   ArrayList<Coordinate> waypointMock;
+  @Mock (name = "datastore")
+  HashMap<String, String> mockDataStore;
   @Mock
   HttpServletRequest request;
   @Mock
   HttpServletResponse response;
+  @Mock
+  HttpSession session;
   @Mock 
   ArrayList<String> chosenWaypointsMock;
-  
+  @Mock
+  StringWriter stringWriter;
+  @Mock
+  PrintWriter writer;
 
   @Before
-  public void before() {
+  public void before() throws Exception  {
     request = mock(HttpServletRequest.class);       
-    response = mock(HttpServletResponse.class);  
+    response = mock(HttpServletResponse.class); 
+    session = mock(HttpSession.class); 
     servlet = PowerMockito.spy(new ChosenWaypointsServlet());
     PowerMockito.mockStatic(ChosenWaypointsServlet.class);
-
     // Propagate private variable with data
     waypointMock = new ArrayList<Coordinate>();
     chosenWaypointsMock = new ArrayList<String>();
+    mockDataStore = new HashMap<String, String>();
+
+    stringWriter = new StringWriter();
+    writer = new PrintWriter(stringWriter);
+    when(response.getWriter()).thenReturn(writer);
+
+    String SessionID = "testsession";
+    PowerMockito.when(ChosenWaypointsServlet.class, "getSession", request).thenReturn(SessionID);
+    helper.setUp();
   }
 
+  /* UNIT TESTS */
   @Test // Empty input
   public void testServletPostEmpty() throws Exception {
     when(request.getParameterNames()).thenReturn(Collections.enumeration(chosenWaypointsMock));
     servlet.doPost(request, response);
     verify(request, atLeast(1)).getParameterNames();
-    when(response.getWriter()).thenReturn(writer);
     servlet.doGet(request, response);
-    assertEquals(stringWriter.toString(), EXPECTED_EMPTY);
+    assertEquals(EXPECTED_EMPTY, stringWriter.toString());
   }
 
   @Test // Post a query with one waypoint description
   public void testServletPostOne() throws Exception {
-    // Set the private variable values here by reflection.
-    ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
     chosenWaypointsMock.add(JSON_STRING_DAISY);
     when(request.getParameterNames()).thenReturn(Collections.enumeration(chosenWaypointsMock));
     servlet.doPost(request, response);
@@ -101,26 +119,13 @@ public class ChosenWaypointsServletPostTest {
     // Create answer to compare against
     ArrayList<Coordinate> comparison = new ArrayList<Coordinate>();
     comparison.add(DAISY);
-    assertEquals(waypointMock, comparison);
+    String compareString = new Gson().toJson(comparison);
+    assertEquals(compareString, stringWriter.toString());
   }
 
-  @Test // Post a query with multiple waypoint descriptions
-  public void testServletPostMultiple() throws Exception {
-    // Set the private variable values here by reflection.
-    ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
-    chosenWaypointsMock.add(JSON_STRING_DAISY);
-    chosenWaypointsMock.add(JSON_STRING_CLOVER);
-    chosenWaypointsMock.add(JSON_STRING_BELLFLOWER);
-    when(request.getParameterNames()).thenReturn(Collections.enumeration(chosenWaypointsMock));
-    servlet.doPost(request, response);
-    verify(request, atLeast(1)).getParameterNames();
-
-    // Create answer to compare against
-    ArrayList<Coordinate> comparison = new ArrayList<Coordinate>();
-    comparison.add(DAISY);
-    comparison.add(CLOVER);
-    comparison.add(BELLFLOWER);
-    assertEquals(waypointMock, comparison);
+  @After
+  public void after() {
+    helper.tearDown();
   }
 
 }
