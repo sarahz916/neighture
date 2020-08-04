@@ -84,6 +84,7 @@ function createPointInfoMap(waypoints) {
                 map: map,
                 position: pt,
                 label: letter,
+                labelAnchor: new google.maps.Point(50, 0),
                 icon: {
                     path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
                     fillColor: FILL_COLORS[i % MAX_WAYPOINTS],
