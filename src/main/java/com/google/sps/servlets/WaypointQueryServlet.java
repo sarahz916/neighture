@@ -105,7 +105,7 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Using the input text, fetches waypoints from the database to be 
     * used by the frontend. Returns possible waypoints. 
     */
-  private void getLocations(String input) throws IOException {
+  private ArrayList<List<Coordinate>> getLocations(String input) throws IOException {
     // Parse out feature requests from input
     ArrayList<ArrayList<String>> featureRequests = processInputText(input);
     ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();    
