@@ -57,6 +57,7 @@ public class WaypointQueryServletTest {
   public static final String SUNFLOWER_BACKEND = "[{\"latitude\": 41.897521, \"longitude\": -87.619934, \"common_name\": {\"name\": \"sunflower\"}}]";
   public static final String NOTHING_BACKEND = "[]";
   public static final String COMPARISON_DATE = "2019-08-01";
+  public static final String DAISY_LABEL = "daisy";
   private WaypointQueryServlet servlet;
   
   @Mock
@@ -72,7 +73,7 @@ public class WaypointQueryServletTest {
     //PowerMockito.mockStatic(WaypointQueryServlet.class);
   }
 
-  /* TESTING getStartDate */
+  /* Testing getStartDate */
   @Test 
   public void testGetStartDate() throws Exception {
     PowerMockito.mockStatic(Calendar.class);
@@ -80,6 +81,13 @@ public class WaypointQueryServletTest {
     when(Calendar.getInstance()).thenReturn(calendarMock);
     String date = WaypointQueryServlet.getStartDate();
     assertEquals(date, COMPARISON_DATE);
+  }
+
+  /* Testing jsonToCoordinates */
+  @Test 
+  public void testJsonToCoordinates() throws Exception {
+    ArrayList<Coordinate> coordinateResult = WaypointQueryServlet.jsonToCoordinates(DAISY_BACKEND, DAISY_LABEL);
+    assertEquals(coordinateResult, DAISY);
   }
   
   /*
