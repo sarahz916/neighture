@@ -43,7 +43,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(WaypointQueryServlet.class)
 public class WaypointQueryServletTest {
-  public static final Coordinate RASPBERRY_PARTIAL = new Coordinate(-87.62212, 41.89796, "1, raspberry");
   public static final ArrayList<Coordinate> DAISY = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62944, 41.84864, "daisy")));
   public static final ArrayList<Coordinate> CLOVER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.63566666666667, 41.856, "clover")));
   public static final ArrayList<Coordinate> BELLFLOWER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.6475, 41.8435, "bellflower")));
@@ -65,7 +64,7 @@ public class WaypointQueryServletTest {
   public static final String TREE_LABEL = "tree";
   public static final String TREE_LICHEN_LABEL = "tree,lichen";
   public static final String TRASH_LABEL = "trash";
-  public static final String MULT_FEATURES_ONE_WAYPOINT_LABEL = "daisy,clover     raspberry   ";
+  public static final String MULT_FEATURES_ONE_WAYPOINT_LABEL = "daisy,cLover     raSpbeRRy   ";
   public static final String ONE_FEATURE_MULT_WAYPOINT_LABEL = "daisy;+clover.raspberry!!?\ntree";
   public static final String MULT_FEATURES_MULT_WAYPOINT_LABEL = "daisy,clover; raspberry tree";
   public static final ArrayList<String> DAISY_CLOVER_RASPBERRY = new ArrayList<String>(Arrays.asList(DAISY_LABEL, CLOVER_LABEL, RASPBERRY_LABEL));
@@ -119,10 +118,17 @@ public class WaypointQueryServletTest {
   /* Testing determineIfInt */
   // ADD
 
+  /* Testing parseWaypointQuery, different cases */
+  @Test 
+  public void testParseWaypointQueryCasing() throws Exception {
+    ArrayList<String> features = WaypointQueryServlet.parseWaypointQuery(MULT_FEATURES_ONE_WAYPOINT_LABEL);
+    assertEquals(features, DAISY_CLOVER_RASPBERRY);
+  }
+
   /* Testing parseWaypointQuery, spaces and commas */
   @Test 
-  public void testParseWaypointQuery() throws Exception {
-    ArrayList<String> features = WaypointQueryServlet.parseWaypointQuery(MULT_FEATURES_ONE_WAYPOINT_LABEL);
+  public void testParseWaypointQuerySplit() throws Exception {
+    ArrayList<String> features = WaypointQueryServlet.parseWaypointQuery(MULT_FEATURES_ONE_WAYPOINT_LABEL.toLowerCase());
     assertEquals(features, DAISY_CLOVER_RASPBERRY);
   }
 
@@ -174,7 +180,7 @@ public class WaypointQueryServletTest {
     PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(RASPBERRY_BACKEND);
     ArrayList<List<Coordinate>> locations = servlet.getLocations("1 raspberry");
     ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
-    comparison.add(Arrays.asList(RASPBERRY_PARTIAL));
+    comparison.add(Arrays.asList(RASPBERRY.get(0)));
     assertEquals(locations, comparison);
   }
 

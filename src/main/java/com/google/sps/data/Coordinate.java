@@ -64,6 +64,6 @@ public final class Coordinate {
     Coordinate otherCoordinate = (Coordinate) other; 
       
     // Compare the data members and return accordingly 
-    return (x.equals(otherCoordinate.getX()) && y.equals(otherCoordinate.getY()) && label.equals(otherCoordinate.getLabel()));
+    return (x.equals(otherCoordinate.getX()) && y.equals(otherCoordinate.getY()));
   }
 }
