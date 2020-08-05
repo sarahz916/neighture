@@ -34,17 +34,26 @@ import java.util.*;
   */ 
 @WebServlet("/gen-route")
 public class GenRouteServlet extends HttpServlet {
+    private ArrayList<String> DropDownvalue = new ArrayList<String>();
 
-    /** Goes through datastore to find most recent Direction Entity associated with SessionID.
-    *   Returns the waypoints ArrayList<Coordinates> as a JSON String in response. 
-    */ 
+    @Override
+    public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String value = request.getParameter("routes-drop-down");
+        DropDownvalue.add(value);
+        // Return last stored waypoints
+        response.sendRedirect("/generated-routes.html");
+    }
+
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String waypointsJSONstring = request.getParameter("routes-drop-down");
-        // Return last stored waypoints
-        response.setContentType("application/json");
-        response.getWriter().println(waypointsJSONstring);
-    
+    response.setContentType("application/json");
+    if(!DropDownvalue.isEmpty()){
+        response.getWriter().println(DropDownvalue.get(0));
+        DropDownvalue.clear();
+    }
+    else{
+        response.getWriter().println("[]");
+    }
     }
 
 }
