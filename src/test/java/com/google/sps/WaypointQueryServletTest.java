@@ -15,6 +15,8 @@
 package com.google.sps;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Calendar.Builder;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -35,9 +37,11 @@ import org.powermock.api.mockito.expectation.PowerMockitoStubber;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+/** Tests each public function of ChosenWaypointsServlet aside from those relating to the datastore
+  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(WaypointQueryServlet.class)
-public class WaypointQueryServletPostTest {
+public class WaypointQueryServletTest {
   public static final ArrayList<Coordinate> DAISY = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62944, 41.84864, "daisy")));
   public static final ArrayList<Coordinate> CLOVER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.63566666666667, 41.856, "clover")));
   public static final ArrayList<Coordinate> BELLFLOWER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.6475, 41.8435, "bellflower")));
@@ -52,14 +56,9 @@ public class WaypointQueryServletPostTest {
   public static final String MEADOWSWEET_BACKEND = "[{\"latitude\": 41.897523, \"longitude\": -87.619934, \"common_name\": {\"name\": \"meadowsweet\"}}]";
   public static final String SUNFLOWER_BACKEND = "[{\"latitude\": 41.897521, \"longitude\": -87.619934, \"common_name\": {\"name\": \"sunflower\"}}]";
   public static final String NOTHING_BACKEND = "[]";
+  public static final String COMPARISON_DATE = "2019-08-01";
   private WaypointQueryServlet servlet;
   
-  @Mock (name = "waypoints")
-  ArrayList<ArrayList<Coordinate>> waypointMock;
-  @Mock
-  HttpServletRequest request;
-  @Mock
-  HttpServletResponse response;
   @Mock
   StringWriter stringWriter;
   @Mock
@@ -68,27 +67,22 @@ public class WaypointQueryServletPostTest {
   HttpSession session;
 
   @Before
-  public void before() throws Exception {
-    request = mock(HttpServletRequest.class);       
-    response = mock(HttpServletResponse.class);  
-    session = request.getSession();
+  public void before() throws Exception { 
     servlet = PowerMockito.spy(new WaypointQueryServlet());
-    PowerMockito.mockStatic(WaypointQueryServlet.class);
-
-    // Propagate private variable with data
-    waypointMock = new ArrayList<ArrayList<Coordinate>>();
-    //ReflectionTestUtils.setField(servlet, "waypoints", waypointMock);
-
-    stringWriter = new StringWriter();
-    writer = new PrintWriter(stringWriter);
-    when(response.getWriter()).thenReturn(writer);
-
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "processInputText", anyString());
-    PowerMockito.doNothing().when(WaypointQueryServlet.class, "storeInputAndWaypoints", anyString(), eq(waypointMock));
-    PowerMockito.doReturn(null).when(WaypointQueryServlet.class, "getStartDate");
+    //PowerMockito.mockStatic(WaypointQueryServlet.class);
   }
 
-  /* UNIT TESTS */
+  /* TESTING getStartDate */
+  @Test 
+  public void testGetStartDate() throws Exception {
+    PowerMockito.mockStatic(Calendar.class);
+    Calendar calendarMock = new Calendar.Builder().setDate(2020, Calendar.AUGUST, 1).build();
+    when(Calendar.getInstance()).thenReturn(calendarMock);
+    String date = WaypointQueryServlet.getStartDate();
+    assertEquals(date, COMPARISON_DATE);
+  }
+  
+  /*
   @Test // Empty input
   public void testServletPostEmpty() throws Exception {
     when(request.getParameter("text-input")).thenReturn("");
@@ -204,7 +198,6 @@ public class WaypointQueryServletPostTest {
     assertEquals(waypointMock, comparison);
   }
 
-  /* INTEGRATION TESTS with fake GET from database */
   @Test // Empty input, GET request from database
   public void testServletPostEmptyIntegration() throws Exception {
     when(request.getParameter("text-input")).thenReturn("");
@@ -316,7 +309,7 @@ public class WaypointQueryServletPostTest {
     comparison.add(TREE_LICHEN);
     comparison.add(RASPBERRY);
     assertEquals(waypointMock, comparison);
-  }
+  }*/
 
   @After
   public void after() {

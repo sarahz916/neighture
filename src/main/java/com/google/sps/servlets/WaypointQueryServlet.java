@@ -199,7 +199,8 @@ public class WaypointQueryServlet extends HttpServlet {
     previousYear.add(Calendar.YEAR, -1);
     DecimalFormat formatter = new DecimalFormat("00"); // To allow leading 0s
     String yearAsString = formatter.format(previousYear.get(Calendar.YEAR));
-    String monthAsString = formatter.format(previousYear.get(Calendar.MONTH));
+    String monthAsString = formatter.format(previousYear.get(Calendar.MONTH) + 1); // The months are 0-indexed
+    System.out.println(monthAsString);
     String dayAsString = formatter.format(previousYear.get(Calendar.DAY_OF_MONTH));
     String dateString = yearAsString + "-" + monthAsString + "-" + dayAsString;
     return dateString;
