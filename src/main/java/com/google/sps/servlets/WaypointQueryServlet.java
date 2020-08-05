@@ -89,9 +89,9 @@ public class WaypointQueryServlet extends HttpServlet {
     response.sendRedirect("/index.html");
   }
 
-    /** Uses the Session ID to retrieve waypoints from datastore
-    * Returns waypoints in JSON String format
-    */
+  /** Uses the Session ID to retrieve waypoints from datastore
+  * Returns waypoints in JSON String format
+  */
   private String getQueryResultsforSession(String currSessionID){
     //Retrieve Waypoints for that session.
     Filter sesionFilter =
@@ -111,13 +111,13 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Using the input text, fetches waypoints from the database to be 
     * used by the frontend. Returns possible waypoints. 
     */
-  private ArrayList<List<Coordinate>> getLocations(String input) throws IOException {
+  public ArrayList<List<Coordinate>> getLocations(String input) throws IOException {
     // Parse out feature requests from input
     ArrayList<ArrayList<String>> featureRequests = processInputText(input);
     ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();    
 
     for (ArrayList<String> waypointQueries : featureRequests) {
-      String waypointQuery = waypointQueries.get(0);
+      String waypointQuery = waypointQueries.get(0); // CHANGE --> REMOVE, LISTTOSTRING function
       ArrayList<Coordinate> potentialCoordinates = new ArrayList<Coordinate>();
       // first is the arraylist index of the first feature in the database
       for (int first = 1, i = 1; i < waypointQueries.size(); i++, first++) {
@@ -150,30 +150,46 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Parses the input string to separate out all the features
     * For each arraylist of strings, the first element is the general waypoint query
     */
-  private static ArrayList<ArrayList<String>> processInputText(String input) {
+  public static ArrayList<ArrayList<String>> processInputText(String input) {
     input = Normalizer.normalize(input, Normalizer.Form.NFKD);
     ArrayList<ArrayList<String>> allFeatures = new ArrayList<ArrayList<String>>();
     // Separate on newlines and punctuation: semicolon, period, question mark, exclamation mark, plus sign
     String[] waypointQueries = input.split("[;.?!+\\n]+");
     for (String waypointQuery : waypointQueries) {
-      waypointQuery = waypointQuery.toLowerCase().trim();
-      ArrayList<String> featuresOneWaypoint = new ArrayList<String>();
-      featuresOneWaypoint.add(waypointQuery);
-      // Separate on commas and spaces
-      String[] featureQueries = waypointQuery.split("[,\\s]+");
-      for (int i = 0; i < featureQueries.length; i++) {
-        String feature = featureQueries[i].toLowerCase().trim();
-        featuresOneWaypoint.add(feature);
-      }
+      ArrayList<String> featuresOneWaypoint = parseWaypointQuery(waypointQuery);
       allFeatures.add(featuresOneWaypoint);
     }
     return allFeatures;
   }
 
+  /** Parses out the features from a waypoint query
+    */
+  public static ArrayList<String> parseWaypointQuery(String waypointQuery) {
+    waypointQuery = waypointQuery.toLowerCase().trim();
+    ArrayList<String> featuresOneWaypoint = new ArrayList<String>();
+    featuresOneWaypoint.add(waypointQuery);
+    // Separate on commas and spaces
+    String[] featureQueries = waypointQuery.split("[,\\s]+"); // TODO: only include numbers (adjectives?) and nouns
+    for (int i = 0; i < featureQueries.length; i++) {
+      String feature = featureQueries[i].toLowerCase().trim();
+      featuresOneWaypoint.add(feature);
+    }
+    return featuresOneWaypoint;
+  }
+
+  /** Determines if the passed in string is a number -- if so, returns the number, which
+    * will replace maxNumberCoordinates; if not, returns the current maxNumberCoordinates to 
+    * leave the variable unchanged
+    */
+  public static int determineIfInt(String word, int currentMaxCoordinates) {
+    // TODO
+    return 0;
+  }
+
   /** Sends a request for the input feature to the database
     * Returns the Coordinate matching the input feature 
     */ 
-  private static ArrayList<Coordinate> fetchFromDatabase(String feature, String label) throws IOException {
+  public static ArrayList<Coordinate> fetchFromDatabase(String feature, String label) throws IOException {
     String startDate = getStartDate();
     String json = sendGET(feature);
     if (json != null) {
@@ -183,15 +199,15 @@ public class WaypointQueryServlet extends HttpServlet {
   }
 
   /** Returns the date a year ago in string form
-    * Note: not used in tests (mocked out)
     */
-  private static String getStartDate() {
+  public static String getStartDate() {
     Calendar previousYear = Calendar.getInstance();
     previousYear.add(Calendar.YEAR, -1);
     DecimalFormat formatter = new DecimalFormat("00"); // To allow leading 0s
     String yearAsString = formatter.format(previousYear.get(Calendar.YEAR));
-    String monthAsString = formatter.format(previousYear.get(Calendar.MONTH));
-    String dayAsString = formatter.format(previousYear.get(Calendar.DATE));
+    String monthAsString = formatter.format(previousYear.get(Calendar.MONTH) + 1); // The months are 0-indexed
+    System.out.println(monthAsString);
+    String dayAsString = formatter.format(previousYear.get(Calendar.DAY_OF_MONTH));
     String dateString = yearAsString + "-" + monthAsString + "-" + dayAsString;
     return dateString;
   }
@@ -225,7 +241,7 @@ public class WaypointQueryServlet extends HttpServlet {
 
   /** Turns a JSON string into an arraylist of coordinates
     */
-  private static ArrayList<Coordinate> jsonToCoordinates(String json, String label) {
+  public static ArrayList<Coordinate> jsonToCoordinates(String json, String label) {
     ArrayList<Coordinate> coordinates = new ArrayList<Coordinate>();
     JSONArray allWaypoints = new JSONArray(json);
     int index = 0;
