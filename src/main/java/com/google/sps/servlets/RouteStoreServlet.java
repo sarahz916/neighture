@@ -59,12 +59,11 @@ public class RouteStoreServlet extends HttpServlet {
     for (Entity entity : results.asIterable()) {
       long id = entity.getKey().getId();
       String text = (String) entity.getProperty("text");
-      String waypointsJson = (String) entity.getProperty("waypoints");
-      Type coordListType = new TypeToken<ArrayList<ArrayList<Coordinate>>>(){}.getType();
-      ArrayList<ArrayList<Coordinate>> waypoints = new Gson().fromJson(waypointsJson, coordListType);
-
-      StoredRoute route = new StoredRoute(id, text, waypoints);
-      routes.add(route);
+      String waypointsJson = (String) entity.getProperty("actual-route");
+      if (waypointsJson != null){
+        StoredRoute route = new StoredRoute(id, text, waypointsJson);
+        routes.add(route);
+      }
     }
     Gson gson = new Gson();
 

@@ -21,32 +21,32 @@ window.onload = function setup() {
 
 
 async function setupGenRouteDropDown() {
-    let res = await getTextStore();
+    let res = await getRouteStore();
     createDropDown(res);
 }
 
 /** Given stored text create dropdown form with those options */
 function createDropDown(dropDowns) {
   const dropDownEl = document.getElementById('routes-drop-down');
-  dropDowns.forEach((textInput) => {
-    dropDownEl.appendChild(createOptionEl(textInput));
+  dropDowns.forEach((route) => {
+    dropDownEl.appendChild(createOptionEl(route));
   });
 }
 
 /** Creates an option element */
-function createOptionEl(textInput){
+function createOptionEl(route){
     const optionEl = document.createElement('option');
     // set value as id value of route in datastore
-    optionEl.setAttribute("value", textInput);
-    optionEl.innerText = textInput;
+    optionEl.setAttribute("value", route.waypoints);
+    optionEl.innerText = route.text;
     return optionEl;
 }
 
 /**
  * Create a route and map from a waypoint entered by the user.
  */
-async function createMapWithWaypoints() {
-    var res = await getWaypoints();
+function createMapWithWaypoints() {
+    var res = getRoute();
     let waypoints = convertWaypointstoLatLng(res);
     let start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
     let end = new google.maps.LatLng(41.850033, -87.5500523); // hardcoded end; will get from user later
@@ -57,9 +57,17 @@ async function createMapWithWaypoints() {
     });
     calcRoute(directionsService, directionsRenderer, start, end, waypoints);
     generateURL (start, end, waypoints);
-    writeToAssociatedText();
 }
 
+/**
+ * Fetch the route from route-drop-down value
+ */
+async function getRoute() {
+    let res = document.getElementById('routes-drop-down').value;
+    console.log(res)
+    let waypoints = JSON.parse(res);
+    return waypoints;
+}
 /**
  * Given a DirectionsService object, a DirectionsRenderer object, start/end coordinates and a list
  * of waypoint coordinates, generate a route using the Google Maps API.
@@ -78,7 +86,7 @@ function calcRoute(directionsService, directionsRenderer, start, end, waypoints)
     directionsService.route(request, function(result, status) {
         if (status == 'OK') {
             directionsRenderer.setDirections(result);
-            createWaypointLegend(result.routes[0], waypointsWithLabels);
+            //createWaypointLegend(result.routes[0], waypointsWithLabels);
         } else {
             alert(`Could not display directions: ${status}`);
         }
@@ -133,25 +141,28 @@ function getLabelFromLatLng(pt, waypointsWithLabels) {
  * Convert waypoints in JSON form returned by servlet to Google Maps LatLng objects.
  */
 function convertWaypointstoLatLng(waypoints) {
-     let latlngWaypoints = {};
-     for (let cluster of waypoints) {
-         pts = [];
-         for (let pt of cluster) {
-            let waypoint = new google.maps.LatLng(pt.y, pt.x);
-            pts.push(waypoint);
-         }
-         latlngWaypoints[cluster[0].label] = pts;
+     let latlngWaypoints = new Map();
+     console.log(waypoints)
+     for (i in waypoints) {
+        console.log(waypoints[i]["label"])
+        let waypoint = new google.maps.LatLng(waypoints[i]["y"], waypoints[i]["x"]);
+        // If the given label doesn't exist in the map, add it.
+        if (!latlngWaypoints.has(waypoints[i]["label"])) {
+            latlngWaypoints.set(waypoints[i]["label"], [waypoint]);
+        } else {
+            latlngWaypoints.get(waypoints[i]["label"]).push(waypoint);
+        }
     }
     return latlngWaypoints;
 }
 
 /**
- * Get a list of waypoints by querying the waypoint servlet.
+ * Get a list of StoredRouts from fetching from /route-store
  */
-async function getTextStore() {
-    let res = await fetch('/text-store');
-    let textstore = await res.json();
-    return textstore;
+async function getRouteStore() {
+    let res = await fetch('/route-store');
+    let routestore = await res.json();
+    return routestore;
 }
 
 /**
