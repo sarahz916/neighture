@@ -62,7 +62,7 @@ function createMapWithWaypoints() {
 /**
  * Fetch the route from route-drop-down value
  */
-async function getRoute() {
+function getRoute() {
     let res = document.getElementById('routes-drop-down').value;
     console.log(res)
     let waypoints = JSON.parse(res);
@@ -75,7 +75,7 @@ async function getRoute() {
 function calcRoute(directionsService, directionsRenderer, start, end, waypoints) {
     var waypointsWithLabels = waypoints;
     let waypointsData = [];
-    Object.entries(waypoints).forEach(pt => waypointsData.push({ location: pt[1] }));
+    waypoints.forEach((pts, label) => pts.forEach(pt => waypointsData.push({ location: pt })));
     let request = {
         origin: start,
         destination: end,
@@ -86,7 +86,7 @@ function calcRoute(directionsService, directionsRenderer, start, end, waypoints)
     directionsService.route(request, function(result, status) {
         if (status == 'OK') {
             directionsRenderer.setDirections(result);
-            //createWaypointLegend(result.routes[0], waypointsWithLabels);
+            createWaypointLegend(result.routes[0], waypointsWithLabels);
         } else {
             alert(`Could not display directions: ${status}`);
         }
@@ -143,14 +143,14 @@ function getLabelFromLatLng(pt, waypointsWithLabels) {
 function convertWaypointstoLatLng(waypoints) {
      let latlngWaypoints = new Map();
      console.log(waypoints)
-     for (i in waypoints) {
-        console.log(waypoints[i]["label"])
-        let waypoint = new google.maps.LatLng(waypoints[i]["y"], waypoints[i]["x"]);
+     for (let i of waypoints) {
+        console.log(i["label"])
+        let waypoint = new google.maps.LatLng(i["y"], i["x"]);
         // If the given label doesn't exist in the map, add it.
-        if (!latlngWaypoints.has(waypoints[i]["label"])) {
-            latlngWaypoints.set(waypoints[i]["label"], [waypoint]);
+        if (!latlngWaypoints.has(i["label"])) {
+            latlngWaypoints.set(i["label"], [waypoint]);
         } else {
-            latlngWaypoints.get(waypoints[i]["label"]).push(waypoint);
+            latlngWaypoints.get(i["label"]).push(waypoint);
         }
     }
     return latlngWaypoints;
