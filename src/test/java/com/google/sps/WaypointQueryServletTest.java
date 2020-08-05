@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package com.google.sps;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -37,11 +38,12 @@ import org.powermock.api.mockito.expectation.PowerMockitoStubber;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-/** Tests each public function of ChosenWaypointsServlet aside from those relating to the datastore
+/** Tests each public function of WaypointQueryServlet aside from those relating to the datastore
   */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(WaypointQueryServlet.class)
 public class WaypointQueryServletTest {
+  public static final Coordinate RASPBERRY_PARTIAL = new Coordinate(-87.62212, 41.89796, "1, raspberry");
   public static final ArrayList<Coordinate> DAISY = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62944, 41.84864, "daisy")));
   public static final ArrayList<Coordinate> CLOVER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.63566666666667, 41.856, "clover")));
   public static final ArrayList<Coordinate> BELLFLOWER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.6475, 41.8435, "bellflower")));
@@ -58,6 +60,15 @@ public class WaypointQueryServletTest {
   public static final String NOTHING_BACKEND = "[]";
   public static final String COMPARISON_DATE = "2019-08-01";
   public static final String DAISY_LABEL = "daisy";
+  public static final String CLOVER_LABEL = "clover";
+  public static final String RASPBERRY_LABEL = "raspberry";
+  public static final String TREE_LABEL = "tree";
+  public static final String TREE_LICHEN_LABEL = "tree,lichen";
+  public static final String TRASH_LABEL = "trash";
+  public static final String MULT_FEATURES_ONE_WAYPOINT_LABEL = "daisy,clover     raspberry   ";
+  public static final String ONE_FEATURE_MULT_WAYPOINT_LABEL = "daisy;+clover.raspberry!!?\ntree";
+  public static final String MULT_FEATURES_MULT_WAYPOINT_LABEL = "daisy,clover; raspberry tree";
+  public static final ArrayList<String> DAISY_CLOVER_RASPBERRY = new ArrayList<String>(Arrays.asList(DAISY_LABEL, CLOVER_LABEL, RASPBERRY_LABEL));
   private WaypointQueryServlet servlet;
   
   @Mock
@@ -70,7 +81,6 @@ public class WaypointQueryServletTest {
   @Before
   public void before() throws Exception { 
     servlet = PowerMockito.spy(new WaypointQueryServlet());
-    //PowerMockito.mockStatic(WaypointQueryServlet.class);
   }
 
   /* Testing getStartDate */
@@ -89,20 +99,87 @@ public class WaypointQueryServletTest {
     ArrayList<Coordinate> coordinateResult = WaypointQueryServlet.jsonToCoordinates(DAISY_BACKEND, DAISY_LABEL);
     assertEquals(coordinateResult, DAISY);
   }
-  
-  /*
-  @Test // Empty input
-  public void testServletPostEmpty() throws Exception {
-    when(request.getParameter("text-input")).thenReturn("");
-    PowerMockito.doReturn(NOTHING).when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
 
-    servlet.doPost(request, response);
-    verify(request, atLeast(1)).getParameter("text-input");
-    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
-    comparison.add(NOTHING);
-    assertEquals(waypointMock, comparison);
+  /* Testing fetchFromDatabase when result exists; mock sendGET */
+  @Test 
+  public void testFetchFromDatabaseResult() throws Exception {
+    PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(TREE_BACKEND);
+    ArrayList<Coordinate> coordinateResult = WaypointQueryServlet.fetchFromDatabase(TREE_LABEL, TREE_LICHEN_LABEL);
+    assertEquals(coordinateResult, TREE_LICHEN);
   }
 
+  /* Testing fetchFromDatabase when result doesn't exist; mock sendGET */
+  @Test 
+  public void testFetchFromDatabaseNoResult() throws Exception {
+    PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(NOTHING_BACKEND);
+    ArrayList<Coordinate> coordinateResult = WaypointQueryServlet.fetchFromDatabase(TRASH_LABEL, TRASH_LABEL);
+    assertEquals(coordinateResult, NOTHING);
+  }
+
+  /* Testing determineIfInt */
+  // ADD
+
+  /* Testing parseWaypointQuery, spaces and commas */
+  @Test 
+  public void testParseWaypointQuery() throws Exception {
+    ArrayList<String> features = WaypointQueryServlet.parseWaypointQuery(MULT_FEATURES_ONE_WAYPOINT_LABEL);
+    assertEquals(features, DAISY_CLOVER_RASPBERRY);
+  }
+
+  /* Testing processInputText, all punctuation, one feature per waypoint */
+  @Test 
+  public void testProcessInputTextPunctuation() throws Exception {
+    ArrayList<ArrayList<String>> features = WaypointQueryServlet.processInputText(ONE_FEATURE_MULT_WAYPOINT_LABEL);
+    ArrayList<ArrayList<String>> comparison = new ArrayList<ArrayList<String>>();
+    comparison.add(new ArrayList<String>(Arrays.asList(DAISY_LABEL)));
+    comparison.add(new ArrayList<String>(Arrays.asList(CLOVER_LABEL)));
+    comparison.add(new ArrayList<String>(Arrays.asList(RASPBERRY_LABEL)));
+    comparison.add(new ArrayList<String>(Arrays.asList(TREE_LABEL)));
+    assertEquals(features, comparison);
+  }
+
+  /* Testing processInputText, multiple features and multiple waypoints */
+  @Test 
+  public void testProcessInputTextMultipleFeaturesWaypoints() throws Exception {
+    ArrayList<ArrayList<String>> features = WaypointQueryServlet.processInputText(MULT_FEATURES_MULT_WAYPOINT_LABEL);
+    ArrayList<ArrayList<String>> comparison = new ArrayList<ArrayList<String>>();
+    comparison.add(new ArrayList<String>(Arrays.asList(DAISY_LABEL, CLOVER_LABEL)));
+    comparison.add(new ArrayList<String>(Arrays.asList(RASPBERRY_LABEL, TREE_LABEL)));
+    assertEquals(features, comparison);
+  }
+
+  /* Testing getLocations on empty input, stubbing database call */
+  @Test
+  public void testGetLocationsEmpty() throws Exception {
+    PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(NOTHING_BACKEND);
+    ArrayList<List<Coordinate>> locations = servlet.getLocations("");
+    ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
+    comparison.add(Arrays.asList());
+    assertEquals(locations, comparison);
+  }
+
+  /* Testing getLocations on one input, stubbing database call */
+  @Test
+  public void testGetLocationsOne() throws Exception {
+    PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(RASPBERRY_BACKEND);
+    ArrayList<List<Coordinate>> locations = servlet.getLocations("raspberry");
+    ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
+    comparison.add(Arrays.asList(RASPBERRY.get(0), RASPBERRY.get(1), RASPBERRY.get(2)));
+    assertEquals(locations, comparison);
+  }
+
+  /* Testing getLocations on an input where we limit the number, stubbing database call */
+  @Test
+  public void testGetLocationsNumber() throws Exception {
+    PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(RASPBERRY_BACKEND);
+    ArrayList<List<Coordinate>> locations = servlet.getLocations("1 raspberry");
+    ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
+    comparison.add(Arrays.asList(RASPBERRY_PARTIAL));
+    assertEquals(locations, comparison);
+  }
+
+  
+  /*
   @Test // Post a query with one waypoint description
   public void testServletPostOne() throws Exception {
     when(request.getParameter("text-input")).thenReturn("daisy");
