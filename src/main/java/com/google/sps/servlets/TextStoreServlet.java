@@ -20,10 +20,7 @@ import com.google.appengine.api.datastore.*;
 import com.google.appengine.api.datastore.Query.*;
 import java.io.IOException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.*;
 import java.util.ArrayList;
 import java.util.List;
 import com.google.gson.Gson;
@@ -43,9 +40,17 @@ public class TextStoreServlet extends HttpServlet {
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     HttpSession currentSession = request.getSession();
     String currSessionID = currentSession.getId();
-    String textinput = getTextInputforSession(currSessionID);
-    response.setContentType("text/plain");
-    response.getWriter().println(textinput);
+    
+    boolean fetched = markFetch(request);
+    if (!fetched){
+        String textinput = getTextInputforSession(currSessionID);
+        response.setContentType("text/plain");
+        response.getWriter().println(textinput);
+    }
+    else{
+        response.setContentType("text/plain");
+        response.getWriter().println(" ");
+    }
   }
  
  
@@ -55,7 +60,7 @@ public class TextStoreServlet extends HttpServlet {
   private String getTextInputforSession(String currSessionID){
     //Retrieve text-input for that session.
     Filter sesionFilter =
-    new FilterPredicate("session-id", FilterOperator.EQUAL, currSessionID);
+        new FilterPredicate("session-id", FilterOperator.EQUAL, currSessionID);
     // sort by most recent query for session ID
     Query query = 
             new Query("Route")
@@ -67,5 +72,18 @@ public class TextStoreServlet extends HttpServlet {
     String text = (String) MostRecentStore.getProperty("text");
     return text;
   }
-
+  
+  /** If session has already fetched from servlet will return true.
+   *   Else if it's first time to fetch from servlet will return false.
+  */ 
+  private static boolean markFetch(HttpServletRequest request){
+    HttpSession currentSession = request.getSession();
+    if (currentSession.getAttribute("textFetched")== null || !(boolean) currentSession.getAttribute("textFetched")){
+        currentSession.setAttribute("textFetched", true);
+        return false;
+    }
+    else{
+        return true;
+    }
+  }
 }

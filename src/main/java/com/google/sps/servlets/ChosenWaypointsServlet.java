@@ -41,12 +41,18 @@ public class ChosenWaypointsServlet extends HttpServlet {
     */ 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    String currSessionID = getSession(request);
-   
-    String waypointsJSONstring = getQueryResultsforSession(currSessionID);
-    // Return last stored waypoints
-    response.setContentType("application/json");
-    response.getWriter().println(waypointsJSONstring);
+    String currSessionID = getSessionID(request);
+    boolean fetched = markFetch(request);
+    if (!fetched){
+        String waypointsJSONstring = getQueryResultsforSession(currSessionID);
+        // Return last stored waypoints
+        response.setContentType("application/json");
+        response.getWriter().println(waypointsJSONstring);
+    }
+    else{
+        response.setContentType("application/json");
+        response.getWriter().println("[]");
+    }
     }
 
     /** Scans the checkbox form for checked coordinates and appends that to waypoints. 
@@ -57,13 +63,16 @@ public class ChosenWaypointsServlet extends HttpServlet {
         //TODO (zous): should we throw exceptions/error if there are no checked checkboxes
         ArrayList<Coordinate> waypoints = getWaypointsfromRequest(request);
         // Store input text and waypoint in datastore.
-        String currSessionID = getSession(request);
+        String currSessionID = getSessionID(request);
+        setSessionAttributes(request);
         storeInputAndWaypoints(currSessionID, waypoints);
         // Redirect back to the index page.
         response.sendRedirect("/index.html");
     }
 
-    public static String getSession(HttpServletRequest request){
+    /** Returns session ID of request. 
+    */ 
+    private static String getSessionID(HttpServletRequest request){
         HttpSession currentSession = request.getSession();
         String currSessionID = currentSession.getId();
         return currSessionID;
@@ -125,5 +134,27 @@ public class ChosenWaypointsServlet extends HttpServlet {
         String waypointsJSONstring = (String) MostRecentStore.getProperty("waypoints");
         return waypointsJSONstring;
     }
+
+  /** If session has already fetched from servlet will return true.
+   *   Else if it's first time to fetch from servlet will return false.
+  */ 
+  private static boolean markFetch(HttpServletRequest request){
+    HttpSession currentSession = request.getSession();
+    if (!(boolean) currentSession.getAttribute("chosenFetched")){
+        currentSession.setAttribute("chosenFetched", true);
+        return false;
+    }
+    else{
+        return true;
+    }
+  }
+
+   /** Changes chosenFetched sessionAttribute to false.
+  */ 
+  private static void setSessionAttributes(HttpServletRequest request){
+      HttpSession currentSession = request.getSession();
+      currentSession.setAttribute("chosenFetched", false);
+      currentSession.setAttribute("textFetched", false);
+  }
 
 }

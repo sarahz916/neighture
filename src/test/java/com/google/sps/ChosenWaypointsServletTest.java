@@ -101,7 +101,7 @@ public class ChosenWaypointsServletTest {
     
 
     String SessionID = "testsession";
-    PowerMockito.when(ChosenWaypointsServlet.class, "getSession", request).thenReturn(SessionID);
+    PowerMockito.when(ChosenWaypointsServlet.class, "getSessionID", request).thenReturn(SessionID);
   }
 
   /** Test function that takes JSON String and returns ArrayList Coordinates. 
