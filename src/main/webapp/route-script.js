@@ -106,6 +106,7 @@ function createMarker(map, pos, label, shape, color) {
             fillOpacity: 100,
             scale: 5,
             strokeWeight: 2,
+            labelOrigin: { x: 0, y: 2}
         }
     };
     let marker = new google.maps.Marker(markerOpts);
