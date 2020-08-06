@@ -13,7 +13,7 @@
 // limitations under the License.
 
 package com.google.sps.servlets;
-
+import com.google.sps.SessionDataStore;
 import java.net.HttpURLConnection;
 import java.net.URL; 
 import com.google.appengine.api.datastore.*;
@@ -32,58 +32,19 @@ import com.google.gson.Gson;
     urlPatterns = "/text-store"
 )
 public class TextStoreServlet extends HttpServlet {
+    private final String FETCH_FIELD = "textFetched";
+    private final String FETCH_PROPERTY ="text";
+    private final String ENTITY_TYPE =  "Route";
 
   /** Looks up text input from Route Entites by Session ID in datastore.
   *   Returns text of most recent input-text from session ID. 
   */ 
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    HttpSession currentSession = request.getSession();
-    String currSessionID = currentSession.getId();
-    
-    boolean fetched = markFetch(request);
-    if (!fetched){
-        String textinput = getTextInputforSession(currSessionID);
-        response.setContentType("text/plain");
-        response.getWriter().println(textinput);
-    }
-    else{
-        response.setContentType("text/plain");
-        response.getWriter().println(" ");
-    }
+      SessionDataStore sessionDataStore = new SessionDataStore(request);
+      String valueJSONString = sessionDataStore.queryOnlyifFirstFetch(FETCH_FIELD, ENTITY_TYPE, FETCH_PROPERTY);
+      response.setContentType("application/json");
+      response.getWriter().println(valueJSONString);
   }
- 
- 
-  /** Looks up text input from Route Entites by Session ID in datastore.
-  *   Returns text of most recent input-text from session ID. 
-  */ 
-  private String getTextInputforSession(String currSessionID){
-    //Retrieve text-input for that session.
-    Filter sesionFilter =
-        new FilterPredicate("session-id", FilterOperator.EQUAL, currSessionID);
-    // sort by most recent query for session ID
-    Query query = 
-            new Query("Route")
-                .setFilter(sesionFilter)
-                .addSort("timestamp", SortDirection.DESCENDING);
-    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-    List results = datastore.prepare(query).asList(FetchOptions.Builder.withLimit(1));
-    Entity MostRecentStore = (Entity) results.get(0);
-    String text = (String) MostRecentStore.getProperty("text");
-    return text;
-  }
-  
-  /** If session has already fetched from servlet will return true.
-   *   Else if it's first time to fetch from servlet will return false.
-  */ 
-  private static boolean markFetch(HttpServletRequest request){
-    HttpSession currentSession = request.getSession();
-    if (currentSession.getAttribute("textFetched")== null || !(boolean) currentSession.getAttribute("textFetched")){
-        currentSession.setAttribute("textFetched", true);
-        return false;
-    }
-    else{
-        return true;
-    }
-  }
+
 }

@@ -15,6 +15,7 @@
 package com.google.sps;
 import com.google.sps.Coordinate;
 import com.google.sps.WaypointDescription;
+import com.google.sps.SessionDataStore;
 import com.google.gson.Gson;
 import com.google.appengine.api.datastore.*;
 import com.google.appengine.api.datastore.Query.*;
@@ -36,6 +37,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;  
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Calendar;
 import java.util.regex.Pattern;
@@ -61,28 +63,22 @@ public class WaypointQueryServlet extends HttpServlet {
   private static final ImmutableMap<String, Integer> NUMBER_MAP = ImmutableMap.<String, Integer>builder().put("one", 1).put("two", 2).put("three", 3)
     .put("four", 4).put("five", 5).put("six", 6).put("seven", 7).put("eight", 8).put("nine", 9).put("ten", 10).build(); 
 
+  private final ArrayList<String> FIELDS_MODIFIED = new ArrayList<String>( 
+       Arrays.asList("queryFetched", "textFetched"));
+  private final String FETCH_FIELD = "queryFetched";
+  private final String FETCH_PROPERTY = "waypoints";
+  private final String ENTITY_TYPE = "Route";
+    
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    HttpSession currentSession = request.getSession();
-    String currSessionID = currentSession.getId();
-    boolean fetched = markFetch(request);
-    if (!fetched){
-        String waypointsJSONstring = getQueryResultsforSession(currSessionID);
-        // Return last stored waypoints
-        response.setContentType("application/json");
-        response.getWriter().println(waypointsJSONstring);
-    }
-    else{
-        response.setContentType("application/json");
-        response.getWriter().println("[]");
-    }
-    
+    SessionDataStore sessionDataStore = new SessionDataStore(request);
+    String valueJSONString = sessionDataStore.queryOnlyifFirstFetch(FETCH_FIELD, ENTITY_TYPE, FETCH_PROPERTY);
+    response.setContentType("application/json");
+    response.getWriter().println(valueJSONString);    
   }
 
   @Override
-  public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-    String currSessionID = getSessionID(request);
-    setSessionAttributes(request);
+  public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
     String input = request.getParameter("text-input");
     ArrayList<List<Coordinate>> waypoints;
     try {
@@ -90,30 +86,16 @@ public class WaypointQueryServlet extends HttpServlet {
     } catch (Exception e) {
       throw new ServletException(e);
     }
-    // Store input text and waypoint in datastore so same session ID can retrieve later.
-    storeInputAndWaypoints(currSessionID, input, waypoints);
+    String waypointsJSONstring = new Gson().toJson(waypoints);
+    SessionDataStore sessionDataStore = new SessionDataStore(request);
+    // Store input text and waypoint in datastore.
+    sessionDataStore.storeProperty(ENTITY_TYPE, "waypoints", waypointsJSONstring);
+    sessionDataStore.storeProperty(ENTITY_TYPE, "text", input);
+    sessionDataStore.setSessionAttributes(FIELDS_MODIFIED);
     // Redirect back to the index page.
     response.sendRedirect("/index.html");
   }
 
-  /** Uses the Session ID to retrieve waypoints from datastore
-  * Returns waypoints in JSON String format
-  */
-  private String getQueryResultsforSession(String currSessionID){
-    //Retrieve Waypoints for that session.
-    Filter sesionFilter =
-    new FilterPredicate("session-id", FilterOperator.EQUAL, currSessionID);
-    // sort by most recent query for session ID
-    Query query = 
-            new Query("Route")
-                .setFilter(sesionFilter)
-                .addSort("timestamp", SortDirection.DESCENDING);
-    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-    List results = datastore.prepare(query).asList(FetchOptions.Builder.withLimit(1));
-    Entity MostRecentStore = (Entity) results.get(0);
-    String waypointsJSONstring = (String) MostRecentStore.getProperty("waypoints");
-    return waypointsJSONstring;
-  }
 
   /** Using the input text, fetches waypoints from the database to be 
     * used by the frontend. Returns possible waypoints. 
@@ -284,55 +266,6 @@ public class WaypointQueryServlet extends HttpServlet {
       index += 1;
     }
     return coordinates;
-  }
-
-  /** Stores input text and waypoints in a RouteEntity in datastore.
-    * Returns nothing.
-    */ 
-  private static void storeInputAndWaypoints(String currSessionID, String textInput, ArrayList<List<Coordinate>> waypoints) {
-    Entity RouteEntity = new Entity("Route");
-    RouteEntity.setProperty("session-id", currSessionID);
-    RouteEntity.setProperty("text", textInput);
-    String json = new Gson().toJson(waypoints);
-    long timestamp = System.currentTimeMillis();
-    RouteEntity.setProperty("timestamp", timestamp);
-    // Store as a json string because Coordinates are unsupported.
-    RouteEntity.setProperty("waypoints", json);
-    // Store Route.
-    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-    datastore.put(RouteEntity);
-  }
-
-
-  /** Returns session ID of request. 
-  */ 
-  private static String getSessionID(HttpServletRequest request) {
-    HttpSession currentSession = request.getSession();
-    String currSessionID = currentSession.getId();
-    return currSessionID;
-  }
-
-   /** If session has already fetched from servlet will return true.
-   *   Else if it's first time to fetch from servlet will return false.
-  */ 
-  private static boolean markFetch(HttpServletRequest request) { 
-    HttpSession currentSession = request.getSession();
-    if (!(boolean) currentSession.getAttribute("queryFetched")) {
-        currentSession.setAttribute("queryFetched", true);
-        return false;
-    }
-    else{
-        return true;
-    }
-  }
-   /** Changes queryFetched sessionAttribute to false.
-  */ 
-
-  private static void setSessionAttributes(HttpServletRequest request) {
-      HttpSession currentSession = request.getSession();
-      currentSession.setAttribute("queryFetched", false);
-      currentSession.setAttribute("chosenFetched", true);
-      currentSession.setAttribute("textFetched", true);
   }
 
 }

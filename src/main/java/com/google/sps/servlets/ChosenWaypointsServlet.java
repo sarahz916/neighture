@@ -14,6 +14,7 @@
 
 package com.google.sps;
 import com.google.sps.Coordinate;
+import com.google.sps.SessionDataStore;
 import com.google.gson.Gson;
 import org.json.JSONObject;
 import com.google.appengine.api.datastore.*;
@@ -34,25 +35,22 @@ import java.util.*;
   */ 
 @WebServlet("/chosen-waypoints")
 public class ChosenWaypointsServlet extends HttpServlet {
-    public static final String EMPTY_LIST = "[]";
+    private final ArrayList<String> FIELDS_MODIFIED = new ArrayList<String>( 
+            Arrays.asList("chosenFetched", "textFetched"));
+    private final String FETCH_FIELD = "chosenFetched";
+    private final String FETCH_PROPERTY = "actual-route";
+    private final String ENTITY_TYPE = "Route";
+    
 
     /** Goes through datastore to find most recent Direction Entity associated with SessionID.
     *   Returns the waypoints ArrayList<Coordinates> as a JSON String in response. 
     */ 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    String currSessionID = getSessionID(request);
-    boolean fetched = markFetch(request);
-    if (!fetched){
-        String waypointsJSONstring = getQueryResultsforSession(currSessionID);
-        // Return last stored waypoints
-        response.setContentType("application/json");
-        response.getWriter().println(waypointsJSONstring);
-    }
-    else{
-        response.setContentType("application/json");
-        response.getWriter().println("[]");
-    }
+      SessionDataStore sessionDataStore = new SessionDataStore(request);
+      String waypointsJSONstring = sessionDataStore.queryOnlyifFirstFetch(FETCH_FIELD, ENTITY_TYPE, FETCH_PROPERTY);
+      response.setContentType("application/json");
+      response.getWriter().println(waypointsJSONstring);
     }
 
     /** Scans the checkbox form for checked coordinates and appends that to waypoints. 
@@ -61,27 +59,20 @@ public class ChosenWaypointsServlet extends HttpServlet {
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         //TODO (zous): should we throw exceptions/error if there are no checked checkboxes
-        ArrayList<Coordinate> waypoints = getWaypointsfromRequest(request);
+        String waypoints = getWaypointsfromRequest(request);
+        SessionDataStore sessionDataStore = new SessionDataStore(request);
         // Store input text and waypoint in datastore.
-        String currSessionID = getSessionID(request);
-        setSessionAttributes(request);
-        storeInputAndWaypoints(currSessionID, waypoints);
+        sessionDataStore.storeProperty(ENTITY_TYPE, FETCH_PROPERTY, waypoints);
+        sessionDataStore.storeStoredRoute();
+        sessionDataStore.setSessionAttributes(FIELDS_MODIFIED);
         // Redirect back to the index page.
         response.sendRedirect("/index.html");
     }
 
-    /** Returns session ID of request. 
-    */ 
-    private static String getSessionID(HttpServletRequest request){
-        HttpSession currentSession = request.getSession();
-        String currSessionID = currentSession.getId();
-        return currSessionID;
-    }
-
     /** Scans the checkbox form for checked coordinates and appends that to waypoints. 
-    *   Returns waypoints as ArrayList<Coordinates>
+    *   Returns waypoints JSON String ArrayList<Coordinates>
     */ 
-    public ArrayList<Coordinate> getWaypointsfromRequest(HttpServletRequest request){
+    public String getWaypointsfromRequest(HttpServletRequest request){
         Enumeration paramNames = request.getParameterNames();
         ArrayList<Coordinate> waypoints = new ArrayList<Coordinate>();
         while(paramNames.hasMoreElements()) {
@@ -94,70 +85,8 @@ public class ChosenWaypointsServlet extends HttpServlet {
             Coordinate featureCoordinate = new Coordinate(x, y, feature);
             waypoints.add(featureCoordinate);
         }
-        return waypoints;
-    }
-
-     /** Stores input text and waypoints in a DirectionEntity in datastore.
-    * Returns nothing.
-    */ 
-    public static void storeInputAndWaypoints(String currSessionID, ArrayList<Coordinate> waypoints){
-        //Retrieve Waypoints for that session.
-        Filter sesionFilter =
-        new FilterPredicate("session-id", FilterOperator.EQUAL, currSessionID);
-        // sort by most recent query for session ID
-        Query query = 
-                new Query("Route")
-                    .setFilter(sesionFilter)
-                    .addSort("timestamp", SortDirection.DESCENDING);
-        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-        List results = datastore.prepare(query).asList(FetchOptions.Builder.withLimit(1));
-        Entity MostRecentStore = (Entity) results.get(0);
         String json = new Gson().toJson(waypoints);
-        MostRecentStore.setProperty("actual-route", json);
-        long timestamp = System.currentTimeMillis();
-        MostRecentStore.setProperty("timestamp", timestamp);
-        datastore.put(MostRecentStore);
+        return json;
     }
-
-    /** Filters through  Direction Entities to find the one for currSessionID.
-    * Returns the choosen waypoints as a JSON String.
-    */     
-    public String getQueryResultsforSession(String currSessionID){
-        //Retrieve Waypoints for that session.
-        Filter sesionFilter =
-        new FilterPredicate("session-id", FilterOperator.EQUAL, currSessionID);
-        // sort by most recent query for session ID
-        Query query = 
-                new Query("Route")
-                    .setFilter(sesionFilter)
-                    .addSort("timestamp", SortDirection.DESCENDING);
-        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-        List results = datastore.prepare(query).asList(FetchOptions.Builder.withLimit(1));
-        Entity MostRecentStore = (Entity) results.get(0);
-        String waypointsJSONstring = (String) MostRecentStore.getProperty("actual-route");
-        return waypointsJSONstring;
-    }
-
-  /** If session has already fetched from servlet will return true.
-   *   Else if it's first time to fetch from servlet will return false.
-  */ 
-  private static boolean markFetch(HttpServletRequest request){
-    HttpSession currentSession = request.getSession();
-    if (!(boolean) currentSession.getAttribute("chosenFetched")){
-        currentSession.setAttribute("chosenFetched", true);
-        return false;
-    }
-    else{
-        return true;
-    }
-  }
-
-   /** Changes chosenFetched sessionAttribute to false.
-  */ 
-  private static void setSessionAttributes(HttpServletRequest request){
-      HttpSession currentSession = request.getSession();
-      currentSession.setAttribute("chosenFetched", false);
-      currentSession.setAttribute("textFetched", false);
-  }
 
 }
