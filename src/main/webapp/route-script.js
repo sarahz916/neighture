@@ -374,6 +374,7 @@ try {
     module.exports.addNewLegendElem = addNewLegendElem;
     module.exports.createColorBoxElem = createColorBoxElem;
     module.exports.createCheckBoxEl = createCheckBoxEl;
+    module.exports.createCheckBoxSet = createCheckBoxSet;
 } catch(error) {
     console.log("Not exporting code from this script")
 }

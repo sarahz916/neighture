@@ -94,4 +94,33 @@ describe('createCheckBoxEl', function() {
         const checkbox = createCheckBoxEl(testCoords, testLabel);
         expect(checkbox.childNodes[1].innerText).toEqual(testLabel);
     });
+
+});
+
+describe('createCheckBoxSet', function() {
+    let createCheckBoxSet = require('./route-script.js').createCheckBoxSet;
+
+    let testSet = [ { x : 1, y : 1, label : 'flower' }, { x : 2, y : 2, label : 'flower' } ];
+    let testColor = 'red'
+
+    it('should be a function', function() {
+        expect(createCheckBoxSet).toBeInstanceOf(Function);
+    });
+
+    it('should return a div with 2 + set.length child nodes', function() {
+        let checkboxset = createCheckBoxSet(testSet, testColor);
+        expect(checkboxset.tagName).toEqual('DIV');
+        expect(checkboxset.childNodes.length).toEqual(2 + testSet.length);
+    });
+
+    it('should return a div with a child h4 element containing the label', function() {
+        let checkboxset = createCheckBoxSet(testSet, testColor);
+        expect(checkboxset.childNodes[0].tagName).toEqual('H4');
+        expect(checkboxset.childNodes[0].innerText).toEqual(testSet[0].label);
+    });
+
+    it('should return a div with (testSet.length) child checkbox elements with correct letter text', function() {
+        let checkboxset = createCheckBoxSet(testSet, testColor);
+        // TODO: write
+    });
 });
