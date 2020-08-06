@@ -13,7 +13,8 @@
 // limitations under the License.
 
 package com.google.sps;
-import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.Iterator;
 
 /** Description of a user's waypoint query: how many the user wants, the label, and the features in the waypoint. */
 public final class WaypointDescription {
@@ -23,11 +24,11 @@ public final class WaypointDescription {
   private int amount;
   private boolean hasSetAmount;
   private String label;
-  private final ArrayList<String> features;
+  private final LinkedHashSet<String> features;
 
   /** Creates a new waypoint description with all needed information
     */
-  public WaypointDescription(int amount, ArrayList<String> features) {
+  public WaypointDescription(int amount, LinkedHashSet<String> features) {
     this.amount = amount;
     this.label = DEFAULT_LABEL;
     this.features = features;
@@ -39,13 +40,13 @@ public final class WaypointDescription {
   public WaypointDescription(int amount) {
     this.amount = amount;
     this.label = DEFAULT_LABEL;
-    this.features = new ArrayList<String>();
+    this.features = new LinkedHashSet<String>();
     hasSetAmount = true;
   }
 
   /** Creates a new waypoint description with some features
     */
-  public WaypointDescription(ArrayList<String> features) {
+  public WaypointDescription(LinkedHashSet<String> features) {
     this.amount = DEFAULT_AMOUNT;
     this.label = DEFAULT_LABEL;
     this.features = features;
@@ -57,7 +58,7 @@ public final class WaypointDescription {
   public WaypointDescription() {
     this.amount = DEFAULT_AMOUNT;
     this.label = DEFAULT_LABEL;
-    this.features = new ArrayList<String>();
+    this.features = new LinkedHashSet<String>();
     hasSetAmount = false;
   }
 
@@ -94,7 +95,7 @@ public final class WaypointDescription {
   
   /** Returns the y coordinate of this waypoint description.
     */
-  public ArrayList<String> getFeatures() {
+  public LinkedHashSet<String> getFeatures() {
     return features;
   }
 
@@ -115,9 +116,10 @@ public final class WaypointDescription {
     */
   public boolean createLabel() {
     if (hasFeatures()) {
-      label = features.get(0);
-      for (int i = 1; i < features.size(); i++) {
-        label += ", " + features.get(i);
+      Iterator<String> iterator = features.iterator();
+      label = iterator.next();
+      while( iterator.hasNext() ){
+        label += ", " + iterator.next();
       }
       return true;
     }

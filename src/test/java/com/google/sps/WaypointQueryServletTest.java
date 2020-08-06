@@ -16,6 +16,7 @@ package com.google.sps;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.Calendar;
 import java.util.Calendar.Builder;
 
@@ -64,12 +65,12 @@ public class WaypointQueryServletTest {
   public static final String ONE_FEATURE_MULT_WAYPOINT_QUERY = "daisy;+clover.raspberry!!?\ntree";
   public static final String MULT_FEATURES_MULT_WAYPOINT_QUERY = "daisy,clover  raspberry; tree";
   public static final int MAX_AMOUNT = 2;
-  public static final WaypointDescription DAISY_CLOVER_RASPBERRY_FEATURES_ONLY = new WaypointDescription(new ArrayList<String>(Arrays.asList("daisy", "clover", "raspberry")));
-  public static final WaypointDescription DAISY_CLOVER_RASPBERRY_WITH_NUMBER = new WaypointDescription(MAX_AMOUNT, new ArrayList<String>(Arrays.asList("daisy", "clover", "raspberry")));
-  public static final WaypointDescription DAISY_DESC = new WaypointDescription(new ArrayList<String>(Arrays.asList("daisy")));
-  public static final WaypointDescription CLOVER_DESC = new WaypointDescription(new ArrayList<String>(Arrays.asList("clover")));
-  public static final WaypointDescription RASPBERRY_DESC = new WaypointDescription(new ArrayList<String>(Arrays.asList("raspberry")));
-  public static final WaypointDescription TREE_DESC = new WaypointDescription(new ArrayList<String>(Arrays.asList("tree")));
+  public static final WaypointDescription DAISY_CLOVER_RASPBERRY_FEATURES_ONLY = new WaypointDescription(new LinkedHashSet<String>(Arrays.asList("daisy", "clover", "raspberry")));
+  public static final WaypointDescription DAISY_CLOVER_RASPBERRY_WITH_NUMBER = new WaypointDescription(MAX_AMOUNT, new LinkedHashSet<String>(Arrays.asList("daisy", "clover", "raspberry")));
+  public static final WaypointDescription DAISY_DESC = new WaypointDescription(new LinkedHashSet<String>(Arrays.asList("daisy")));
+  public static final WaypointDescription CLOVER_DESC = new WaypointDescription(new LinkedHashSet<String>(Arrays.asList("clover")));
+  public static final WaypointDescription RASPBERRY_DESC = new WaypointDescription(new LinkedHashSet<String>(Arrays.asList("raspberry")));
+  public static final WaypointDescription TREE_DESC = new WaypointDescription(new LinkedHashSet<String>(Arrays.asList("tree")));
   public static final ArrayList<String> TREE_WORD = new ArrayList<String>(Arrays.asList("tree"));
   public static final ArrayList<String> LICHEN_WORD = new ArrayList<String>(Arrays.asList("lichen"));
   public static final ArrayList<String> DAISY_WORD = new ArrayList<String>(Arrays.asList("daisy"));

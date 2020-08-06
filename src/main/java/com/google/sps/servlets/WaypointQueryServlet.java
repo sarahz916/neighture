@@ -37,6 +37,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;  
 import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Calendar;
 import java.util.regex.Pattern;
 import java.text.DecimalFormat;
@@ -126,19 +127,19 @@ public class WaypointQueryServlet extends HttpServlet {
     for (WaypointDescription waypointDescription : waypointRequests) {
       int maxNumberCoordinates = waypointDescription.getMaxAmount();
       String waypointLabel = waypointDescription.getLabel();
-      ArrayList<String> featureRequests = waypointDescription.getFeatures();
+      LinkedHashSet<String> featureRequests = waypointDescription.getFeatures();
+      boolean firstFeatureFound = false;
       ArrayList<Coordinate> potentialCoordinates = new ArrayList<Coordinate>();
       // first is the arraylist index of the first feature in the database
-      for (int first = 0, i = 0; i < featureRequests.size(); i++, first++) {
-        String featureRequest = featureRequests.get(i);
+      for (String featureRequest : featureRequests) {
         // Make call to database
         ArrayList<Coordinate> locations = fetchFromDatabase(featureRequest, waypointLabel);
         if (!locations.isEmpty()) { // The feature is in the database
-          if (i == first) {
-            potentialCoordinates.addAll(locations);
-            first = -1; // We don't need to worry about it anymore since at least one feature was found!
-          } else {
+          if (firstFeatureFound) {
             potentialCoordinates.retainAll(locations);
+          } else {
+            potentialCoordinates.addAll(locations);
+            firstFeatureFound = true;
           }
         }
       }
@@ -175,7 +176,7 @@ public class WaypointQueryServlet extends HttpServlet {
       String feature = featureQueries[i]; 
       if (isInt(feature)) {
         int maxAmount = wordToInt(feature);
-        if (waypoint.hasFeatures()) { // HAS FEATURES, MAKE NEW ONE; ADD CASE FOR SET ALREADY SO JUST DISCARD
+        if (waypoint.hasFeatures()) { 
           // Start a new waypoint description
           waypoint.createLabel();
           waypointsFromQuery.add(waypoint);
