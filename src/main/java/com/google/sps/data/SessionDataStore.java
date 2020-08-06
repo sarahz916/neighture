@@ -65,6 +65,8 @@ public final class SessionDataStore {
         }
     }
 
+    /** Stores Entity with Property Value with Session ID as id in DataStore for easy retrieval.
+    */ 
     public void storeProperty(String EntityType, String PropertyName, String value){
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         Transaction txn = datastore.beginTransaction();
@@ -79,7 +81,8 @@ public final class SessionDataStore {
         datastore.put(txn, Entity);
         txn.commit();
     }
-
+    /** Retrieves the Property value of the Entity requested associated to the Session ID only if fetchAttribute is false. 
+    */ 
     public String queryOnlyifFirstFetch(String fetchAttribute, String EntityType, String propertyToGet){
     boolean fetched = this.markFetch(fetchAttribute);
     if (!fetched){
@@ -89,6 +92,8 @@ public final class SessionDataStore {
     }
     }
 
+    /** Retrieves the Property value of the Entity requested. 
+    */ 
     public String fetchSessionEntity(String EntityType, String propertyToGet){
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         try {
@@ -99,7 +104,8 @@ public final class SessionDataStore {
             return EMPTY_LIST;
         }
     }
-
+    /** Creates an StoredRoute Entity that goes into GenRoute page.  
+    */ 
     public void storeStoredRoute(){
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         TransactionOptions options = TransactionOptions.Builder.withXG(true);
