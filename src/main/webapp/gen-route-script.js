@@ -190,6 +190,20 @@ function getLabelFromLatLng(pt, waypointsWithLabels) {
 /**
  * Convert waypoint clusters in JSON form returned by servlet to Google Maps LatLng objects.
  */
+<<<<<<< HEAD
+function convertWaypointstoLatLng(waypoints) {
+     let latlngWaypoints = new Map();
+     console.log(waypoints)
+     for (let i of waypoints) {
+        console.log(i["label"])
+        let waypoint = new google.maps.LatLng(i["y"], i["x"]);
+        // If the given label doesn't exist in the map, add it.
+        if (!latlngWaypoints.has(i["label"])) {
+            latlngWaypoints.set(i["label"], [waypoint]);
+        } else {
+            latlngWaypoints.get(i["label"]).push(waypoint);
+        }
+=======
 function convertWaypointClusterstoLatLng(waypoints) {
      let latlngWaypoints = {};
      for (let cluster of waypoints) {
@@ -199,6 +213,7 @@ function convertWaypointClusterstoLatLng(waypoints) {
             pts.push(waypoint);
          }
          latlngWaypoints[cluster[0].label] = pts;
+>>>>>>> 1252e476d2eccc64a7d0b038befbbd5f179585e9
     }
     return latlngWaypoints;
 }

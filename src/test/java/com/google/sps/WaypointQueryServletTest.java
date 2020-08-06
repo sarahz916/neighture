@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package com.google.sps;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -37,7 +38,7 @@ import org.powermock.api.mockito.expectation.PowerMockitoStubber;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-/** Tests each public function of ChosenWaypointsServlet aside from those relating to the datastore
+/** Tests each public function of WaypointQueryServlet aside from those relating to the datastore
   */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(WaypointQueryServlet.class)
@@ -57,20 +58,21 @@ public class WaypointQueryServletTest {
   public static final String SUNFLOWER_BACKEND = "[{\"latitude\": 41.897521, \"longitude\": -87.619934, \"common_name\": {\"name\": \"sunflower\"}}]";
   public static final String NOTHING_BACKEND = "[]";
   public static final String COMPARISON_DATE = "2019-08-01";
-  public static final String DAISY_LABEL = "daisy";
+  public static final String MULT_FEATURES_ONE_WAYPOINT_LABEL = "daisy,cLover     raSpbeRRy   ";
+  public static final String ONE_FEATURE_MULT_WAYPOINT_LABEL = "daisy;+clover.raspberry!!?\ntree";
+  public static final String MULT_FEATURES_MULT_WAYPOINT_LABEL = "daisy,clover; raspberry tree";
+  public static final ArrayList<String> DAISY_CLOVER_RASPBERRY = new ArrayList<String>(Arrays.asList("daisy", "clover", "raspberry"));
+  public static final ArrayList<String> TREE_QUERY = new ArrayList<String>(Arrays.asList("tree"));
+  public static final ArrayList<String> LICHEN_QUERY = new ArrayList<String>(Arrays.asList("lichen"));
   private WaypointQueryServlet servlet;
   
   @Mock
-  StringWriter stringWriter;
-  @Mock
-  PrintWriter writer;
-  @Mock
-  HttpSession session;
+  int maxNumberCoordinatesMock;
 
   @Before
   public void before() throws Exception { 
     servlet = PowerMockito.spy(new WaypointQueryServlet());
-    //PowerMockito.mockStatic(WaypointQueryServlet.class);
+    //servlet = mock(WaypointQueryServlet.class, CALLS_REAL_METHODS);
   }
 
   /* Testing getStartDate */
@@ -86,241 +88,148 @@ public class WaypointQueryServletTest {
   /* Testing jsonToCoordinates */
   @Test 
   public void testJsonToCoordinates() throws Exception {
-    ArrayList<Coordinate> coordinateResult = WaypointQueryServlet.jsonToCoordinates(DAISY_BACKEND, DAISY_LABEL);
+    ArrayList<Coordinate> coordinateResult = WaypointQueryServlet.jsonToCoordinates(DAISY_BACKEND, "daisy");
     assertEquals(coordinateResult, DAISY);
   }
-  
-  /*
-  @Test // Empty input
-  public void testServletPostEmpty() throws Exception {
-    when(request.getParameter("text-input")).thenReturn("");
-    PowerMockito.doReturn(NOTHING).when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
 
-    servlet.doPost(request, response);
-    verify(request, atLeast(1)).getParameter("text-input");
-    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
-    comparison.add(NOTHING);
-    assertEquals(waypointMock, comparison);
+  /* Testing fetchFromDatabase when result exists; mock sendGET */
+  @Test 
+  public void testFetchFromDatabaseResult() throws Exception {
+    PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(TREE_BACKEND);
+    ArrayList<Coordinate> coordinateResult = WaypointQueryServlet.fetchFromDatabase("tree", "tree,lichen");
+    assertEquals(coordinateResult, TREE_LICHEN);
   }
 
-  @Test // Post a query with one waypoint description
-  public void testServletPostOne() throws Exception {
-    when(request.getParameter("text-input")).thenReturn("daisy");
-    PowerMockito.doReturn(DAISY).when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
-
-    servlet.doPost(request, response);
-    verify(request, atLeast(1)).getParameter("text-input");
-
-    // Create answer to compare against
-    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
-    comparison.add(DAISY);
-    assertEquals(waypointMock, comparison);
+  /* Testing fetchFromDatabase when result doesn't exist; mock sendGET */
+  @Test 
+  public void testFetchFromDatabaseNoResult() throws Exception {
+    PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(NOTHING_BACKEND);
+    ArrayList<Coordinate> coordinateResult = WaypointQueryServlet.fetchFromDatabase("trash", "trash");
+    assertEquals(coordinateResult, NOTHING);
   }
 
-  @Test // Post a query with multiple waypoint descriptions
-  public void testServletPostMultiple() throws Exception {
-    when(request.getParameter("text-input")).thenReturn("daisy;clover;bellflower");
-    ((PowerMockitoStubber) PowerMockito.doReturn(DAISY, CLOVER, BELLFLOWER)).when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
-    servlet.doPost(request, response);
-    verify(request, atLeast(1)).getParameter("text-input");
+  /* Testing determineIfInt */
+  // ADD
 
-    // Create answer to compare against
-    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
-    comparison.add(DAISY);
-    comparison.add(CLOVER);
-    comparison.add(BELLFLOWER);
-    assertEquals(waypointMock, comparison);
+  /* Testing parseWaypointQuery, different cases */
+  @Test 
+  public void testParseWaypointQueryCasing() throws Exception {
+    ArrayList<String> features = WaypointQueryServlet.parseWaypointQuery(MULT_FEATURES_ONE_WAYPOINT_LABEL);
+    assertEquals(features, DAISY_CLOVER_RASPBERRY);
   }
 
-  @Test // Post a query with a waypoint description that isn't in the database
-  public void testServletPostBadInput() throws Exception {
-    when(request.getParameter("text-input")).thenReturn("daisy;wrong");
-    ((PowerMockitoStubber) PowerMockito.doReturn(DAISY, NOTHING)).when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
-
-    servlet.doPost(request, response);
-    verify(request, atLeast(1)).getParameter("text-input");
-
-    // Create answer to compare against
-    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
-    comparison.add(DAISY);
-    comparison.add(NOTHING);
-    assertEquals(waypointMock, comparison);
+  /* Testing parseWaypointQuery, spaces and commas */
+  @Test 
+  public void testParseWaypointQuerySplit() throws Exception {
+    ArrayList<String> features = WaypointQueryServlet.parseWaypointQuery(MULT_FEATURES_ONE_WAYPOINT_LABEL.toLowerCase());
+    assertEquals(features, DAISY_CLOVER_RASPBERRY);
   }
 
-  @Test // Post a query with waypoint descriptions separated by a lot of spacing
-  public void testServletPostLotsOfSpacing() throws Exception {
-    when(request.getParameter("text-input")).thenReturn("   daisy;    clover   ");
-    ((PowerMockitoStubber) PowerMockito.doReturn(DAISY,CLOVER)).when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
-
-    servlet.doPost(request, response);
-    verify(request, atLeast(1)).getParameter("text-input");
-
-    // Create answer to compare against
-    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
-    comparison.add(DAISY);
-    comparison.add(CLOVER);
-    assertEquals(waypointMock, comparison);
+  /* Testing processInputText, all punctuation, one feature per waypoint */
+  @Test 
+  public void testProcessInputTextPunctuation() throws Exception {
+    ArrayList<ArrayList<String>> features = WaypointQueryServlet.processInputText(ONE_FEATURE_MULT_WAYPOINT_LABEL);
+    ArrayList<ArrayList<String>> comparison = new ArrayList<ArrayList<String>>();
+    comparison.add(new ArrayList<String>(Arrays.asList("daisy")));
+    comparison.add(new ArrayList<String>(Arrays.asList("clover")));
+    comparison.add(new ArrayList<String>(Arrays.asList("raspberry")));
+    comparison.add(new ArrayList<String>(Arrays.asList("tree")));
+    assertEquals(features, comparison);
   }
 
-  @Test // Post a query with a waypoint description with different letter cases
-  public void testServletPostDifferentCases() throws Exception {
-    when(request.getParameter("text-input")).thenReturn("DAisY");
-    ((PowerMockitoStubber) PowerMockito.doReturn(DAISY)).when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
-
-    servlet.doPost(request, response);
-    verify(request, atLeast(1)).getParameter("text-input");
-
-    // Create answer to compare against
-    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
-    comparison.add(DAISY);
-    assertEquals(waypointMock, comparison);
+  /* Testing processInputText, multiple features and multiple waypoints */
+  @Test 
+  public void testProcessInputTextMultipleFeaturesWaypoints() throws Exception {
+    ArrayList<ArrayList<String>> features = WaypointQueryServlet.processInputText(MULT_FEATURES_MULT_WAYPOINT_LABEL);
+    ArrayList<ArrayList<String>> comparison = new ArrayList<ArrayList<String>>();
+    comparison.add(new ArrayList<String>(Arrays.asList("daisy", "clover")));
+    comparison.add(new ArrayList<String>(Arrays.asList("raspberry", "tree")));
+    assertEquals(features, comparison);
   }
 
-  @Test // Post a query with non-semicolon, non-comma punctuation delimiters
-  public void testServletPostDifferentPunctuation() throws Exception {
-    when(request.getParameter("text-input")).thenReturn("daisy! clover. bellflower");
-    ((PowerMockitoStubber) PowerMockito.doReturn(DAISY, CLOVER, BELLFLOWER)).when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
-
-    servlet.doPost(request, response);
-    verify(request, atLeast(1)).getParameter("text-input");
-
-    // Create answer to compare against
-    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
-    comparison.add(DAISY);
-    comparison.add(CLOVER);
-    comparison.add(BELLFLOWER);
-    assertEquals(waypointMock, comparison);
+  /* Testing getLocations on empty input, stubbing database call */
+  @Test
+  public void testGetLocationsEmpty() throws Exception {
+    PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(NOTHING_BACKEND);
+    // String anyString = anyString();
+    // when(servlet.sendGET(anyString)).thenReturn(NOTHING_BACKEND);
+    ArrayList<List<Coordinate>> locations = servlet.getLocations("");
+    ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
+    comparison.add(Arrays.asList());
+    assertEquals(locations, comparison);
   }
 
-  @Test // Post a query separating feature queries within a waypoint description with spaces
-  public void testServletPostSeparateSpaces() throws Exception {
-    when(request.getParameter("text-input")).thenReturn("tree lichen");
-    ((PowerMockitoStubber) PowerMockito.doReturn(TREE_LICHEN)).when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
-
-    servlet.doPost(request, response);
-    verify(request, atLeast(1)).getParameter("text-input");
-
-    // Create answer to compare against
-    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
-    comparison.add(TREE_LICHEN);
-    assertEquals(waypointMock, comparison);
-  }
-
-  @Test // Empty input, GET request from database
-  public void testServletPostEmptyIntegration() throws Exception {
-    when(request.getParameter("text-input")).thenReturn("");
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
-    PowerMockito.doReturn(NOTHING_BACKEND).when(WaypointQueryServlet.class, "sendGET", anyString());
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "jsonToCoordinates", anyString(), anyString());
-
-    servlet.doPost(request, response);
-    verify(request, atLeast(1)).getParameter("text-input");
-
-    // Create answer to compare against
-    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
-    comparison.add(NOTHING);
-    assertEquals(waypointMock, comparison);
-  }
-  
-  @Test // Post a query with one waypoint description, GET request from database
-  public void testServletPostOneIntegration() throws Exception {
-    when(request.getParameter("text-input")).thenReturn("daisy");
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
-    PowerMockito.doReturn(DAISY_BACKEND).when(WaypointQueryServlet.class, "sendGET", anyString());
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "jsonToCoordinates", anyString(), anyString());
-
-    servlet.doPost(request, response);
-    verify(request, atLeast(1)).getParameter("text-input");
-
-    // Create answer to compare against
-    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
-    comparison.add(DAISY);
-    assertEquals(waypointMock, comparison);
-  }
-
-  @Test // One waypoint description with multiple instances, GET request from database
-  public void testServletPostOneMultipleInstances() throws Exception {
-    when(request.getParameter("text-input")).thenReturn("raspberry");
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
-    PowerMockito.doReturn(RASPBERRY_BACKEND).when(WaypointQueryServlet.class, "sendGET", anyString());
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "jsonToCoordinates", anyString(), anyString());
-
-    servlet.doPost(request, response);
-    verify(request, atLeast(1)).getParameter("text-input");
-
-    // Create answer to compare against
-    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
+  /* Testing getLocations on one input, stubbing database call */
+  @Test
+  public void testGetLocationsOne() throws Exception {
+    PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(RASPBERRY_BACKEND);
+    ArrayList<List<Coordinate>> locations = servlet.getLocations("raspberry");
+    ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
     comparison.add(RASPBERRY);
-    assertEquals(waypointMock, comparison);
+    assertEquals(locations, comparison);
   }
 
+  /* Testing getLocations on an input where we limit the number, stubbing database call */
+  @Test
+  public void testGetLocationsNumber() throws Exception {
+    PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(RASPBERRY_BACKEND);
+    ArrayList<List<Coordinate>> locations = servlet.getLocations("1 raspberry");
+    ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
+    comparison.add(Arrays.asList(RASPBERRY.get(0)));
+    assertEquals(locations, comparison);
+  }
+
+  /* Testing getLocations with two features that have the exact same coordinates, stubbing database call */
   @Test // Two features that have the exact same coordinates
   public void testServletPostSameCoordinates() throws Exception {
-    when(request.getParameter("text-input")).thenReturn("tree,lichen");
+    PowerMockito.mockStatic(WaypointQueryServlet.class);
+    maxNumberCoordinatesMock = 5;
+    ReflectionTestUtils.setField(servlet, "maxNumberCoordinates", maxNumberCoordinatesMock);
+    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "processInputText", anyString());
+    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "parseWaypointQuery", anyString());
+    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "determineIfInt", anyString(), anyInt());
     PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
+    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "jsonToCoordinates", anyString(), anyString());
     ((PowerMockitoStubber) PowerMockito.doReturn(TREE_BACKEND, LICHEN_BACKEND)).when(WaypointQueryServlet.class, "sendGET", anyString());
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "jsonToCoordinates", anyString(), anyString());
-  
-    servlet.doPost(request, response);
-    verify(request, atLeast(1)).getParameter("text-input");
-
-    // Create answer to compare against
-    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
+    ArrayList<List<Coordinate>> locations = servlet.getLocations("tree, lichen");
+    ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
     comparison.add(TREE_LICHEN);
-    assertEquals(waypointMock, comparison);
+    assertEquals(locations, comparison);
   }
 
-  @Test // Two features that have similar coordinates
+  /* Testing getLocations with two features that have similar coordinates, stubbing database call */
+  @Test
   public void testServletPostSimilarCoordinates() throws Exception {
-    when(request.getParameter("text-input")).thenReturn("meadowsweet,sunflower");
+    PowerMockito.mockStatic(WaypointQueryServlet.class);
+    maxNumberCoordinatesMock = 5;
+    ReflectionTestUtils.setField(servlet, "maxNumberCoordinates", maxNumberCoordinatesMock);
+    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "processInputText", anyString());
+    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "parseWaypointQuery", anyString());
+    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "determineIfInt", anyString(), anyInt());
     PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
+    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "jsonToCoordinates", anyString(), anyString());
     ((PowerMockitoStubber) PowerMockito.doReturn(MEADOWSWEET_BACKEND, SUNFLOWER_BACKEND)).when(WaypointQueryServlet.class, "sendGET", anyString());
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "jsonToCoordinates", anyString(), anyString());
-
-    servlet.doPost(request, response);
-    verify(request, atLeast(1)).getParameter("text-input");
-
-    // Create answer to compare against
-    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
+    ArrayList<List<Coordinate>> locations = servlet.getLocations("meadowsweet, sunflower");
+    ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
     comparison.add(MEADOWSWEET_SUNFLOWER);
-    assertEquals(waypointMock, comparison);
+    assertEquals(locations, comparison);
   }
 
-  @Test // Two features that have different coordinates
+  /* Testing getLocations with two features that have different coordinates, stubbing database call */
+  @Test
   public void testServletPostDifferentCoordinates() throws Exception {
-    when(request.getParameter("text-input")).thenReturn("tree,raspberry");
+    PowerMockito.mockStatic(WaypointQueryServlet.class);
+    maxNumberCoordinatesMock = 5;
+    ReflectionTestUtils.setField(servlet, "maxNumberCoordinates", maxNumberCoordinatesMock);
+    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "processInputText", anyString());
+    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "parseWaypointQuery", anyString());
+    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "determineIfInt", anyString(), anyInt());
     PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
+    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "jsonToCoordinates", anyString(), anyString());
     ((PowerMockitoStubber) PowerMockito.doReturn(TREE_BACKEND, RASPBERRY_BACKEND)).when(WaypointQueryServlet.class, "sendGET", anyString());
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "jsonToCoordinates", anyString(), anyString());
-
-    servlet.doPost(request, response);
-    verify(request, atLeast(1)).getParameter("text-input");
-
-    // Create answer to compare against
-    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
+    ArrayList<List<Coordinate>> locations = servlet.getLocations("tree, raspberry");
+    ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
     comparison.add(NOTHING);
-    assertEquals(waypointMock, comparison);
-  }
-
-  @Test // Multiple waypoint descriptions with multiple features
-  public void testServletPostMultipleDescriptionsAndFeatures() throws Exception {
-    when(request.getParameter("text-input")).thenReturn("tree,lichen; raspberry");
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
-    ((PowerMockitoStubber) PowerMockito.doReturn(TREE_BACKEND, LICHEN_BACKEND, RASPBERRY_BACKEND)).when(WaypointQueryServlet.class, "sendGET", anyString());
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "jsonToCoordinates", anyString(), anyString());
-
-    servlet.doPost(request, response);
-    verify(request, atLeast(1)).getParameter("text-input");
-
-    // Create answer to compare against
-    ArrayList<ArrayList<Coordinate>> comparison = new ArrayList<ArrayList<Coordinate>>();
-    comparison.add(TREE_LICHEN);
-    comparison.add(RASPBERRY);
-    assertEquals(waypointMock, comparison);
-  }*/
-
-  @After
-  public void after() {
-    writer.flush();
+    assertEquals(locations, comparison);
   }
 }

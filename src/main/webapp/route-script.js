@@ -30,6 +30,7 @@ window.onload = function setup() {
 document.getElementById('text-git statform').addEventListener('submit', setupUserChoices());
 document.getElementById('select-points').addEventListener('submit', createMapWithWaypoints());
 
+
 /**
  * Create a route and map from a waypoint entered by the user.
  */
@@ -369,4 +370,13 @@ async function writeToAssociatedText(){
     // To get the most recent entered term, get first element of array
     // of all input text. 
     associatedTextEl.innerText = "You entered: " + storedtext;
+}
+
+try {
+    module.exports.addNewLegendElem = addNewLegendElem;
+    module.exports.createColorBoxElem = createColorBoxElem;
+    module.exports.createCheckBoxEl = createCheckBoxEl;
+    module.exports.createCheckBoxSet = createCheckBoxSet;
+} catch(error) {
+    console.log("Not exporting code from this script")
 }
