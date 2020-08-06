@@ -19,6 +19,7 @@ window.onload = function setup() {
     setupGenRouteDropDown();
 }
 
+document.getElementById('select-points').addEventListener('submit', createMapWithWaypoints());
 
 async function setupGenRouteDropDown() {
     let res = await getRouteStore();
@@ -45,8 +46,9 @@ function createOptionEl(route){
 /**
  * Create a route and map from a waypoint entered by the user.
  */
-function createMapWithWaypoints() {
-    var res = getRoute();
+async function createMapWithWaypoints() {
+    setupGenRouteDropDown();
+    var res = await getPickedRoute();
     let waypoints = convertWaypointstoLatLng(res);
     let start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
     let end = new google.maps.LatLng(41.850033, -87.5500523); // hardcoded end; will get from user later
@@ -58,16 +60,15 @@ function createMapWithWaypoints() {
     calcRoute(directionsService, directionsRenderer, start, end, waypoints);
     generateURL (start, end, waypoints);
 }
-
 /**
- * Fetch the route from route-drop-down value
+ * Fetch the generated route from gen-route servlet
  */
-function getRoute() {
-    let res = document.getElementById('routes-drop-down').value;
-    console.log(res)
-    let waypoints = JSON.parse(res);
+async function getPickedRoute() {
+    let res = await fetch('/gen-route');
+    let waypoints = await res.json();
     return waypoints;
 }
+
 /**
  * Given a DirectionsService object, a DirectionsRenderer object, start/end coordinates and a list
  * of waypoint coordinates, generate a route using the Google Maps API.
@@ -108,15 +109,64 @@ async function createWaypointLegend(route, waypointsWithLabels) {
     let marker = 'A';
     addNewLegendElem(legend, `${marker}: start`);
     let i;
+    let totalDistance = 0;
+    let totalDuration = 0;
+    // For each leg of the route, find the label of the end point
+    // and add it to the page.
     for (i = 0; i < route.legs.length - 1; i++) {
         let pt = route.legs[i].end_location;
+        totalDistance += route.legs[i].distance.value;
+        totalDuration += route.legs[i].duration.value;
         let label = getLabelFromLatLng(pt, waypointsWithLabels);
         marker = String.fromCharCode(marker.charCodeAt(0) + 1);
         addNewLegendElem(legend, `${marker}: ${label}`);
     }
     let end = route.legs[route.legs.length - 1].end_location;
+    totalDistance += route.legs[route.legs.length - 1].distance.value;
+    totalDuration += route.legs[route.legs.length - 1].duration.value;
     marker = String.fromCharCode(marker.charCodeAt(0) + 1);
     addNewLegendElem(legend, `${marker}: end`);
+    addDistanceTimeToLegend(legend, totalDistance, totalDuration);
+}
+
+/**
+ * Given the total distance and time of a route, convert the numbers to more useful metrics
+ * and add them to the legend to display to the user.
+ */
+function addDistanceTimeToLegend(legend, totalDistance, totalDuration) {
+    // Convert totalDistance and totalDuration to more helpful metrics.
+    totalDistance = Math.round(convertMetersToMiles(totalDistance) * 10) / 10;
+    totalDuration = Math.round(convertSecondsToHours(totalDuration) * 10) / 10;
+    let durationMetric = 'hours';
+    if (totalDuration < 1) {
+        totalDuration = Math.round(convertHoursToMinutes(totalDuration) * 10) / 10;
+        durationMetric = 'minutes'
+    }
+    addNewLegendElem(legend, `Total Route Distance: ${totalDistance} miles`);
+    addNewLegendElem(legend, `Total Route Duration: ${totalDuration} ${durationMetric}`);
+}
+
+/**
+ * Convert a distance in meters to miles.
+ */
+function convertMetersToMiles(distance) {
+    const CONVERSION = 0.000621371;
+    return distance * CONVERSION;
+}
+/**
+ * Convert a time in seconds to hours.
+ */
+function convertSecondsToHours(time) {
+    const CONVERSION = 3600;
+    return time / CONVERSION;
+}
+
+/**
+ * Convert a time in hours to minutes.
+ */
+function convertHoursToMinutes(time) {
+    const CONVERSION = 60;
+    return time / CONVERSION;
 }
 
 /**
@@ -138,8 +188,9 @@ function getLabelFromLatLng(pt, waypointsWithLabels) {
 }
 
 /**
- * Convert waypoints in JSON form returned by servlet to Google Maps LatLng objects.
+ * Convert waypoint clusters in JSON form returned by servlet to Google Maps LatLng objects.
  */
+<<<<<<< HEAD
 function convertWaypointstoLatLng(waypoints) {
      let latlngWaypoints = new Map();
      console.log(waypoints)
@@ -152,6 +203,17 @@ function convertWaypointstoLatLng(waypoints) {
         } else {
             latlngWaypoints.get(i["label"]).push(waypoint);
         }
+=======
+function convertWaypointClusterstoLatLng(waypoints) {
+     let latlngWaypoints = {};
+     for (let cluster of waypoints) {
+         pts = [];
+         for (let pt of cluster) {
+            let waypoint = new google.maps.LatLng(pt.y, pt.x);
+            pts.push(waypoint);
+         }
+         latlngWaypoints[cluster[0].label] = pts;
+>>>>>>> 1252e476d2eccc64a7d0b038befbbd5f179585e9
     }
     return latlngWaypoints;
 }
@@ -183,7 +245,7 @@ function generateURL(start, end, waypoints){
     let globalURL = 'https://www.google.com/maps/dir/?api=1';
     globalURL = globalURL + '&origin=' + start + '&destination=' + end;
     globalURL += '&waypoints='
-    Object.entries(waypoints).forEach(pt => globalURL += pt + '|')
+    waypoints.forEach((pts, label) => pts.forEach(pt => globalURL += pt + '|'));
     globalURL = globalURL + '&travelmode=walking';
     const URLcontainer = document.getElementById('globalURL');
     globalURL = globalURL.split(" ").join("") //need to get rid of white space for link to work
@@ -201,4 +263,20 @@ async function writeToAssociatedText(){
     // To get the most recent entered term, get first element of array
     // of all input text. 
     associatedTextEl.innerText = "You entered: " + storedtext[0];
+}
+/**
+ * Convert waypoints in JSON form returned by servlet to Google Maps LatLng objects.
+ */
+function convertWaypointstoLatLng(waypoints) {
+     let latlngWaypoints = new Map();
+     for (let pt of waypoints) {
+        let waypoint = new google.maps.LatLng(pt.y, pt.x);
+        // If the given label doesn't exist in the map, add it.
+        if (!latlngWaypoints.has(pt.label)) {
+            latlngWaypoints.set(pt.label, [waypoint]);
+        } else {
+            latlngWaypoints.get(pt.label).push(waypoint);
+        }
+    }
+    return latlngWaypoints;
 }

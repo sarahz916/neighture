@@ -35,9 +35,11 @@ import org.powermock.api.mockito.expectation.PowerMockitoStubber;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+/** Tests each public function of ChosenWaypointsServlet aside from those relating to the datastore
+  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(WaypointQueryServlet.class)
-public class WaypointQueryServletPostTest {
+public class WaypointQueryServletTest {
   public static final ArrayList<Coordinate> DAISY = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62944, 41.84864, "daisy")));
   public static final ArrayList<Coordinate> CLOVER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.63566666666667, 41.856, "clover")));
   public static final ArrayList<Coordinate> BELLFLOWER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.6475, 41.8435, "bellflower")));
@@ -88,7 +90,7 @@ public class WaypointQueryServletPostTest {
     PowerMockito.doReturn(null).when(WaypointQueryServlet.class, "getStartDate");
   }
 
-  /* UNIT TESTS */
+  /* TESTING  */
   @Test // Empty input
   public void testServletPostEmpty() throws Exception {
     when(request.getParameter("text-input")).thenReturn("");
