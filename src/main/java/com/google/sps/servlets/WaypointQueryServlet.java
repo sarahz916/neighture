@@ -14,9 +14,11 @@
 
 package com.google.sps;
 import com.google.sps.Coordinate;
+import com.google.sps.WaypointDescription;
 import com.google.gson.Gson;
 import com.google.appengine.api.datastore.*;
 import com.google.appengine.api.datastore.Query.*;
+import com.google.common.collect.ImmutableMap;
 import org.json.JSONObject;  
 import org.json.JSONArray;  
 import org.apache.commons.math3.util.Precision;
@@ -26,6 +28,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.ServletException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -54,10 +57,9 @@ import com.google.cloud.language.v1.Token;
   */
 @WebServlet("/query")
 public class WaypointQueryServlet extends HttpServlet {
-  // The maximum number of coordinates will be an optional input by the user, with 5 as the default
-  public static int DEFAULT_MAX_NUMBER_COORDINATES = 5;
-  private int maxNumberCoordinates = DEFAULT_MAX_NUMBER_COORDINATES;
   private static final Pattern PATTERN = Pattern.compile("^\\d+$"); // Improves performance by avoiding compile of pattern in every method call
+  private static final ImmutableMap<String, Integer> NUMBER_MAP = ImmutableMap.<String, Integer>builder().put("one", 1).put("two", 2).put("three", 3)
+    .put("four", 4).put("five", 5).put("six", 6).put("seven", 7).put("eight", 8).put("nine", 9).put("ten", 10).build(); 
 
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -78,11 +80,16 @@ public class WaypointQueryServlet extends HttpServlet {
   }
 
   @Override
-  public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+  public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     String currSessionID = getSessionID(request);
     setSessionAttributes(request);
     String input = request.getParameter("text-input");
-    ArrayList<List<Coordinate>> waypoints = getLocations(input);
+    ArrayList<List<Coordinate>> waypoints;
+    try {
+      waypoints = getLocations(input);
+    } catch (Exception e) {
+      throw new ServletException(e);
+    }
     // Store input text and waypoint in datastore so same session ID can retrieve later.
     storeInputAndWaypoints(currSessionID, input, waypoints);
     // Redirect back to the index page.
@@ -111,38 +118,31 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Using the input text, fetches waypoints from the database to be 
     * used by the frontend. Returns possible waypoints. 
     */
-  public ArrayList<List<Coordinate>> getLocations(String input) throws IOException {
+  public ArrayList<List<Coordinate>> getLocations(String input) throws Exception {
     // Parse out feature requests from input
-    ArrayList<ArrayList<String>> featureRequests = processInputText(input);
+    ArrayList<WaypointDescription> waypointRequests = processInputText(input);
     ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();    
 
-    for (ArrayList<String> waypointQueries : featureRequests) {
-      //String waypointQuery = waypointQueries.get(0); // CHANGE --> REMOVE, LISTTOSTRING function
-      String waypointLabel = String.join(", ", waypointQueries);
+    for (WaypointDescription waypointDescription : waypointRequests) {
+      int maxNumberCoordinates = waypointDescription.getMaxAmount();
+      String waypointLabel = waypointDescription.getLabel();
+      ArrayList<String> featureRequests = waypointDescription.getFeatures();
       ArrayList<Coordinate> potentialCoordinates = new ArrayList<Coordinate>();
       // first is the arraylist index of the first feature in the database
-      for (int first = 0, i = 0; i < waypointQueries.size(); i++, first++) {
-        String featureRequest = waypointQueries.get(i);
-        // Check if feature request is a number
-        if (PATTERN.matcher(featureRequest).matches()) {
-          maxNumberCoordinates = Integer.parseInt(featureRequest);
-        } else if (featureRequest.equals("all") || featureRequest.equals("every")) {
-          maxNumberCoordinates = Integer.MAX_VALUE;
-        } else {
-          // Make call to database
-          ArrayList<Coordinate> locations = fetchFromDatabase(featureRequest, waypointLabel);
-          if (!locations.isEmpty()) { // The feature is in the database
-            if (i == first) {
-              potentialCoordinates.addAll(locations);
-              first = -1; // We don't need to worry about it anymore since at least one feature was found!
-            } else {
-              potentialCoordinates.retainAll(locations);
-            }
+      for (int first = 0, i = 0; i < featureRequests.size(); i++, first++) {
+        String featureRequest = featureRequests.get(i);
+        // Make call to database
+        ArrayList<Coordinate> locations = fetchFromDatabase(featureRequest, waypointLabel);
+        if (!locations.isEmpty()) { // The feature is in the database
+          if (i == first) {
+            potentialCoordinates.addAll(locations);
+            first = -1; // We don't need to worry about it anymore since at least one feature was found!
+          } else {
+            potentialCoordinates.retainAll(locations);
           }
         }
       }
       List<Coordinate> locations = potentialCoordinates.subList(0, Math.min(maxNumberCoordinates, potentialCoordinates.size()));
-      maxNumberCoordinates = DEFAULT_MAX_NUMBER_COORDINATES;
       waypoints.add(locations);
     }   
     return waypoints;
@@ -151,40 +151,68 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Parses the input string to separate out all the features
     * For each arraylist of strings, the first element is the general waypoint query
     */
-  public static ArrayList<ArrayList<String>> processInputText(String input) {
+  public ArrayList<WaypointDescription> processInputText(String input) throws Exception {
     input = Normalizer.normalize(input, Normalizer.Form.NFKD);
-    ArrayList<ArrayList<String>> allFeatures = new ArrayList<ArrayList<String>>();
+    ArrayList<WaypointDescription> allWaypoints = new ArrayList<WaypointDescription>();
     // Separate on newlines and punctuation: semicolon, period, question mark, exclamation mark, plus sign
     String[] waypointQueries = input.split("[;.?!+\\n]+");
     for (String waypointQuery : waypointQueries) {
-      ArrayList<String> featuresOneWaypoint = parseWaypointQuery(waypointQuery);
-      allFeatures.add(featuresOneWaypoint);
+      ArrayList<WaypointDescription> waypointsFromQuery = parseWaypointQuery(waypointQuery);
+      allWaypoints.addAll(waypointsFromQuery);
     }
-    return allFeatures;
+    return allWaypoints;
   }
 
   /** Parses out the features from a waypoint query
     */
-  public static ArrayList<String> parseWaypointQuery(String waypointQuery) {
+  public ArrayList<WaypointDescription> parseWaypointQuery(String waypointQuery) throws Exception {
     waypointQuery = waypointQuery.toLowerCase().trim(); // determine -- keep lowercase or allow uppercase?
-    ArrayList<String> featuresOneWaypoint = new ArrayList<String>();
-    //featuresOneWaypoint.add(waypointQuery);
+    ArrayList<WaypointDescription> waypointsFromQuery = new ArrayList<WaypointDescription>();
     // Separate on commas and spaces
     String[] featureQueries = waypointQuery.split("[,\\s]+"); // TODO: only include numbers (adjectives?) and nouns
+    WaypointDescription waypoint = new WaypointDescription();
     for (int i = 0; i < featureQueries.length; i++) {
       String feature = featureQueries[i]; 
-      featuresOneWaypoint.add(feature);
+      if (isInt(feature)) {
+        int maxAmount = wordToInt(feature);
+        if (waypoint.hasFeatures()) { // HAS FEATURES, MAKE NEW ONE; ADD CASE FOR SET ALREADY SO JUST DISCARD
+          // Start a new waypoint description
+          waypoint.createLabel();
+          waypointsFromQuery.add(waypoint);
+          waypoint = new WaypointDescription(maxAmount);
+        } else {
+          waypoint.setMaxAmount(maxAmount);
+        }
+      } else {
+        // Will do parsing for nouns/not pronouns here
+        waypoint.addFeature(feature);
+      }
     }
-    return featuresOneWaypoint;
+    if (waypoint.hasFeatures()) {
+      waypoint.createLabel();
+      waypointsFromQuery.add(waypoint);
+    }
+    return waypointsFromQuery;
   }
 
-  /** Determines if the passed in string is a number -- if so, returns the number, which
-    * will replace maxNumberCoordinates; if not, returns the current maxNumberCoordinates to 
-    * leave the variable unchanged
+  /** Determines if the passed in string is a number 
     */
-  public static int determineIfInt(String word, int currentMaxCoordinates) {
-    // TODO
-    return 0;
+  public boolean isInt(String word) {
+    return PATTERN.matcher(word).matches() || NUMBER_MAP.containsKey(word)
+      || word.equals("all") || word.equals("every");
+  }
+
+  /** Assuming that the passed in string is a number, converts it to an int
+    */
+  public int wordToInt(String word) throws Exception {
+    if (PATTERN.matcher(word).matches()) {
+      return Integer.parseInt(word);
+    } else if (NUMBER_MAP.containsKey(word)) {
+      return NUMBER_MAP.get(word);
+    } else if (word.equals("all") || word.equals("every")) {
+      return Integer.MAX_VALUE;
+    }
+    throw new Exception("Word is not an integer!");
   }
 
   /** Sends a request for the input feature to the database
@@ -261,7 +289,7 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Stores input text and waypoints in a RouteEntity in datastore.
     * Returns nothing.
     */ 
-  private static void storeInputAndWaypoints(String currSessionID, String textInput, ArrayList<List<Coordinate>> waypoints){
+  private static void storeInputAndWaypoints(String currSessionID, String textInput, ArrayList<List<Coordinate>> waypoints) {
     Entity RouteEntity = new Entity("Route");
     RouteEntity.setProperty("session-id", currSessionID);
     RouteEntity.setProperty("text", textInput);
@@ -278,7 +306,7 @@ public class WaypointQueryServlet extends HttpServlet {
 
   /** Returns session ID of request. 
   */ 
-  private static String getSessionID(HttpServletRequest request){
+  private static String getSessionID(HttpServletRequest request) {
     HttpSession currentSession = request.getSession();
     String currSessionID = currentSession.getId();
     return currSessionID;
@@ -287,9 +315,9 @@ public class WaypointQueryServlet extends HttpServlet {
    /** If session has already fetched from servlet will return true.
    *   Else if it's first time to fetch from servlet will return false.
   */ 
-  private static boolean markFetch(HttpServletRequest request){
+  private static boolean markFetch(HttpServletRequest request) { 
     HttpSession currentSession = request.getSession();
-    if (!(boolean) currentSession.getAttribute("queryFetched")){
+    if (!(boolean) currentSession.getAttribute("queryFetched")) {
         currentSession.setAttribute("queryFetched", true);
         return false;
     }
@@ -300,7 +328,7 @@ public class WaypointQueryServlet extends HttpServlet {
    /** Changes queryFetched sessionAttribute to false.
   */ 
 
-  private static void setSessionAttributes(HttpServletRequest request){
+  private static void setSessionAttributes(HttpServletRequest request) {
       HttpSession currentSession = request.getSession();
       currentSession.setAttribute("queryFetched", false);
       currentSession.setAttribute("chosenFetched", true);
