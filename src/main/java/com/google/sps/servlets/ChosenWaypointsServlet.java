@@ -101,16 +101,22 @@ public class ChosenWaypointsServlet extends HttpServlet {
     * Returns nothing.
     */ 
     public static void storeInputAndWaypoints(String currSessionID, ArrayList<Coordinate> waypoints){
-        Entity DirectionEntity = new Entity("Direction");
-        DirectionEntity.setProperty("session-id", currSessionID);
-        String json = new Gson().toJson(waypoints);
-        long timestamp = System.currentTimeMillis();
-        DirectionEntity.setProperty("timestamp", timestamp);
-        // Store as a json string because Coordinates are unsupported.
-        DirectionEntity.setProperty("waypoints", json);
-        // Store Direction.
+        //Retrieve Waypoints for that session.
+        Filter sesionFilter =
+        new FilterPredicate("session-id", FilterOperator.EQUAL, currSessionID);
+        // sort by most recent query for session ID
+        Query query = 
+                new Query("Route")
+                    .setFilter(sesionFilter)
+                    .addSort("timestamp", SortDirection.DESCENDING);
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-        datastore.put(DirectionEntity);
+        List results = datastore.prepare(query).asList(FetchOptions.Builder.withLimit(1));
+        Entity MostRecentStore = (Entity) results.get(0);
+        String json = new Gson().toJson(waypoints);
+        MostRecentStore.setProperty("actual-route", json);
+        long timestamp = System.currentTimeMillis();
+        MostRecentStore.setProperty("timestamp", timestamp);
+        datastore.put(MostRecentStore);
     }
 
     /** Filters through  Direction Entities to find the one for currSessionID.
@@ -122,16 +128,13 @@ public class ChosenWaypointsServlet extends HttpServlet {
         new FilterPredicate("session-id", FilterOperator.EQUAL, currSessionID);
         // sort by most recent query for session ID
         Query query = 
-                new Query("Direction")
+                new Query("Route")
                     .setFilter(sesionFilter)
                     .addSort("timestamp", SortDirection.DESCENDING);
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         List results = datastore.prepare(query).asList(FetchOptions.Builder.withLimit(1));
-        //if (results.isEmpty()){
-            //return EMPTY_LIST;
-        //}
         Entity MostRecentStore = (Entity) results.get(0);
-        String waypointsJSONstring = (String) MostRecentStore.getProperty("waypoints");
+        String waypointsJSONstring = (String) MostRecentStore.getProperty("actual-route");
         return waypointsJSONstring;
     }
 

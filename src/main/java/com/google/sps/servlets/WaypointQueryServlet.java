@@ -79,10 +79,10 @@ public class WaypointQueryServlet extends HttpServlet {
 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    String currSessionID = getSessionID(request);
-    setSessionAttributes(request);
     String input = request.getParameter("text-input");
     ArrayList<List<Coordinate>> waypoints = getLocations(input);
+    String currSessionID = getSessionID(request);
+    setSessionAttributes(request);
     // Store input text and waypoint in datastore so same session ID can retrieve later.
     storeInputAndWaypoints(currSessionID, input, waypoints);
     // Redirect back to the index page.
