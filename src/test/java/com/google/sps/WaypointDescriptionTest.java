@@ -24,24 +24,73 @@ import org.junit.Assert;
 
 @RunWith(JUnit4.class)
 public final class WaypointDescriptionTest {
-  public static final String LABEL = "daisy, clover";
+  public static final String LABEL = "3 daisy, clover";
   public static final String DEFAULT_LABEL = "UNLABELED";  
   public static final int AMOUNT = 3;
-  public static final int DEFAULT_AMOUNT = 0;
+  public static final int DEFAULT_AMOUNT = 5;
   public static final ArrayList<String> SOME_FEATURES = new ArrayList<String>(Arrays.asList("daisy", "clover"));
   public static final ArrayList<String> NO_FEATURES = new ArrayList<String>();
 
   @Test
-  public void constructFullWaypointDescriptionUnfinalized() {
-      WaypointDescription description = new WaypointDescription(AMOUNT, SOME_FEATURES);
-      Assert.assertEquals(AMOUNT, description.getAmount());
-      Assert.assertEquals(DEFAULT_LABEL, description.getLabel());
-      Assert.assertEquals(SOME_FEATURES, description.getFeatures());
-      Assert.assertTrue(!description.hasLabel());
-      Assert.assertTrue(description.hasFeatures());
+  public void constructFullWaypointDescription() {
+    WaypointDescription description = new WaypointDescription(AMOUNT, SOME_FEATURES);
+    Assert.assertEquals(AMOUNT, description.getAmount());
+    Assert.assertEquals(DEFAULT_LABEL, description.getLabel());
+    Assert.assertEquals(SOME_FEATURES, description.getFeatures());
+    Assert.assertFalse(description.hasLabel());
+    Assert.assertTrue(description.hasFeatures());
+    Assert.assertTrue(description.maxAmountWasSet());
   }
 
-  // TODO: add tests for the other constructors
+  @Test
+  public void constructWaypointDescriptionAmount() {
+    WaypointDescription description = new WaypointDescription(AMOUNT);
+    Assert.assertEquals(AMOUNT, description.getAmount());
+    Assert.assertEquals(DEFAULT_LABEL, description.getLabel());
+    Assert.assertEquals(NO_FEATURES, description.getFeatures());
+    Assert.assertFalse(description.hasLabel());
+    Assert.assertFalse(description.hasFeatures());
+    Assert.assertTrue(description.maxAmountWasSet());
+  }
+  
+  @Test
+  public void constructWaypointDescriptionFeatures() {
+    WaypointDescription description = new WaypointDescription(SOME_FEATURES);
+    Assert.assertEquals(DEFAULT_AMOUNT, description.getAmount());
+    Assert.assertEquals(DEFAULT_LABEL, description.getLabel());
+    Assert.assertEquals(SOME_FEATURES, description.getFeatures());
+    Assert.assertFalse(description.hasLabel());
+    Assert.assertTrue(description.hasFeatures());
+    Assert.assertFalse(description.maxAmountWasSet());
+  }
+
+  @Test
+  public void constructEmptyWaypointDescription() {
+    WaypointDescription description = new WaypointDescription();
+    Assert.assertEquals(DEFAULT_AMOUNT, description.getAmount());
+    Assert.assertEquals(DEFAULT_LABEL, description.getLabel());
+    Assert.assertEquals(NO_FEATURES, description.getFeatures());
+    Assert.assertFalse(description.hasLabel());
+    Assert.assertFalse(description.hasFeatures());
+    Assert.assertFalse(description.maxAmountWasSet());
+  }
+
+  @Test
+  public void successfullyCreateLabel() {
+    WaypointDescription description = new WaypointDescription(AMOUNT, SOME_FEATURES);
+    description.createLabel();
+    Assert.assertEquals(LABEL, description.getLabel());
+    Assert.assertTrue(description.hasLabel());
+  }
+
+  @Test
+  public void createLabelFail() { // Fails because there are no features
+    WaypointDescription description = new WaypointDescription(AMOUNT);
+    description.createLabel();
+    Assert.assertEquals(DEFAULT_LABEL, description.getLabel());
+    Assert.assertFalse(description.hasLabel());
+  }
+
+  // TODO: 
   // Add tests + code for adding/changing amount, label, and features
-  // Add tests for finalizing
 }

@@ -19,9 +19,10 @@ import java.util.ArrayList;
 public final class WaypointDescription {
 
   private final int amount;
+  private boolean hasSetAmount;
   private String label;
   private final ArrayList<String> features;
-  private static final int DEFAULT_AMOUNT = 0;
+  private static final int DEFAULT_AMOUNT = 5;
   private static final String DEFAULT_LABEL = "UNLABELED";
 
   /** Creates a new waypoint description with all needed information
@@ -30,6 +31,7 @@ public final class WaypointDescription {
     this.amount = amount;
     this.label = DEFAULT_LABEL;
     this.features = features;
+    hasSetAmount = true;
   }
 
   /** Creates a new waypoint description with an amount
@@ -38,6 +40,7 @@ public final class WaypointDescription {
     this.amount = amount;
     this.label = DEFAULT_LABEL;
     this.features = new ArrayList<String>();
+    hasSetAmount = true;
   }
 
   /** Creates a new waypoint description with some features
@@ -46,12 +49,28 @@ public final class WaypointDescription {
     this.amount = DEFAULT_AMOUNT;
     this.label = DEFAULT_LABEL;
     this.features = features;
+    hasSetAmount = false;
   }
 
-  /** Returns the x coordinate of this waypoint description.
+  /** Creates a new waypoint description with only default values
+    */
+  public WaypointDescription() {
+    this.amount = DEFAULT_AMOUNT;
+    this.label = DEFAULT_LABEL;
+    this.features = new ArrayList<String>();
+    hasSetAmount = false;
+  }
+
+  /** Returns the amount of waypoints the user wants.
     */
   public int getAmount() {
     return amount;
+  }
+
+  /** Returns whether or not the user has requested a max number of waypoints
+    */
+  public boolean maxAmountWasSet() {
+    return hasSetAmount;
   }
 
   /** Returns the label of this waypoint description.
@@ -79,11 +98,16 @@ public final class WaypointDescription {
   }
 
   /** Waypoint description is done being made, so a label can be made
+    * Returns whether or not the description was successfully finalized
     */
-  public void finalize() {
-    label = Integer.toString(amount);
-    for (String feature : features) {
-      label += ", " + feature;
+  public boolean createLabel() {
+    if (hasFeatures()) {
+      label = Integer.toString(amount) + " " + features.get(0);
+      for (int i = 1; i < features.size(); i++) {
+        label += ", " + features.get(i);
+      }
+      return true;
     }
+    return false;
   }
 }
