@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
 
     <script defer src="route-script.js"></script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBaBCxBuGqZx0IGQ4lb9eKrICwU8Rduz3c"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBaBCxBuGqZx0IGQ4lb9eKrICwU8Rduz3c&libraries=places"></script>
       
   </head>
   <nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
@@ -51,7 +51,14 @@
             </p>
             <form id="start-location">
                 <p>Enter a start location:</p>
-                <textarea name="startloc-input" id="startloc-input"></textarea>
+
+                <input type="text" name="startloc-input" id="startloc-input"></input>
+
+                <p>Enter an end location:</p>
+
+                <input type="text" name="endloc-input" id="endloc-input"></input>
+
+                <input type="submit" id="start-end-submit"/>  
             </form>
             <form action="/query" method="POST" id ="text-git statform">
 
