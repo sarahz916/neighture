@@ -51,6 +51,8 @@ public class RouteStoreServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
      // Show all the generated routes stored. 
+
+    //TODO(zous): Put a limit on how many StoredRoutes sent to the dropdown menu in generatedroutes.html
     Query query = new Query("StoredRoute");
 
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
