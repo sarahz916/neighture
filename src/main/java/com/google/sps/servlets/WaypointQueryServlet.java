@@ -63,18 +63,24 @@ public class WaypointQueryServlet extends HttpServlet {
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     HttpSession currentSession = request.getSession();
     String currSessionID = currentSession.getId();
-    String waypointsJSONstring = getQueryResultsforSession(currSessionID);
+    boolean fetched = markFetch(request);
+    if (!fetched){
+        String waypointsJSONstring = getQueryResultsforSession(currSessionID);
+        // Return last stored waypoints
+        response.setContentType("application/json");
+        response.getWriter().println(waypointsJSONstring);
+    }
+    else{
+        response.setContentType("application/json");
+        response.getWriter().println("[]");
+    }
     
-    // Return last stored waypoints
-    response.setContentType("application/json");
-    response.getWriter().println(waypointsJSONstring);
   }
 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    HttpSession currentSession = request.getSession();
-    String currSessionID = currentSession.getId();
-
+    String currSessionID = getSessionID(request);
+    setSessionAttributes(request);
     String input = request.getParameter("text-input");
     ArrayList<List<Coordinate>> waypoints = getLocations(input);
     // Store input text and waypoint in datastore so same session ID can retrieve later.
@@ -268,4 +274,37 @@ public class WaypointQueryServlet extends HttpServlet {
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     datastore.put(RouteEntity);
   }
+
+
+  /** Returns session ID of request. 
+  */ 
+  private static String getSessionID(HttpServletRequest request){
+    HttpSession currentSession = request.getSession();
+    String currSessionID = currentSession.getId();
+    return currSessionID;
+  }
+
+   /** If session has already fetched from servlet will return true.
+   *   Else if it's first time to fetch from servlet will return false.
+  */ 
+  private static boolean markFetch(HttpServletRequest request){
+    HttpSession currentSession = request.getSession();
+    if (!(boolean) currentSession.getAttribute("queryFetched")){
+        currentSession.setAttribute("queryFetched", true);
+        return false;
+    }
+    else{
+        return true;
+    }
+  }
+   /** Changes queryFetched sessionAttribute to false.
+  */ 
+
+  private static void setSessionAttributes(HttpServletRequest request){
+      HttpSession currentSession = request.getSession();
+      currentSession.setAttribute("queryFetched", false);
+      currentSession.setAttribute("chosenFetched", true);
+      currentSession.setAttribute("textFetched", true);
+  }
+
 }
