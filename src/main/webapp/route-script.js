@@ -25,18 +25,11 @@ window.onload = function setup() {
     var chicago = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
     initMap(chicago, 'route-map');
     initMap(chicago, 'point-map');
-    initAutocomplete('startloc-input');
-    initAutocomplete('endloc-input');
 }
 
 document.getElementById('text-git statform').addEventListener('submit', setupUserChoices());
 document.getElementById('select-points').addEventListener('submit', createMapWithWaypoints());
 
-
-function initAutocomplete(id) {
-    let input = document.getElementById(id);
-    var autocomplete = new google.maps.places.Autocomplete(input);
-}
 
 /**
  * Create a route and map from a waypoint entered by the user.
