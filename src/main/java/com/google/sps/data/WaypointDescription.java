@@ -18,7 +18,7 @@ import java.util.ArrayList;
 /** Description of a user's waypoint query: how many the user wants, the label, and the features in the waypoint. */
 public final class WaypointDescription {
 
-  private final int amount;
+  private int amount;
   private boolean hasSetAmount;
   private String label;
   private final ArrayList<String> features;
@@ -63,7 +63,7 @@ public final class WaypointDescription {
 
   /** Returns the amount of waypoints the user wants.
     */
-  public int getAmount() {
+  public int getMaxAmount() {
     return amount;
   }
 
@@ -71,6 +71,13 @@ public final class WaypointDescription {
     */
   public boolean maxAmountWasSet() {
     return hasSetAmount;
+  }
+
+  /** Updates amount of waypoints -- in our code, the user should only update
+    * if the amount has never been set before
+    */
+  public void setMaxAmount(int newAmount) {
+    amount = newAmount;
   }
 
   /** Returns the label of this waypoint description.
@@ -95,6 +102,12 @@ public final class WaypointDescription {
     */
   public boolean hasFeatures() {
     return (!features.isEmpty());
+  }
+
+  /** Add a feature to the waypoint
+    */
+  public void addFeature(String feature) {
+    features.add(feature);
   }
 
   /** Waypoint description is done being made, so a label can be made

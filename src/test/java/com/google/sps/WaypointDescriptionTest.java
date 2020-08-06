@@ -29,12 +29,14 @@ public final class WaypointDescriptionTest {
   public static final int AMOUNT = 3;
   public static final int DEFAULT_AMOUNT = 5;
   public static final ArrayList<String> SOME_FEATURES = new ArrayList<String>(Arrays.asList("daisy", "clover"));
+  public static final ArrayList<String> MORE_FEATURES = new ArrayList<String>(Arrays.asList("daisy", "clover", "raspberry"));
   public static final ArrayList<String> NO_FEATURES = new ArrayList<String>();
+  public static final String RASPBERRY_LABEL = "raspberry";
 
   @Test
   public void constructFullWaypointDescription() {
     WaypointDescription description = new WaypointDescription(AMOUNT, SOME_FEATURES);
-    Assert.assertEquals(AMOUNT, description.getAmount());
+    Assert.assertEquals(AMOUNT, description.getMaxAmount());
     Assert.assertEquals(DEFAULT_LABEL, description.getLabel());
     Assert.assertEquals(SOME_FEATURES, description.getFeatures());
     Assert.assertFalse(description.hasLabel());
@@ -45,7 +47,7 @@ public final class WaypointDescriptionTest {
   @Test
   public void constructWaypointDescriptionAmount() {
     WaypointDescription description = new WaypointDescription(AMOUNT);
-    Assert.assertEquals(AMOUNT, description.getAmount());
+    Assert.assertEquals(AMOUNT, description.getMaxAmount());
     Assert.assertEquals(DEFAULT_LABEL, description.getLabel());
     Assert.assertEquals(NO_FEATURES, description.getFeatures());
     Assert.assertFalse(description.hasLabel());
@@ -56,7 +58,7 @@ public final class WaypointDescriptionTest {
   @Test
   public void constructWaypointDescriptionFeatures() {
     WaypointDescription description = new WaypointDescription(SOME_FEATURES);
-    Assert.assertEquals(DEFAULT_AMOUNT, description.getAmount());
+    Assert.assertEquals(DEFAULT_AMOUNT, description.getMaxAmount());
     Assert.assertEquals(DEFAULT_LABEL, description.getLabel());
     Assert.assertEquals(SOME_FEATURES, description.getFeatures());
     Assert.assertFalse(description.hasLabel());
@@ -67,7 +69,7 @@ public final class WaypointDescriptionTest {
   @Test
   public void constructEmptyWaypointDescription() {
     WaypointDescription description = new WaypointDescription();
-    Assert.assertEquals(DEFAULT_AMOUNT, description.getAmount());
+    Assert.assertEquals(DEFAULT_AMOUNT, description.getMaxAmount());
     Assert.assertEquals(DEFAULT_LABEL, description.getLabel());
     Assert.assertEquals(NO_FEATURES, description.getFeatures());
     Assert.assertFalse(description.hasLabel());
@@ -91,6 +93,18 @@ public final class WaypointDescriptionTest {
     Assert.assertFalse(description.hasLabel());
   }
 
-  // TODO: 
-  // Add tests + code for adding/changing amount, label, and features
+  @Test
+  public void changeMaxAmountFromDefault() { 
+    WaypointDescription description = new WaypointDescription();
+    Assert.assertEquals(DEFAULT_AMOUNT, description.getMaxAmount());
+    description.setMaxAmount(AMOUNT);
+    Assert.assertEquals(AMOUNT, description.getMaxAmount());
+  }
+
+  @Test
+  public void addFeatures() { 
+    WaypointDescription description = new WaypointDescription(SOME_FEATURES);
+    description.addFeature(RASPBERRY_LABEL);
+    Assert.assertEquals(MORE_FEATURES, description.getFeatures());
+  }
 }
