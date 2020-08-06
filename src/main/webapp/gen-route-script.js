@@ -19,26 +19,27 @@ window.onload = function setup() {
     setupGenRouteDropDown();
 }
 
+document.getElementById('select-points').addEventListener('submit', createMapWithWaypoints());
 
 async function setupGenRouteDropDown() {
-    let res = await getTextStore();
+    let res = await getRouteStore();
     createDropDown(res);
 }
 
 /** Given stored text create dropdown form with those options */
 function createDropDown(dropDowns) {
   const dropDownEl = document.getElementById('routes-drop-down');
-  dropDowns.forEach((textInput) => {
-    dropDownEl.appendChild(createOptionEl(textInput));
+  dropDowns.forEach((route) => {
+    dropDownEl.appendChild(createOptionEl(route));
   });
 }
 
 /** Creates an option element */
-function createOptionEl(textInput){
+function createOptionEl(route){
     const optionEl = document.createElement('option');
     // set value as id value of route in datastore
-    optionEl.setAttribute("value", textInput);
-    optionEl.innerText = textInput;
+    optionEl.setAttribute("value", route.waypoints);
+    optionEl.innerText = route.text;
     return optionEl;
 }
 
@@ -46,7 +47,8 @@ function createOptionEl(textInput){
  * Create a route and map from a waypoint entered by the user.
  */
 async function createMapWithWaypoints() {
-    var res = await getWaypoints();
+    setupGenRouteDropDown();
+    var res = await getPickedRoute();
     let waypoints = convertWaypointstoLatLng(res);
     let start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
     let end = new google.maps.LatLng(41.850033, -87.5500523); // hardcoded end; will get from user later
@@ -57,7 +59,14 @@ async function createMapWithWaypoints() {
     });
     calcRoute(directionsService, directionsRenderer, start, end, waypoints);
     generateURL (start, end, waypoints);
-    writeToAssociatedText();
+}
+/**
+ * Fetch the generated route from gen-route servlet
+ */
+async function getPickedRoute() {
+    let res = await fetch('/gen-route');
+    let waypoints = await res.json();
+    return waypoints;
 }
 
 /**
@@ -67,7 +76,7 @@ async function createMapWithWaypoints() {
 function calcRoute(directionsService, directionsRenderer, start, end, waypoints) {
     var waypointsWithLabels = waypoints;
     let waypointsData = [];
-    Object.entries(waypoints).forEach(pt => waypointsData.push({ location: pt[1] }));
+    waypoints.forEach((pts, label) => pts.forEach(pt => waypointsData.push({ location: pt })));
     let request = {
         origin: start,
         destination: end,
@@ -100,15 +109,64 @@ async function createWaypointLegend(route, waypointsWithLabels) {
     let marker = 'A';
     addNewLegendElem(legend, `${marker}: start`);
     let i;
+    let totalDistance = 0;
+    let totalDuration = 0;
+    // For each leg of the route, find the label of the end point
+    // and add it to the page.
     for (i = 0; i < route.legs.length - 1; i++) {
         let pt = route.legs[i].end_location;
+        totalDistance += route.legs[i].distance.value;
+        totalDuration += route.legs[i].duration.value;
         let label = getLabelFromLatLng(pt, waypointsWithLabels);
         marker = String.fromCharCode(marker.charCodeAt(0) + 1);
         addNewLegendElem(legend, `${marker}: ${label}`);
     }
     let end = route.legs[route.legs.length - 1].end_location;
+    totalDistance += route.legs[route.legs.length - 1].distance.value;
+    totalDuration += route.legs[route.legs.length - 1].duration.value;
     marker = String.fromCharCode(marker.charCodeAt(0) + 1);
     addNewLegendElem(legend, `${marker}: end`);
+    addDistanceTimeToLegend(legend, totalDistance, totalDuration);
+}
+
+/**
+ * Given the total distance and time of a route, convert the numbers to more useful metrics
+ * and add them to the legend to display to the user.
+ */
+function addDistanceTimeToLegend(legend, totalDistance, totalDuration) {
+    // Convert totalDistance and totalDuration to more helpful metrics.
+    totalDistance = Math.round(convertMetersToMiles(totalDistance) * 10) / 10;
+    totalDuration = Math.round(convertSecondsToHours(totalDuration) * 10) / 10;
+    let durationMetric = 'hours';
+    if (totalDuration < 1) {
+        totalDuration = Math.round(convertHoursToMinutes(totalDuration) * 10) / 10;
+        durationMetric = 'minutes'
+    }
+    addNewLegendElem(legend, `Total Route Distance: ${totalDistance} miles`);
+    addNewLegendElem(legend, `Total Route Duration: ${totalDuration} ${durationMetric}`);
+}
+
+/**
+ * Convert a distance in meters to miles.
+ */
+function convertMetersToMiles(distance) {
+    const CONVERSION = 0.000621371;
+    return distance * CONVERSION;
+}
+/**
+ * Convert a time in seconds to hours.
+ */
+function convertSecondsToHours(time) {
+    const CONVERSION = 3600;
+    return time / CONVERSION;
+}
+
+/**
+ * Convert a time in hours to minutes.
+ */
+function convertHoursToMinutes(time) {
+    const CONVERSION = 60;
+    return time / CONVERSION;
 }
 
 /**
@@ -130,9 +188,9 @@ function getLabelFromLatLng(pt, waypointsWithLabels) {
 }
 
 /**
- * Convert waypoints in JSON form returned by servlet to Google Maps LatLng objects.
+ * Convert waypoint clusters in JSON form returned by servlet to Google Maps LatLng objects.
  */
-function convertWaypointstoLatLng(waypoints) {
+function convertWaypointClusterstoLatLng(waypoints) {
      let latlngWaypoints = {};
      for (let cluster of waypoints) {
          pts = [];
@@ -146,12 +204,12 @@ function convertWaypointstoLatLng(waypoints) {
 }
 
 /**
- * Get a list of waypoints by querying the waypoint servlet.
+ * Get a list of StoredRouts from fetching from /route-store
  */
-async function getTextStore() {
-    let res = await fetch('/text-store');
-    let textstore = await res.json();
-    return textstore;
+async function getRouteStore() {
+    let res = await fetch('/route-store');
+    let routestore = await res.json();
+    return routestore;
 }
 
 /**
@@ -172,7 +230,7 @@ function generateURL(start, end, waypoints){
     let globalURL = 'https://www.google.com/maps/dir/?api=1';
     globalURL = globalURL + '&origin=' + start + '&destination=' + end;
     globalURL += '&waypoints='
-    Object.entries(waypoints).forEach(pt => globalURL += pt + '|')
+    waypoints.forEach((pts, label) => pts.forEach(pt => globalURL += pt + '|'));
     globalURL = globalURL + '&travelmode=walking';
     const URLcontainer = document.getElementById('globalURL');
     globalURL = globalURL.split(" ").join("") //need to get rid of white space for link to work
@@ -190,4 +248,20 @@ async function writeToAssociatedText(){
     // To get the most recent entered term, get first element of array
     // of all input text. 
     associatedTextEl.innerText = "You entered: " + storedtext[0];
+}
+/**
+ * Convert waypoints in JSON form returned by servlet to Google Maps LatLng objects.
+ */
+function convertWaypointstoLatLng(waypoints) {
+     let latlngWaypoints = new Map();
+     for (let pt of waypoints) {
+        let waypoint = new google.maps.LatLng(pt.y, pt.x);
+        // If the given label doesn't exist in the map, add it.
+        if (!latlngWaypoints.has(pt.label)) {
+            latlngWaypoints.set(pt.label, [waypoint]);
+        } else {
+            latlngWaypoints.get(pt.label).push(waypoint);
+        }
+    }
+    return latlngWaypoints;
 }
