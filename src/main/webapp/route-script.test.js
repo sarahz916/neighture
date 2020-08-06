@@ -12,6 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/**
+ * Note: to install Jest, either run the command 'npm install --save-dev jest -g' whenever Cloud Shell restarts OR
+ * create a file calleed '.customize_environment' in your home directory and add the following:
+ * '#!/bin/sh
+ * npm install --save-dev jest -g
+ */
+
 // mock the basic DOM of our webpage
 document.body.innerHTML = 
     '<form action="/chosen-waypoints" id="select-points"></form>' +
