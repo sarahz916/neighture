@@ -117,10 +117,11 @@ public class WaypointQueryServlet extends HttpServlet {
     ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();    
 
     for (ArrayList<String> waypointQueries : featureRequests) {
-      String waypointQuery = waypointQueries.get(0); // CHANGE --> REMOVE, LISTTOSTRING function
+      //String waypointQuery = waypointQueries.get(0); // CHANGE --> REMOVE, LISTTOSTRING function
+      String waypointLabel = String.join(", ", waypointQueries);
       ArrayList<Coordinate> potentialCoordinates = new ArrayList<Coordinate>();
       // first is the arraylist index of the first feature in the database
-      for (int first = 1, i = 1; i < waypointQueries.size(); i++, first++) {
+      for (int first = 0, i = 0; i < waypointQueries.size(); i++, first++) {
         String featureRequest = waypointQueries.get(i);
         // Check if feature request is a number
         if (PATTERN.matcher(featureRequest).matches()) {
@@ -129,11 +130,11 @@ public class WaypointQueryServlet extends HttpServlet {
           maxNumberCoordinates = Integer.MAX_VALUE;
         } else {
           // Make call to database
-          ArrayList<Coordinate> locations = fetchFromDatabase(featureRequest, waypointQuery);
+          ArrayList<Coordinate> locations = fetchFromDatabase(featureRequest, waypointLabel);
           if (!locations.isEmpty()) { // The feature is in the database
             if (i == first) {
               potentialCoordinates.addAll(locations);
-              first = 0; // We don't need to worry about it anymore since at least one feature was found!
+              first = -1; // We don't need to worry about it anymore since at least one feature was found!
             } else {
               potentialCoordinates.retainAll(locations);
             }
@@ -165,13 +166,13 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Parses out the features from a waypoint query
     */
   public static ArrayList<String> parseWaypointQuery(String waypointQuery) {
-    waypointQuery = waypointQuery.toLowerCase().trim();
+    waypointQuery = waypointQuery.toLowerCase().trim(); // determine -- keep lowercase or allow uppercase?
     ArrayList<String> featuresOneWaypoint = new ArrayList<String>();
-    featuresOneWaypoint.add(waypointQuery);
+    //featuresOneWaypoint.add(waypointQuery);
     // Separate on commas and spaces
     String[] featureQueries = waypointQuery.split("[,\\s]+"); // TODO: only include numbers (adjectives?) and nouns
     for (int i = 0; i < featureQueries.length; i++) {
-      String feature = featureQueries[i].toLowerCase().trim();
+      String feature = featureQueries[i]; 
       featuresOneWaypoint.add(feature);
     }
     return featuresOneWaypoint;
@@ -206,7 +207,6 @@ public class WaypointQueryServlet extends HttpServlet {
     DecimalFormat formatter = new DecimalFormat("00"); // To allow leading 0s
     String yearAsString = formatter.format(previousYear.get(Calendar.YEAR));
     String monthAsString = formatter.format(previousYear.get(Calendar.MONTH) + 1); // The months are 0-indexed
-    System.out.println(monthAsString);
     String dayAsString = formatter.format(previousYear.get(Calendar.DAY_OF_MONTH));
     String dateString = yearAsString + "-" + monthAsString + "-" + dayAsString;
     return dateString;
@@ -215,7 +215,7 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Sends a request for the input feature to the database and returns 
     * a JSON of the features
     */ 
-  private static String sendGET(String feature) throws IOException {
+  public static String sendGET(String feature) throws IOException {
     //URL obj = new URL("https://neighborhood-nature.appspot.com/database?q=" + feature);
     URL obj = new URL("http://localhost:8080/database?q=" + feature);
     HttpURLConnection con = (HttpURLConnection) obj.openConnection();
