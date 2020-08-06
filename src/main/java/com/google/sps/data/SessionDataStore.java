@@ -102,7 +102,8 @@ public final class SessionDataStore {
 
     public void storeStoredRoute(){
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-        Transaction txn = datastore.beginTransaction();
+        TransactionOptions options = TransactionOptions.Builder.withXG(true);
+        Transaction txn = datastore.beginTransaction(options);
         try{
             Key ID = KeyFactory.createKey("Route", this.sessionID);
             Entity Entity = datastore.get(ID);

@@ -51,7 +51,7 @@ public class RouteStoreServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
      // Show all the generated routes stored. 
-    Query query = new Query("StoredRoute").addSort("timestamp", SortDirection.DESCENDING);
+    Query query = new Query("StoredRoute");
 
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     PreparedQuery results = datastore.prepare(query);

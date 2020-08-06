@@ -33,8 +33,8 @@ import com.google.gson.Gson;
 )
 public class TextStoreServlet extends HttpServlet {
     private final String FETCH_FIELD = "textFetched";
-    private final String FETCH_PROPERTY = "Route";
-    private final String ENTITY_TYPE = "text";
+    private final String FETCH_PROPERTY ="text";
+    private final String ENTITY_TYPE =  "Route";
 
   /** Looks up text input from Route Entites by Session ID in datastore.
   *   Returns text of most recent input-text from session ID. 
