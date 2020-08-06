@@ -58,21 +58,35 @@ public class WaypointQueryServletTest {
   public static final String SUNFLOWER_BACKEND = "[{\"latitude\": 41.897521, \"longitude\": -87.619934, \"common_name\": {\"name\": \"sunflower\"}}]";
   public static final String NOTHING_BACKEND = "[]";
   public static final String COMPARISON_DATE = "2019-08-01";
-  public static final String MULT_FEATURES_ONE_WAYPOINT_LABEL = "daisy,cLover     raSpbeRRy   ";
-  public static final String ONE_FEATURE_MULT_WAYPOINT_LABEL = "daisy;+clover.raspberry!!?\ntree";
-  public static final String MULT_FEATURES_MULT_WAYPOINT_LABEL = "daisy,clover; raspberry tree";
-  public static final ArrayList<String> DAISY_CLOVER_RASPBERRY = new ArrayList<String>(Arrays.asList("daisy", "clover", "raspberry"));
-  public static final ArrayList<String> TREE_QUERY = new ArrayList<String>(Arrays.asList("tree"));
-  public static final ArrayList<String> LICHEN_QUERY = new ArrayList<String>(Arrays.asList("lichen"));
+  public static final String MULT_FEATURES_ONE_WAYPOINT_QUERY = "daisy,cLover     raSpbeRRy   ";
+  public static final String NUMBER_BEGINNING_QUERY = "2 daisy,cLover,raspberry";
+  public static final String NUMBER_MIDDLE_QUERY = "tree,2 daisy, clover, raspberry";
+  public static final String ONE_FEATURE_MULT_WAYPOINT_QUERY = "daisy;+clover.raspberry!!?\ntree";
+  public static final String MULT_FEATURES_MULT_WAYPOINT_QUERY = "daisy,clover  raspberry; tree";
+  public static final int MAX_AMOUNT = 2;
+  public static final WaypointDescription DAISY_CLOVER_RASPBERRY_FEATURES_ONLY = new WaypointDescription(new ArrayList<String>(Arrays.asList("daisy", "clover", "raspberry")));
+  public static final WaypointDescription DAISY_CLOVER_RASPBERRY_WITH_NUMBER = new WaypointDescription(MAX_AMOUNT, new ArrayList<String>(Arrays.asList("daisy", "clover", "raspberry")));
+  public static final WaypointDescription DAISY_DESC = new WaypointDescription(new ArrayList<String>(Arrays.asList("daisy")));
+  public static final WaypointDescription CLOVER_DESC = new WaypointDescription(new ArrayList<String>(Arrays.asList("clover")));
+  public static final WaypointDescription RASPBERRY_DESC = new WaypointDescription(new ArrayList<String>(Arrays.asList("raspberry")));
+  public static final WaypointDescription TREE_DESC = new WaypointDescription(new ArrayList<String>(Arrays.asList("tree")));
+  public static final ArrayList<String> TREE_WORD = new ArrayList<String>(Arrays.asList("tree"));
+  public static final ArrayList<String> LICHEN_WORD = new ArrayList<String>(Arrays.asList("lichen"));
+  public static final ArrayList<String> DAISY_WORD = new ArrayList<String>(Arrays.asList("daisy"));
+  public static final ArrayList<String> CLOVER_WORD = new ArrayList<String>(Arrays.asList("clover"));
+  public static final ArrayList<String> RASPBERRY_WORD = new ArrayList<String>(Arrays.asList("raspberry"));
   private WaypointQueryServlet servlet;
-  
-  @Mock
-  int maxNumberCoordinatesMock;
 
   @Before
   public void before() throws Exception { 
     servlet = PowerMockito.spy(new WaypointQueryServlet());
-    //servlet = mock(WaypointQueryServlet.class, CALLS_REAL_METHODS);
+
+    DAISY_CLOVER_RASPBERRY_FEATURES_ONLY.createLabel();
+    DAISY_CLOVER_RASPBERRY_WITH_NUMBER.createLabel();
+    DAISY_DESC.createLabel();
+    CLOVER_DESC.createLabel();
+    RASPBERRY_DESC.createLabel();
+    TREE_DESC.createLabel();
   }
 
   /* Testing getStartDate */
@@ -108,42 +122,97 @@ public class WaypointQueryServletTest {
     assertEquals(coordinateResult, NOTHING);
   }
 
-  /* Testing determineIfInt */
-  // ADD
+  /* Testing isInt for a numeral */
+  @Test
+  public void testIsIntNumeral() throws Exception {
+    boolean wordIsInt = servlet.isInt("2");
+    assertTrue(wordIsInt);
+  }
+
+  /* Testing isInt for a written-out number */
+  @Test
+  public void testIsIntWritten() throws Exception {
+    boolean wordIsInt = servlet.isInt("two");
+    assertTrue(wordIsInt);
+  } 
+
+  /* Testing isInt on a non-number */
+  @Test
+  public void testIsIntNot() throws Exception {
+    boolean wordIsInt = servlet.isInt("daisy");
+    assertFalse(wordIsInt);
+  } 
+
+  /* Testing wordToInt for a numeral */
+  @Test
+  public void testWordToIntNumeral() throws Exception {
+    int newInt = servlet.wordToInt("2");
+    assertEquals(newInt, MAX_AMOUNT);
+  }
+
+  /* Testing wordToInt for a written-out number */
+  @Test
+  public void testWordToIntWritten() throws Exception {
+    int newInt = servlet.wordToInt("two");
+    assertEquals(newInt, MAX_AMOUNT);
+  } 
 
   /* Testing parseWaypointQuery, different cases */
   @Test 
   public void testParseWaypointQueryCasing() throws Exception {
-    ArrayList<String> features = WaypointQueryServlet.parseWaypointQuery(MULT_FEATURES_ONE_WAYPOINT_LABEL);
-    assertEquals(features, DAISY_CLOVER_RASPBERRY);
+    ArrayList<WaypointDescription> features = servlet.parseWaypointQuery(MULT_FEATURES_ONE_WAYPOINT_QUERY);
+    ArrayList<WaypointDescription> comparison = new ArrayList<WaypointDescription>();
+    comparison.add(DAISY_CLOVER_RASPBERRY_FEATURES_ONLY);
+    assertEquals(features, comparison);
   }
 
   /* Testing parseWaypointQuery, spaces and commas */
   @Test 
   public void testParseWaypointQuerySplit() throws Exception {
-    ArrayList<String> features = WaypointQueryServlet.parseWaypointQuery(MULT_FEATURES_ONE_WAYPOINT_LABEL.toLowerCase());
-    assertEquals(features, DAISY_CLOVER_RASPBERRY);
+    ArrayList<WaypointDescription> features = servlet.parseWaypointQuery(MULT_FEATURES_ONE_WAYPOINT_QUERY.toLowerCase());
+    ArrayList<WaypointDescription> comparison = new ArrayList<WaypointDescription>();
+    comparison.add(DAISY_CLOVER_RASPBERRY_FEATURES_ONLY);
+    assertEquals(features, comparison);
+  }
+
+  /* Testing parseWaypointQuery where the query contains a number at the beginning */
+  @Test 
+  public void testParseWaypointQueryNumberBeginning() throws Exception {
+    ArrayList<WaypointDescription> features = servlet.parseWaypointQuery(NUMBER_BEGINNING_QUERY);
+    ArrayList<WaypointDescription> comparison = new ArrayList<WaypointDescription>();
+    comparison.add(DAISY_CLOVER_RASPBERRY_WITH_NUMBER);
+    assertEquals(features, comparison);
+  }
+
+  /* Testing parseWaypointQuery where the query contains a number in the middle */
+  @Test 
+  public void testParseWaypointQueryNumberMiddle() throws Exception {
+    ArrayList<WaypointDescription> features = servlet.parseWaypointQuery(NUMBER_MIDDLE_QUERY);
+    ArrayList<WaypointDescription> comparison = new ArrayList<WaypointDescription>();
+    comparison.add(TREE_DESC);
+    comparison.add(DAISY_CLOVER_RASPBERRY_WITH_NUMBER);
+    assertEquals(features, comparison);
   }
 
   /* Testing processInputText, all punctuation, one feature per waypoint */
   @Test 
   public void testProcessInputTextPunctuation() throws Exception {
-    ArrayList<ArrayList<String>> features = WaypointQueryServlet.processInputText(ONE_FEATURE_MULT_WAYPOINT_LABEL);
-    ArrayList<ArrayList<String>> comparison = new ArrayList<ArrayList<String>>();
-    comparison.add(new ArrayList<String>(Arrays.asList("daisy")));
-    comparison.add(new ArrayList<String>(Arrays.asList("clover")));
-    comparison.add(new ArrayList<String>(Arrays.asList("raspberry")));
-    comparison.add(new ArrayList<String>(Arrays.asList("tree")));
+    ArrayList<WaypointDescription> features = servlet.processInputText(ONE_FEATURE_MULT_WAYPOINT_QUERY);
+    ArrayList<WaypointDescription> comparison = new ArrayList<WaypointDescription>();
+    comparison.add(DAISY_DESC);
+    comparison.add(CLOVER_DESC);
+    comparison.add(RASPBERRY_DESC);
+    comparison.add(TREE_DESC);
     assertEquals(features, comparison);
   }
 
   /* Testing processInputText, multiple features and multiple waypoints */
   @Test 
   public void testProcessInputTextMultipleFeaturesWaypoints() throws Exception {
-    ArrayList<ArrayList<String>> features = WaypointQueryServlet.processInputText(MULT_FEATURES_MULT_WAYPOINT_LABEL);
-    ArrayList<ArrayList<String>> comparison = new ArrayList<ArrayList<String>>();
-    comparison.add(new ArrayList<String>(Arrays.asList("daisy", "clover")));
-    comparison.add(new ArrayList<String>(Arrays.asList("raspberry", "tree")));
+    ArrayList<WaypointDescription> features = servlet.processInputText(MULT_FEATURES_MULT_WAYPOINT_QUERY);
+    ArrayList<WaypointDescription> comparison = new ArrayList<WaypointDescription>();
+    comparison.add(DAISY_CLOVER_RASPBERRY_FEATURES_ONLY);
+    comparison.add(TREE_DESC);
     assertEquals(features, comparison);
   }
 
@@ -183,11 +252,8 @@ public class WaypointQueryServletTest {
   @Test // Two features that have the exact same coordinates
   public void testServletPostSameCoordinates() throws Exception {
     PowerMockito.mockStatic(WaypointQueryServlet.class);
-    maxNumberCoordinatesMock = 5;
-    ReflectionTestUtils.setField(servlet, "maxNumberCoordinates", maxNumberCoordinatesMock);
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "processInputText", anyString());
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "parseWaypointQuery", anyString());
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "determineIfInt", anyString(), anyInt());
+    //PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "processInputText", anyString());
+    //PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "parseWaypointQuery", anyString());
     PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
     PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "jsonToCoordinates", anyString(), anyString());
     ((PowerMockitoStubber) PowerMockito.doReturn(TREE_BACKEND, LICHEN_BACKEND)).when(WaypointQueryServlet.class, "sendGET", anyString());
@@ -201,11 +267,8 @@ public class WaypointQueryServletTest {
   @Test
   public void testServletPostSimilarCoordinates() throws Exception {
     PowerMockito.mockStatic(WaypointQueryServlet.class);
-    maxNumberCoordinatesMock = 5;
-    ReflectionTestUtils.setField(servlet, "maxNumberCoordinates", maxNumberCoordinatesMock);
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "processInputText", anyString());
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "parseWaypointQuery", anyString());
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "determineIfInt", anyString(), anyInt());
+    //PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "processInputText", anyString());
+    //PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "parseWaypointQuery", anyString());
     PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
     PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "jsonToCoordinates", anyString(), anyString());
     ((PowerMockitoStubber) PowerMockito.doReturn(MEADOWSWEET_BACKEND, SUNFLOWER_BACKEND)).when(WaypointQueryServlet.class, "sendGET", anyString());
@@ -219,11 +282,9 @@ public class WaypointQueryServletTest {
   @Test
   public void testServletPostDifferentCoordinates() throws Exception {
     PowerMockito.mockStatic(WaypointQueryServlet.class);
-    maxNumberCoordinatesMock = 5;
-    ReflectionTestUtils.setField(servlet, "maxNumberCoordinates", maxNumberCoordinatesMock);
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "processInputText", anyString());
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "parseWaypointQuery", anyString());
-    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "determineIfInt", anyString(), anyInt());
+    //PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "processInputText", anyString());
+    //PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "parseWaypointQuery", anyString());
+    //PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "determineIfInt", anyString(), anyInt());
     PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
     PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "jsonToCoordinates", anyString(), anyString());
     ((PowerMockitoStubber) PowerMockito.doReturn(TREE_BACKEND, RASPBERRY_BACKEND)).when(WaypointQueryServlet.class, "sendGET", anyString());

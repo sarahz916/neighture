@@ -17,13 +17,13 @@ import java.util.ArrayList;
 
 /** Description of a user's waypoint query: how many the user wants, the label, and the features in the waypoint. */
 public final class WaypointDescription {
-
+  // The maximum number of coordinates will be an optional input by the user, with 5 as the default
+  private static final int DEFAULT_AMOUNT = 5;
+  private static final String DEFAULT_LABEL = "UNLABELED";
   private int amount;
   private boolean hasSetAmount;
   private String label;
   private final ArrayList<String> features;
-  private static final int DEFAULT_AMOUNT = 5;
-  private static final String DEFAULT_LABEL = "UNLABELED";
 
   /** Creates a new waypoint description with all needed information
     */
@@ -73,8 +73,8 @@ public final class WaypointDescription {
     return hasSetAmount;
   }
 
-  /** Updates amount of waypoints -- in our code, the user should only update
-    * if the amount has never been set before
+  /** Updates amount of waypoints -- in our code, the user should only update if
+    * there are no features for this waypoint yet
     */
   public void setMaxAmount(int newAmount) {
     amount = newAmount;
@@ -115,12 +115,32 @@ public final class WaypointDescription {
     */
   public boolean createLabel() {
     if (hasFeatures()) {
-      label = Integer.toString(amount) + " " + features.get(0);
+      label = features.get(0);
       for (int i = 1; i < features.size(); i++) {
         label += ", " + features.get(i);
       }
       return true;
     }
     return false;
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    // If the object is compared with itself then return true   
+    if (other == this) { 
+        return true; 
+    } 
+
+    /* Check if other is an instance of WaypointDescription or not 
+      "null instanceof [type]" also returns false */
+    if (!(other instanceof WaypointDescription)) { 
+        return false; 
+    } 
+      
+    // typecast other to WaypointDescription so that we can compare data members  
+    WaypointDescription otherWaypoint = (WaypointDescription) other; 
+      
+    // Compare the data members and return accordingly 
+    return (amount == otherWaypoint.getMaxAmount() && label.equals(otherWaypoint.getLabel()));
   }
 }

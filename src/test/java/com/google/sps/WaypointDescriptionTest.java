@@ -24,14 +24,14 @@ import org.junit.Assert;
 
 @RunWith(JUnit4.class)
 public final class WaypointDescriptionTest {
-  public static final String LABEL = "3 daisy, clover";
+  public static final String LABEL = "daisy, clover";
+  public static final String RASPBERRY_LABEL = "raspberry";
   public static final String DEFAULT_LABEL = "UNLABELED";  
   public static final int AMOUNT = 3;
   public static final int DEFAULT_AMOUNT = 5;
   public static final ArrayList<String> SOME_FEATURES = new ArrayList<String>(Arrays.asList("daisy", "clover"));
   public static final ArrayList<String> MORE_FEATURES = new ArrayList<String>(Arrays.asList("daisy", "clover", "raspberry"));
   public static final ArrayList<String> NO_FEATURES = new ArrayList<String>();
-  public static final String RASPBERRY_LABEL = "raspberry";
 
   @Test
   public void constructFullWaypointDescription() {
