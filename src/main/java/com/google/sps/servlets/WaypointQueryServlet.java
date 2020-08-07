@@ -78,7 +78,7 @@ public class WaypointQueryServlet extends HttpServlet {
   }
 
   @Override
-  public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+  public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     String input = request.getParameter("text-input");
     ArrayList<List<Coordinate>> waypoints;
     try {
