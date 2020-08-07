@@ -16,7 +16,6 @@ package com.google.sps.servlets;
 import com.google.sps.Coordinate;
 import java.net.HttpURLConnection;
 import java.net.URL; 
-import com.google.cloud.language.v1.Document;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;

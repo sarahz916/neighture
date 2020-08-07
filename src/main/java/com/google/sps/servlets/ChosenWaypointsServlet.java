@@ -17,8 +17,6 @@ import com.google.sps.Coordinate;
 import com.google.sps.SessionDataStore;
 import com.google.gson.Gson;
 import org.json.JSONObject;
-import com.google.appengine.api.datastore.*;
-import com.google.appengine.api.datastore.Query.*;  
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
