@@ -20,16 +20,51 @@ const FILL_COLORS = ["#FF0000", '#F1C40F', '#3498DB', '#154360', '#D1F2EB', '#D7
                     ];
 const MAX_WAYPOINTS = 25;
 
-window.onload = function setup() {
+window.onload = async function setup() {
     // Inialize and create a map with no directions on it when the page is reloaded.
-    var chicago = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
-    initMap(chicago, 'route-map');
-    initMap(chicago, 'point-map');
+    let start = await getStartAddr();
+    let end = await getEndAddr();
+    initMap(start, 'route-map');
+    initMap(start, 'point-map');
+    await initStartEndDisplay(start, end);
 }
 
 document.getElementById('text-git statform').addEventListener('submit', setupUserChoices());
 document.getElementById('select-points').addEventListener('submit', createMapWithWaypoints());
 
+/**
+ * Get and displays the inputted start and end location addresses to the user.
+ */
+async function initStartEndDisplay(start, end) {
+    document.getElementById('start-display').textContent = `Start location: ${start}`;
+    document.getElementById('end-display').textContent = `End location: ${end}`;
+}
+
+/**
+ * Get the start location address entered by the user.
+ */
+async function getStartAddr() {
+    let startEnd = await getStartEnd();
+    return startEnd.start;
+}
+
+/**
+ * Gets the end location address entered by the user.
+ */
+async function getEndAddr() {
+    let startEnd = await getStartEnd();
+    return startEnd.end;
+}
+
+/**
+ * Fetches the start and end location addresses from the StartEndServlet.
+ */
+async function getStartEnd() {
+    let res = await fetch('/start-end');
+    let startEnd = await res.json();
+    console.log(startEnd);
+    return startEnd;
+}
 
 /**
  * Create a route and map from a waypoint entered by the user.
@@ -37,8 +72,10 @@ document.getElementById('select-points').addEventListener('submit', createMapWit
 async function createMapWithWaypoints() {
     var res = await getChosenPoints();
     let waypoints = convertWaypointstoLatLng(res);
-    let start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
-    let end = new google.maps.LatLng(41.866940, -87.607105); // hardcoded end; will get from user later
+    let start = await getStartAddr();
+    let end = await getEndAddr();
+    console.log(start);
+    console.log(end);
     let map = initMap(start, 'route-map');
     let directionsService = new google.maps.DirectionsService();
     let directionsRenderer = new google.maps.DirectionsRenderer({
