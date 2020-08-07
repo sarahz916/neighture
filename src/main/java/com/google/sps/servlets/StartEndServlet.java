@@ -14,13 +14,22 @@
 
 package com.google.sps.servlets;
 import com.google.sps.SessionDataStore;
-
+import com.google.sps.Coordinate;
 import java.io.IOException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.util.ArrayList;
 import java.util.List;
 import com.google.gson.Gson;
+import java.net.HttpURLConnection;
+import java.net.URL;  
+import com.google.maps.GeoApiContext;
+import com.google.maps.model.GeocodingResult;
+import com.google.maps.GeocodingApi;
+import com.google.maps.GaeRequestHandler;
+import com.google.maps.errors.ApiException;
+import java.lang.InterruptedException;
+import org.json.JSONObject;
 
 /** Servlet that returns text input data */
 @WebServlet(
@@ -30,32 +39,67 @@ import com.google.gson.Gson;
 )
 public class StartEndServlet extends HttpServlet {
     private final String ENTITY_TYPE =  "StartEnd";
-    private ArrayList<String> results = new ArrayList<String>();
+    private final String API_KEY = "AIzaSyBaBCxBuGqZx0IGQ4lb9eKrICwU8Rduz3c";
 
   /** Fetches start and end data associated with Session ID */
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
       SessionDataStore sessionDataStore = new SessionDataStore(request);
-      String start = "\"" + sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "start") + "\"";
-      String end = "\"" + sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "end") + "\"";
-      String StartEndJson = "{ \"start\":" + start + ", \"end\":" + end + "}";
+      String start = sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "start");
+      String end = sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "end");
+      String midpoint = sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "midpoint");
+      JSONObject startendmid = new JSONObject();
+      startendmid.put("start", start);
+      startendmid.put("end", end);
+      startendmid.put("midpoint", midpoint);
       response.setContentType("application/json");
-      response.getWriter().println(StartEndJson);
+      response.getWriter().println(startendmid.toString());
   }
 
- /** Stores start and end input strings with Session ID */
+ /** Stores start, end and midpoint locations as JSON Strings of Coordinates with Session ID */
  @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         //Get StartEnd from request
         String start = request.getParameter("startloc-input");
         String end = request.getParameter("endloc-input");
-        results.add(start);
-        results.add(end);
-        SessionDataStore sessionDataStore = new SessionDataStore(request);
+        //Request GeoCoding API for coordinates
+        Coordinate startCoord = getGeoLocation(start);
+        Coordinate endCoord = getGeoLocation(end);
+        //Get midpoint Coordinate
+        Coordinate midCoord = getMidpoint(startCoord, endCoord);
         // Store start and end in datastore with ID.
-        sessionDataStore.storeProperty(ENTITY_TYPE, "start", start);
-        sessionDataStore.storeProperty(ENTITY_TYPE, "end", end);
+        SessionDataStore sessionDataStore = new SessionDataStore(request);
+        sessionDataStore.storeProperty(ENTITY_TYPE, "start", new Gson().toJson(startCoord));
+        sessionDataStore.storeProperty(ENTITY_TYPE, "end", new Gson().toJson(endCoord));
+        sessionDataStore.storeProperty(ENTITY_TYPE, "midpoint", new Gson().toJson(midCoord));
         // Redirect back to the index page.
         response.sendRedirect("/index.html");
     }
+
+  /** Gets geoLocation via GeoEncoding API and returns Coordinate of place */ 
+    private Coordinate getGeoLocation(String placeQuery) throws IOException {
+        GeoApiContext context = new GeoApiContext.Builder(new GaeRequestHandler.Builder())
+            .apiKey(API_KEY)
+            .build();
+        GeocodingResult[] results;
+        try{
+            results =  GeocodingApi.geocode(context,
+                placeQuery).await();
+        }catch(ApiException | InterruptedException ex){
+            return null;
+        }
+        Double y = results[0].geometry.location.lat;
+        Double x = results[0].geometry.location.lng;
+        Coordinate startEndCoordinate  = new Coordinate(x, y, placeQuery);
+        return startEndCoordinate;
+    }
+
+  /**Returns Coordinate of midpoint between start and end Coordinates */ 
+    private Coordinate getMidpoint(Coordinate start, Coordinate end){
+        Double y = (start.getY() + end.getY())/2;
+        Double x = (start.getX() + end.getX())/2;
+        return new Coordinate(x, y, "midpoint");
+    }
+
+
 }

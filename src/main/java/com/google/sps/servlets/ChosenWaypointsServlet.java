@@ -17,17 +17,10 @@ import com.google.sps.Coordinate;
 import com.google.sps.SessionDataStore;
 import com.google.gson.Gson;
 import org.json.JSONObject;
-import com.google.appengine.api.datastore.*;
-import com.google.appengine.api.datastore.Query.*;  
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;  
 import java.util.*;
 
 /** Servlet that scans for which checkboxes are checked and returns the selected
