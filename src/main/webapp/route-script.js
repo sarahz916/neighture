@@ -21,11 +21,14 @@ const FILL_COLORS = ["#FF0000", '#F1C40F', '#3498DB', '#154360', '#D1F2EB', '#D7
 const MAX_WAYPOINTS = 25;
 
 window.onload = async function setup() {
-    // Inialize and create a map with no directions on it when the page is reloaded.
+    // Initialize and create a map with no directions on it when the page is reloaded.
+    var chicago = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
     let start = await getStartAddr();
     let end = await getEndAddr();
-    initMap(start, 'route-map');
-    initMap(start, 'point-map');
+    // initMap(start, 'route-map');
+    // initMap(start, 'point-map');
+    initMap(chicago, 'route-map');
+    initMap(chicago, 'point-map');
     await initStartEndDisplay(start, end);
 }
 
@@ -62,7 +65,6 @@ async function getEndAddr() {
 async function getStartEnd() {
     let res = await fetch('/start-end');
     let startEnd = await res.json();
-    console.log(startEnd);
     return startEnd;
 }
 
@@ -72,10 +74,12 @@ async function getStartEnd() {
 async function createMapWithWaypoints() {
     var res = await getChosenPoints();
     let waypoints = convertWaypointstoLatLng(res);
+    // let start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
+    // let end = new google.maps.LatLng(41.866940, -87.607105); // hardcoded end; will get from user later
+
     let start = await getStartAddr();
     let end = await getEndAddr();
-    console.log(start);
-    console.log(end);
+
     let map = initMap(start, 'route-map');
     let directionsService = new google.maps.DirectionsService();
     let directionsRenderer = new google.maps.DirectionsRenderer({
