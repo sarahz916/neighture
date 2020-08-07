@@ -45,9 +45,9 @@ public class StartEndServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
       SessionDataStore sessionDataStore = new SessionDataStore(request);
-      String start = sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "start");
-      String end = sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "end");
-      String midpoint = sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "midpoint");
+      JSONObject start = new JSONObject(sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "start"));
+      JSONObject end = new JSONObject(sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "end"));
+      JSONObject midpoint = new JSONObject(sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "midpoint"));
       JSONObject startendmid = new JSONObject();
       startendmid.put("start", start);
       startendmid.put("end", end);
