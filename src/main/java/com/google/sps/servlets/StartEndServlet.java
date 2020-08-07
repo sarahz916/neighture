@@ -14,10 +14,7 @@
 
 package com.google.sps.servlets;
 import com.google.sps.SessionDataStore;
-import java.net.HttpURLConnection;
-import java.net.URL; 
-import com.google.appengine.api.datastore.*;
-import com.google.appengine.api.datastore.Query.*;
+
 import java.io.IOException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
@@ -27,24 +24,31 @@ import com.google.gson.Gson;
 
 /** Servlet that returns text input data */
 @WebServlet(
-    name = "TextStore",
-    description = "TextStore: accesses text input",
-    urlPatterns = "/text-store"
+    name = "StartEnd",
+    description = "StartEnd: records start end location of user",
+    urlPatterns = "/start-end"
 )
-public class TextStoreServlet extends HttpServlet {
-    private final String FETCH_FIELD = "textFetched";
-    private final String FETCH_PROPERTY ="text";
-    private final String ENTITY_TYPE =  "Route";
+public class StartEndServlet extends HttpServlet {
+    private final String ENTITY_TYPE =  "StartEnd";
 
-  /** Looks up text input from Route Entites by Session ID in datastore.
-  *   Returns text of most recent input-text from session ID. 
-  */ 
+
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
       SessionDataStore sessionDataStore = new SessionDataStore(request);
-      String valueJSONString = sessionDataStore.queryOnlyifFirstFetch(FETCH_FIELD, ENTITY_TYPE, FETCH_PROPERTY);
+      /*String valueJSONString = sessionDataStore.queryOnlyifFirstFetch(FETCH_FIELD, ENTITY_TYPE, FETCH_PROPERTY);
       response.setContentType("application/json");
-      response.getWriter().println(valueJSONString);
+      response.getWriter().println(valueJSONString);*/
   }
 
+ @Override
+    public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        //Get StartEnd from request
+        
+        /*SessionDataStore sessionDataStore = new SessionDataStore(request);
+        // Store input text and waypoint in datastore.
+        sessionDataStore.storeProperty(ENTITY_TYPE, FETCH_PROPERTY, waypoints);
+        sessionDataStore.storeStoredRoute();
+        sessionDataStore.setSessionAttributes(FIELDS_MODIFIED);
+        // Redirect back to the index page.
+        response.sendRedirect("/index.html");*/
 }

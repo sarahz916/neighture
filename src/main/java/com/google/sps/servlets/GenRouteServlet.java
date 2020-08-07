@@ -34,26 +34,32 @@ import java.util.*;
   */ 
 @WebServlet("/gen-route")
 public class GenRouteServlet extends HttpServlet {
-    private ArrayList<String> DropDownvalue = new ArrayList<String>();
+    private final ArrayList<String> FIELDS_MODIFIED = new ArrayList<String>( 
+            Arrays.asList("genRouteFetch"));
+    private final String FETCH_FIELD = "genRouteFetch";
+    private final String FETCH_PROPERTY = "gen-route";
+    private final String ENTITY_TYPE = "genRoute";
+    
+    /** Retrieves past generated route user selected on generatedroutes.html
+    */ 
+    @Override
+    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+      SessionDataStore sessionDataStore = new SessionDataStore(request);
+      String waypointsJSONstring = sessionDataStore.queryOnlyifFirstFetch(FETCH_FIELD, ENTITY_TYPE, FETCH_PROPERTY);
+      response.setContentType("application/json");
+      response.getWriter().println(waypointsJSONstring);
+    }
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String value = request.getParameter("routes-drop-down");
-        DropDownvalue.add(value);
+        SessionDataStore sessionDataStore = new SessionDataStore(request);
+        // Store input text and waypoint in datastore.
+        sessionDataStore.storeProperty(ENTITY_TYPE, FETCH_PROPERTY, value);
+        sessionDataStore.setSessionAttributes(FIELDS_MODIFIED);
         // Return last stored waypoints
         response.sendRedirect("/generated-routes.html");
     }
 
-    @Override
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    response.setContentType("application/json");
-    if(!DropDownvalue.isEmpty()){
-        response.getWriter().println(DropDownvalue.get(0));
-        DropDownvalue.clear();
-    }
-    else{
-        response.getWriter().println("[]");
-    }
-    }
 
 }

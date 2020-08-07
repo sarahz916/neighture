@@ -32,7 +32,7 @@ public class DeleteRouteServlet extends HttpServlet {
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
     long id = Long.parseLong(request.getParameter("id"));
 
-    Key routeEntityKey = KeyFactory.createKey("Route", id);
+    Key routeEntityKey = KeyFactory.createKey("StoredRoute", id);
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     datastore.delete(routeEntityKey);
   }
