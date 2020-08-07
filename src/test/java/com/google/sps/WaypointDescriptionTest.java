@@ -13,7 +13,7 @@
 // limitations under the License.
 
 package com.google.sps;
-import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.Arrays;
 
 import org.junit.Test;
@@ -29,9 +29,9 @@ public final class WaypointDescriptionTest {
   public static final String DEFAULT_LABEL = "UNLABELED";  
   public static final int AMOUNT = 3;
   public static final int DEFAULT_AMOUNT = 5;
-  public static final ArrayList<String> SOME_FEATURES = new ArrayList<String>(Arrays.asList("daisy", "clover"));
-  public static final ArrayList<String> MORE_FEATURES = new ArrayList<String>(Arrays.asList("daisy", "clover", "raspberry"));
-  public static final ArrayList<String> NO_FEATURES = new ArrayList<String>();
+  public static final LinkedHashSet<String> SOME_FEATURES = new LinkedHashSet<String>(Arrays.asList("daisy", "clover"));
+  public static final LinkedHashSet<String> MORE_FEATURES = new LinkedHashSet<String>(Arrays.asList("daisy", "clover", "raspberry"));
+  public static final LinkedHashSet<String> NO_FEATURES = new LinkedHashSet<String>();
 
   @Test
   public void constructFullWaypointDescription() {
