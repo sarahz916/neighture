@@ -30,25 +30,31 @@ import com.google.gson.Gson;
 )
 public class StartEndServlet extends HttpServlet {
     private final String ENTITY_TYPE =  "StartEnd";
+    private ArrayList<String> results = new ArrayList<String>();
 
 
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
       SessionDataStore sessionDataStore = new SessionDataStore(request);
-      /*String valueJSONString = sessionDataStore.queryOnlyifFirstFetch(FETCH_FIELD, ENTITY_TYPE, FETCH_PROPERTY);
+      String start = "\"" + sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "start") + "\"";
+      String end = "\"" + sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "end") + "\"";
+      String StartEndJson = "{ \"start\":" + start + ", \"end\":" + end + "}";
       response.setContentType("application/json");
-      response.getWriter().println(valueJSONString);*/
+      response.getWriter().println(StartEndJson);
   }
 
  @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         //Get StartEnd from request
-        
-        /*SessionDataStore sessionDataStore = new SessionDataStore(request);
-        // Store input text and waypoint in datastore.
-        sessionDataStore.storeProperty(ENTITY_TYPE, FETCH_PROPERTY, waypoints);
-        sessionDataStore.storeStoredRoute();
-        sessionDataStore.setSessionAttributes(FIELDS_MODIFIED);
+        String start = request.getParameter("startloc-input");
+        String end = request.getParameter("endloc-input");
+        results.add(start);
+        results.add(end);
+        SessionDataStore sessionDataStore = new SessionDataStore(request);
+        // Store start and end in datastore with ID.
+        sessionDataStore.storeProperty(ENTITY_TYPE, "start", start);
+        sessionDataStore.storeProperty(ENTITY_TYPE, "end", end);
         // Redirect back to the index page.
-        response.sendRedirect("/index.html");*/
+        response.sendRedirect("/index.html");
+    }
 }
