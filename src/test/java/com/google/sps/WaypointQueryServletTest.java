@@ -158,6 +158,27 @@ public class WaypointQueryServletTest {
     assertEquals(newInt, MAX_AMOUNT);
   } 
 
+  // /* Testing isNoun for a noun */
+  // @Test
+  // public void testIsNounTrue() throws Exception {
+  //   boolean wordIsNoun = servlet.isNoun("daisy");
+  //   assertTrue(wordIsNoun);
+  // }
+
+  // /* Testing isNoun for a pronoun */
+  // @Test
+  // public void testIsNounPronoun() throws Exception {
+  //   boolean wordIsNoun = servlet.isNoun("i");
+  //   assertFalse(wordIsNoun);
+  // }
+
+  // /* Testing isNoun for a non-noun */
+  // @Test
+  // public void testIsNounFalse() throws Exception {
+  //   boolean wordIsNoun = servlet.isNoun("see");
+  //   assertFalse(wordIsNoun);
+  // }
+
   /* Testing parseWaypointQuery, different cases */
   @Test 
   public void testParseWaypointQueryCasing() throws Exception {
@@ -221,8 +242,6 @@ public class WaypointQueryServletTest {
   @Test
   public void testGetLocationsEmpty() throws Exception {
     PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(NOTHING_BACKEND);
-    // String anyString = anyString();
-    // when(servlet.sendGET(anyString)).thenReturn(NOTHING_BACKEND);
     ArrayList<List<Coordinate>> locations = servlet.getLocations("");
     ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
     comparison.add(Arrays.asList());
@@ -250,11 +269,10 @@ public class WaypointQueryServletTest {
   }
 
   /* Testing getLocations with two features that have the exact same coordinates, stubbing database call */
-  @Test // Two features that have the exact same coordinates
+  @Test
   public void testServletPostSameCoordinates() throws Exception {
     PowerMockito.mockStatic(WaypointQueryServlet.class);
-    //PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "processInputText", anyString());
-    //PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "parseWaypointQuery", anyString());
+    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "getTags", anyString());
     PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
     PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "jsonToCoordinates", anyString(), anyString());
     ((PowerMockitoStubber) PowerMockito.doReturn(TREE_BACKEND, LICHEN_BACKEND)).when(WaypointQueryServlet.class, "sendGET", anyString());
@@ -268,8 +286,7 @@ public class WaypointQueryServletTest {
   @Test
   public void testServletPostSimilarCoordinates() throws Exception {
     PowerMockito.mockStatic(WaypointQueryServlet.class);
-    //PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "processInputText", anyString());
-    //PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "parseWaypointQuery", anyString());
+    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "getTags", anyString());
     PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
     PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "jsonToCoordinates", anyString(), anyString());
     ((PowerMockitoStubber) PowerMockito.doReturn(MEADOWSWEET_BACKEND, SUNFLOWER_BACKEND)).when(WaypointQueryServlet.class, "sendGET", anyString());
@@ -283,9 +300,7 @@ public class WaypointQueryServletTest {
   @Test
   public void testServletPostDifferentCoordinates() throws Exception {
     PowerMockito.mockStatic(WaypointQueryServlet.class);
-    //PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "processInputText", anyString());
-    //PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "parseWaypointQuery", anyString());
-    //PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "determineIfInt", anyString(), anyInt());
+    PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "getTags", anyString());
     PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "fetchFromDatabase", anyString(), anyString());
     PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "jsonToCoordinates", anyString(), anyString());
     ((PowerMockitoStubber) PowerMockito.doReturn(TREE_BACKEND, RASPBERRY_BACKEND)).when(WaypointQueryServlet.class, "sendGET", anyString());

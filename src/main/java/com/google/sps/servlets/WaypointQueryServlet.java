@@ -46,13 +46,20 @@ import java.text.DecimalFormat;
 import java.text.Normalizer;
 
 // Imports the Google Cloud client library
-import com.google.cloud.language.v1.Document;
-import com.google.cloud.language.v1.Document.Type;
-import com.google.cloud.language.v1.LanguageServiceClient;
-import com.google.cloud.language.v1.AnalyzeSyntaxRequest;
-import com.google.cloud.language.v1.AnalyzeSyntaxResponse;
-import com.google.cloud.language.v1.EncodingType;
-import com.google.cloud.language.v1.Token;
+// import com.google.cloud.language.v1.Document;
+// import com.google.cloud.language.v1.Document.Type;
+// import com.google.cloud.language.v1.LanguageServiceClient;
+// import com.google.cloud.language.v1.AnalyzeSyntaxRequest;
+// import com.google.cloud.language.v1.AnalyzeSyntaxResponse;
+// import com.google.cloud.language.v1.EncodingType;
+// import com.google.cloud.language.v1.Token;
+
+import java.io.FileInputStream; 
+import java.io.InputStream;  
+import opennlp.tools.postag.POSModel; 
+import opennlp.tools.postag.POSSample; 
+import opennlp.tools.postag.POSTaggerME; 
+import opennlp.tools.tokenize.WhitespaceTokenizer;  
 
 /** Servlet that handles the user's query by parsing out
   * the waypoint queries and their matching coordinates in 
@@ -61,8 +68,9 @@ import com.google.cloud.language.v1.Token;
 @WebServlet("/query")
 public class WaypointQueryServlet extends HttpServlet {
   private static final Pattern PATTERN = Pattern.compile("^\\d+$"); // Improves performance by avoiding compile of pattern in every method call
-  private static final ImmutableMap<String, Integer> NUMBER_MAP = ImmutableMap.<String, Integer>builder().put("one", 1).put("two", 2).put("three", 3)
-    .put("four", 4).put("five", 5).put("six", 6).put("seven", 7).put("eight", 8).put("nine", 9).put("ten", 10).build(); 
+  private static final ImmutableMap<String, Integer> NUMBER_MAP = ImmutableMap.<String, Integer>builder()
+    .put("one", 1).put("two", 2).put("three", 3).put("four", 4).put("five", 5).put("six", 6).put("seven", 7)
+    .put("eight", 8).put("nine", 9).put("ten", 10).put("eleven", 11).put("twelve", 12).put("fifteen", 15).put("twenty", 20).build(); 
 
   private final ArrayList<String> FIELDS_MODIFIED = new ArrayList<String>( 
        Arrays.asList("queryFetched", "textFetched"));
@@ -79,7 +87,7 @@ public class WaypointQueryServlet extends HttpServlet {
   }
 
   @Override
-  public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+  public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     String input = request.getParameter("text-input");
     ArrayList<List<Coordinate>> waypoints;
     try {
@@ -153,6 +161,7 @@ public class WaypointQueryServlet extends HttpServlet {
     ArrayList<WaypointDescription> waypointsFromQuery = new ArrayList<WaypointDescription>();
     // Separate on commas and spaces
     String[] featureQueries = waypointQuery.split("[,\\s]+"); // TODO: only include numbers (adjectives?) and nouns
+    String[] tags = getTags(featureQueries);
     WaypointDescription waypoint = new WaypointDescription();
     for (int i = 0; i < featureQueries.length; i++) {
       String feature = featureQueries[i]; 
@@ -168,6 +177,7 @@ public class WaypointQueryServlet extends HttpServlet {
         }
       } else {
         // Will do parsing for nouns/not pronouns here
+        System.out.println(tags[i]);
         waypoint.addFeature(feature);
       }
     }
@@ -176,6 +186,21 @@ public class WaypointQueryServlet extends HttpServlet {
       waypointsFromQuery.add(waypoint);
     }
     return waypointsFromQuery;
+  }
+
+  /** Gets the part of speech tags for a sentence of tokens
+    */
+  public static String[] getTags(String[] tokens) throws Exception {
+    //Loading Parts of speech-maxent model       
+    InputStream inputStream = new FileInputStream("/WEB-INF/en-pos-maxent.bin"); 
+    POSModel model = new POSModel(inputStream); 
+      
+    //Instantiating POSTaggerME class 
+    POSTaggerME tagger = new POSTaggerME(model); 
+
+    //Generating tags 
+    String[] tags = tagger.tag(tokens);
+    return tags;
   }
 
   /** Determines if the passed in string is a number 
@@ -196,6 +221,12 @@ public class WaypointQueryServlet extends HttpServlet {
       return Integer.MAX_VALUE;
     }
     throw new Exception("Word is not an integer!");
+  }
+
+  /** Determines if the passed in string is a noun 
+    */
+  public boolean isNoun(String word) {
+    return false;
   }
 
   /** Sends a request for the input feature to the database
