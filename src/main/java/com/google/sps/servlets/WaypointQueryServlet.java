@@ -17,8 +17,6 @@ import com.google.sps.Coordinate;
 import com.google.sps.WaypointDescription;
 import com.google.sps.SessionDataStore;
 import com.google.gson.Gson;
-import com.google.appengine.api.datastore.*;
-import com.google.appengine.api.datastore.Query.*;
 import com.google.common.collect.ImmutableMap;
 import org.json.JSONObject;  
 import org.json.JSONArray;  

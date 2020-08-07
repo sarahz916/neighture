@@ -14,10 +14,6 @@
 
 package com.google.sps.servlets;
 import com.google.sps.SessionDataStore;
-import java.net.HttpURLConnection;
-import java.net.URL; 
-import com.google.appengine.api.datastore.*;
-import com.google.appengine.api.datastore.Query.*;
 import java.io.IOException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
