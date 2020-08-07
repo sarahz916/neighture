@@ -71,7 +71,6 @@ public class WaypointQueryServlet extends HttpServlet {
   private static final ImmutableMap<String, Integer> NUMBER_MAP = ImmutableMap.<String, Integer>builder()
     .put("one", 1).put("two", 2).put("three", 3).put("four", 4).put("five", 5).put("six", 6).put("seven", 7)
     .put("eight", 8).put("nine", 9).put("ten", 10).put("eleven", 11).put("twelve", 12).put("fifteen", 15).put("twenty", 20).build(); 
-
   private final ArrayList<String> FIELDS_MODIFIED = new ArrayList<String>( 
        Arrays.asList("queryFetched", "textFetched"));
   private final String FETCH_FIELD = "queryFetched";
@@ -133,6 +132,7 @@ public class WaypointQueryServlet extends HttpServlet {
           }
         }
       }
+
       List<Coordinate> locations = potentialCoordinates.subList(0, Math.min(maxNumberCoordinates, potentialCoordinates.size()));
       waypoints.add(locations);
     }   
@@ -161,7 +161,8 @@ public class WaypointQueryServlet extends HttpServlet {
     ArrayList<WaypointDescription> waypointsFromQuery = new ArrayList<WaypointDescription>();
     // Separate on commas and spaces
     String[] featureQueries = waypointQuery.split("[,\\s]+"); // TODO: only include numbers (adjectives?) and nouns
-    String[] tags = getTags(featureQueries);
+    String[][] bigTags = getTags(featureQueries);
+    String[] primaryTags = bigTags[0];
     WaypointDescription waypoint = new WaypointDescription();
     for (int i = 0; i < featureQueries.length; i++) {
       String feature = featureQueries[i]; 
@@ -176,9 +177,16 @@ public class WaypointQueryServlet extends HttpServlet {
           waypoint.setMaxAmount(maxAmount);
         }
       } else {
-        // Will do parsing for nouns/not pronouns here
-        System.out.println(tags[i]);
-        waypoint.addFeature(feature);
+        // Parsing for nouns/not pronouns
+        if (primaryTags[i].equals("NN") || primaryTags[i].equals("NNS")) { // Doesn't look for proper nouns right now
+          waypoint.addFeature(feature);
+        } else if (bigTags.length == 2 && !primaryTags[i].equals("PRP")) { 
+          // Second chance: as long as it's not a pronoun, see if the word can still be a noun
+          String[] secondaryTags = bigTags[1];
+          if (secondaryTags[i].equals("NN") || secondaryTags[i].equals("NNS")) {
+            waypoint.addFeature(feature);
+          }
+        }
       }
     }
     if (waypoint.hasFeatures()) {
@@ -190,17 +198,18 @@ public class WaypointQueryServlet extends HttpServlet {
 
   /** Gets the part of speech tags for a sentence of tokens
     */
-  public static String[] getTags(String[] tokens) throws Exception {
-    //Loading Parts of speech-maxent model       
-    InputStream inputStream = new FileInputStream("/WEB-INF/en-pos-maxent.bin"); 
+  public String[][] getTags(String[] tokens) throws Exception {
+    //Loading Parts of speech-maxent model      
+    //InputStream inputStream = new FileInputStream("src/main/webapp/WEB-INF/en-pos-maxent.bin") ;
+    InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("en-pos-maxent.bin");
     POSModel model = new POSModel(inputStream); 
       
     //Instantiating POSTaggerME class 
     POSTaggerME tagger = new POSTaggerME(model); 
 
     //Generating tags 
-    String[] tags = tagger.tag(tokens);
-    return tags;
+    String[][] bigTags = tagger.tag(2, tokens);
+    return bigTags;
   }
 
   /** Determines if the passed in string is a number 
@@ -221,12 +230,6 @@ public class WaypointQueryServlet extends HttpServlet {
       return Integer.MAX_VALUE;
     }
     throw new Exception("Word is not an integer!");
-  }
-
-  /** Determines if the passed in string is a noun 
-    */
-  public boolean isNoun(String word) {
-    return false;
   }
 
   /** Sends a request for the input feature to the database

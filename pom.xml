@@ -151,6 +151,12 @@
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>${basedir}/src/main/resources</directory>
+        <filtering>false</filtering>
+      </resource>
+    </resources>
     <plugins>
       <!-- Provides `mvn package appengine:run` for local testing
            and `mvn package appengine:deploy` for deploying. -->
