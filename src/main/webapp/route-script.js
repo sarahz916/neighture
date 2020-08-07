@@ -21,18 +21,8 @@ const FILL_COLORS = ["#FF0000", '#F1C40F', '#3498DB', '#154360', '#D1F2EB', '#D7
 const MAX_WAYPOINTS = 25;
 
 window.onload = async function setup() {
-    // Initialize and create a map with no directions on it when the page is reloaded.
-    var chicago = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
     let startAddr = await getStartAddr();
     let endAddr = await getEndAddr();
-
-    let startCoord = await getStartCoord();
-    let endCoord = await getEndCoord();
-
-    initMap(startCoord, 'route-map');
-    initMap(startCoord, 'point-map');
-    // initMap(chicago, 'route-map');
-    // initMap(chicago, 'point-map');
     await initStartEndDisplay(startAddr, endAddr);
 }
 
@@ -93,10 +83,8 @@ async function getStartEnd() {
  */
 async function createMapWithWaypoints() {
     var res = await getChosenPoints();
+    console.log(res);
     let waypoints = convertWaypointstoLatLng(res);
-    // let start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
-    // let end = new google.maps.LatLng(41.866940, -87.607105); // hardcoded end; will get from user later
-
     let start = await getStartCoord();
     let end = await getEndCoord();
 
@@ -133,6 +121,8 @@ async function setupUserChoices() {
  * Get waypoints from the servlet and map each cluster of waypoints on the map in a different marker color.
  */
 function createPointInfoMap(waypoints) {
+    // let start = getStartCoord();
+    // let end = getEndCoord();
     let start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
     let end = new google.maps.LatLng(41.866940, -87.607105); // hardcoded end; will get from user later
     let map = initMap(start, 'point-map');
