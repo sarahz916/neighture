@@ -59,21 +59,25 @@ public class StartEndServlet extends HttpServlet {
  /** Stores start, end and midpoint locations as JSON Strings of Coordinates with Session ID */
  @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        //Get StartEnd from request
-        String start = request.getParameter("startloc-input");
-        String end = request.getParameter("endloc-input");
-        //Request GeoCoding API for coordinates
-        Coordinate startCoord = getGeoLocation(start);
-        Coordinate endCoord = getGeoLocation(end);
-        //Get midpoint Coordinate
-        Coordinate midCoord = getMidpoint(startCoord, endCoord);
-        // Store start and end in datastore with ID.
-        SessionDataStore sessionDataStore = new SessionDataStore(request);
-        sessionDataStore.storeProperty(ENTITY_TYPE, "start", new Gson().toJson(startCoord));
-        sessionDataStore.storeProperty(ENTITY_TYPE, "end", new Gson().toJson(endCoord));
-        sessionDataStore.storeProperty(ENTITY_TYPE, "midpoint", new Gson().toJson(midCoord));
-        // Redirect back to the index page.
-        response.sendRedirect("/index.html");
+        try{
+            //Get StartEnd from request
+            String start = request.getParameter("startloc-input");
+            String end = request.getParameter("endloc-input");
+            //Request GeoCoding API for coordinates
+            Coordinate startCoord = getGeoLocation(start);
+            Coordinate endCoord = getGeoLocation(end);
+            //Get midpoint Coordinate
+            Coordinate midCoord = getMidpoint(startCoord, endCoord);
+            // Store start and end in datastore with ID.
+            SessionDataStore sessionDataStore = new SessionDataStore(request);
+            sessionDataStore.storeProperty(ENTITY_TYPE, "start", new Gson().toJson(startCoord));
+            sessionDataStore.storeProperty(ENTITY_TYPE, "end", new Gson().toJson(endCoord));
+            sessionDataStore.storeProperty(ENTITY_TYPE, "midpoint", new Gson().toJson(midCoord));
+            // Redirect back to the index page.
+            response.sendRedirect("/index.html");
+        }catch(Exception e){
+            response.sendRedirect("/error-page.html");
+        }
     }
 
   /** Gets geoLocation via GeoEncoding API and returns Coordinate of place */ 
