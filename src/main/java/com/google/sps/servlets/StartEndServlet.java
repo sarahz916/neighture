@@ -32,7 +32,7 @@ public class StartEndServlet extends HttpServlet {
     private final String ENTITY_TYPE =  "StartEnd";
     private ArrayList<String> results = new ArrayList<String>();
 
-
+  /** Fetches start and end data associated with Session ID */
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
       SessionDataStore sessionDataStore = new SessionDataStore(request);
@@ -43,6 +43,7 @@ public class StartEndServlet extends HttpServlet {
       response.getWriter().println(StartEndJson);
   }
 
+ /** Stores start and end input strings with Session ID */
  @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         //Get StartEnd from request
