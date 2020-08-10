@@ -301,7 +301,7 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Fetches midpoint from sessionDataStore. 
     */
  private Coordinate getMidpoint(SessionDataStore sessionDataStore){
-    JSONObject midpoint = new JSONObject(sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "midpoint"));
+    JSONObject jsonObject = new JSONObject(sessionDataStore.fetchSessionEntity("StartEnd", "midpoint"));
     Double x = jsonObject.getDouble("x");
     Double y = jsonObject.getDouble("y");
     midpoint = new Coordinate(x, y, "midpoint");
