@@ -43,6 +43,12 @@ import java.util.regex.Pattern;
 import java.text.DecimalFormat;
 import java.text.Normalizer;
 
+import java.io.FileInputStream; 
+import java.io.InputStream;  
+import opennlp.tools.postag.POSModel; 
+import opennlp.tools.postag.POSSample; 
+import opennlp.tools.postag.POSTaggerME; 
+
 /** Servlet that handles the user's query by parsing out
   * the waypoint queries and their matching coordinates in 
   * the database.
@@ -50,14 +56,17 @@ import java.text.Normalizer;
 @WebServlet("/query")
 public class WaypointQueryServlet extends HttpServlet {
   private static final Pattern PATTERN = Pattern.compile("^\\d+$"); // Improves performance by avoiding compile of pattern in every method call
-  private static final ImmutableMap<String, Integer> NUMBER_MAP = ImmutableMap.<String, Integer>builder().put("one", 1).put("two", 2).put("three", 3)
-    .put("four", 4).put("five", 5).put("six", 6).put("seven", 7).put("eight", 8).put("nine", 9).put("ten", 10).build(); 
-
+  private static final ImmutableMap<String, Integer> NUMBER_MAP = ImmutableMap.<String, Integer>builder()
+    .put("one", 1).put("two", 2).put("three", 3).put("four", 4).put("five", 5).put("six", 6).put("seven", 7)
+    .put("eight", 8).put("nine", 9).put("ten", 10).put("eleven", 11).put("twelve", 12).put("fifteen", 15).put("twenty", 20).build(); 
   private final ArrayList<String> FIELDS_MODIFIED = new ArrayList<String>( 
        Arrays.asList("queryFetched", "textFetched"));
   private final String FETCH_FIELD = "queryFetched";
   private final String FETCH_PROPERTY = "waypoints";
   private final String ENTITY_TYPE = "Route";
+  private static final String NOUN_SINGULAR_OR_MASS = "NN";
+  private static final String NOUN_PLURAL = "NNS";
+  private static final String PRONOUN = "PRP";
     
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -114,6 +123,7 @@ public class WaypointQueryServlet extends HttpServlet {
           }
         }
       }
+
       List<Coordinate> locations = potentialCoordinates.subList(0, Math.min(maxNumberCoordinates, potentialCoordinates.size()));
       waypoints.add(locations);
     }   
@@ -142,6 +152,8 @@ public class WaypointQueryServlet extends HttpServlet {
     ArrayList<WaypointDescription> waypointsFromQuery = new ArrayList<WaypointDescription>();
     // Separate on commas and spaces
     String[] featureQueries = waypointQuery.split("[,\\s]+"); // TODO: only include numbers (adjectives?) and nouns
+    String[][] bigTags = getTags(featureQueries);
+    String[] primaryTags = bigTags[0];
     WaypointDescription waypoint = new WaypointDescription();
     for (int i = 0; i < featureQueries.length; i++) {
       String feature = featureQueries[i]; 
@@ -156,8 +168,16 @@ public class WaypointQueryServlet extends HttpServlet {
           waypoint.setMaxAmount(maxAmount);
         }
       } else {
-        // Will do parsing for nouns/not pronouns here
-        waypoint.addFeature(feature);
+        // Parsing for nouns/not pronouns
+        if (primaryTags[i].equals(NOUN_SINGULAR_OR_MASS) || primaryTags[i].equals(NOUN_PLURAL)) { // Doesn't look for proper nouns right now
+          waypoint.addFeature(feature);
+        } else if (bigTags.length == 2 && !primaryTags[i].equals(PRONOUN)) { 
+          // Second chance: as long as it's not a pronoun, see if the word can still be a noun
+          String[] secondaryTags = bigTags[1];
+          if (secondaryTags[i].equals(NOUN_SINGULAR_OR_MASS) || secondaryTags[i].equals(NOUN_PLURAL)) {
+            waypoint.addFeature(feature);
+          }
+        }
       }
     }
     if (waypoint.hasFeatures()) {
@@ -165,6 +185,22 @@ public class WaypointQueryServlet extends HttpServlet {
       waypointsFromQuery.add(waypoint);
     }
     return waypointsFromQuery;
+  }
+
+  /** Gets the part of speech tags for a sentence of tokens
+    */
+  public String[][] getTags(String[] tokens) throws Exception {
+    //Loading Parts of speech-maxent model      
+    //InputStream inputStream = new FileInputStream("src/main/webapp/WEB-INF/en-pos-maxent.bin") ;
+    InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("en-pos-maxent.bin");
+    POSModel model = new POSModel(inputStream); 
+      
+    //Instantiating POSTaggerME class 
+    POSTaggerME tagger = new POSTaggerME(model); 
+
+    //Generating tags 
+    String[][] bigTags = tagger.tag(2, tokens);
+    return bigTags;
   }
 
   /** Determines if the passed in string is a number 
