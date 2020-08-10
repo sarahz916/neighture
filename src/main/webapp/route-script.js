@@ -124,7 +124,8 @@ async function setupUserChoices() {
  */
 function createPointInfoMap(start, end, waypoints) {
     let map = initMap(start, 'point-map');
-    map.setZoom(10);
+    let bounds = createBounds(start, end, waypoints);
+    map.fitBounds(bounds);
 
     createMarker(map, start, 'start', google.maps.SymbolPath.CIRCLE, 'black');
     createMarker(map, end, 'end', google.maps.SymbolPath.CIRCLE, 'black');
@@ -141,7 +142,22 @@ function createPointInfoMap(start, end, waypoints) {
     }
 }
 
-
+/**
+ * Given a start and end coordinate and a map of waypoint labels to a list of LatLng waypoints, 
+ * create a Google Maps LatLngBounds object around which a map can be fit.
+ */
+function createBounds(start, end, waypoints) {
+    let bounds = new google.maps.LatLngBounds();
+    bounds.extend(start);
+    bounds.extend(end);
+    for (let i = 0; i < Object.entries(waypoints).length; i++) {
+        let [label, cluster] = Object.entries(waypoints)[i];
+        for (let pt of cluster) {
+            bounds.extend(pt);
+        }
+    }
+    return bounds;
+}
 
 /**
  * Given options for a custom Google Maps marker, create the marker on the map.
