@@ -98,22 +98,37 @@ public class ChosenWaypointsServletTest {
 
     stringWriter = new StringWriter();
     writer = new PrintWriter(stringWriter);
-    
-
-    String SessionID = "testsession";
-    PowerMockito.when(ChosenWaypointsServlet.class, "getSessionID", request).thenReturn(SessionID);
   }
 
-  /** Test function that takes JSON String and returns ArrayList Coordinates. 
+  /*getWaypointsfromRequestTests*/
+
+  /** Test one waypoint. 
   */  
   @Test 
-  public void getWayPointsfromRequestTest(){
+  public void testOne(){
     chosenWaypointsMock.add(JSON_STRING_DAISY);
     when(request.getParameterNames()).thenReturn(Collections.enumeration(chosenWaypointsMock));
-    ArrayList<Coordinate> actual = servlet.getWaypointsfromRequest(request);
+    String actual = servlet.getWaypointsfromRequest(request);
     ArrayList<Coordinate> comparison = new ArrayList<Coordinate>();
     comparison.add(DAISY);
-    assertEquals(comparison, actual);
+    String comparisonString = new Gson().toJson(comparison);
+    assertEquals(comparisonString, actual);
   }
 
+  /** Test multiple chosen waypoints.
+  */  
+  @Test 
+  public void testMultiple(){
+    chosenWaypointsMock.add(JSON_STRING_DAISY);
+    chosenWaypointsMock.add(JSON_STRING_BELLFLOWER);
+    chosenWaypointsMock.add(JSON_STRING_CLOVER);
+    when(request.getParameterNames()).thenReturn(Collections.enumeration(chosenWaypointsMock));
+    String actual = servlet.getWaypointsfromRequest(request);
+    ArrayList<Coordinate> comparison = new ArrayList<Coordinate>();
+    comparison.add(DAISY);
+    comparison.add(BELLFLOWER);
+    comparison.add(CLOVER);
+    String comparisonString = new Gson().toJson(comparison);
+    assertEquals(comparisonString, actual);
+  }
 }
