@@ -64,6 +64,9 @@ public class WaypointQueryServlet extends HttpServlet {
   private final String FETCH_FIELD = "queryFetched";
   private final String FETCH_PROPERTY = "waypoints";
   private final String ENTITY_TYPE = "Route";
+  private static final String NOUN_SINGULAR_OR_MASS = "NN";
+  private static final String NOUN_PLURAL = "NNS";
+  private static final String PRONOUN = "PRP";
     
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -166,12 +169,12 @@ public class WaypointQueryServlet extends HttpServlet {
         }
       } else {
         // Parsing for nouns/not pronouns
-        if (primaryTags[i].equals("NN") || primaryTags[i].equals("NNS")) { // Doesn't look for proper nouns right now
+        if (primaryTags[i].equals(NOUN_SINGULAR_OR_MASS) || primaryTags[i].equals(NOUN_PLURAL)) { // Doesn't look for proper nouns right now
           waypoint.addFeature(feature);
-        } else if (bigTags.length == 2 && !primaryTags[i].equals("PRP")) { 
+        } else if (bigTags.length == 2 && !primaryTags[i].equals(PRONOUN)) { 
           // Second chance: as long as it's not a pronoun, see if the word can still be a noun
           String[] secondaryTags = bigTags[1];
-          if (secondaryTags[i].equals("NN") || secondaryTags[i].equals("NNS")) {
+          if (secondaryTags[i].equals(NOUN_SINGULAR_OR_MASS) || secondaryTags[i].equals(NOUN_PLURAL)) {
             waypoint.addFeature(feature);
           }
         }
