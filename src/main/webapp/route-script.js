@@ -19,7 +19,7 @@ const FILL_COLORS = ["#FF0000", '#F1C40F', '#3498DB', '#154360', '#D1F2EB', '#D7
                     '#F8F000', '#F8006D', '#AB0500', '#2DC4BB'
                     ];
 const MAX_WAYPOINTS = 25;
-const CHOICE_AT_ONCE = 1; 
+const CHOICE_AT_ONCE = 3; 
 
 window.onload = async function setup() {
     let startAddr = await getStartAddr();
