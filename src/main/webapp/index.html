@@ -54,14 +54,12 @@
             <br>
             Type in what you want to see! You can separate different queries using non-comma
             punctuation and specify a limit to how many results you want for each feature(s)!
-            <!-- Separate different queries using non-comma punctuation. <br> -->
             <i> Example: clover; daisy </i>
             </p>
             <form action="/query" method="POST" id ="text-git statform">
 
                 <p>Enter text:</p>
                 <!--TODO (zous): Put in character/word limit on text box. -->
-                <!--TODO: try to have a feedback form-->
                 <textarea name="text-input" id="text-input"></textarea>
 
                 <br>
@@ -77,6 +75,9 @@
                 <h3> Step 2: </h3>
                 <p> 
                 Use checkboxes to clarify some points:
+                <br><br>
+                Default is five choices per a feature. Use the below form to change number of 
+                locations per a feature.
                 </p>
                 
                 <form action="/chosen-waypoints" method="POST" id="select-points">
