@@ -113,20 +113,19 @@ async function getChosenPoints() {
 async function setupUserChoices() {
     let res = await getWaypoints();
     let waypoints = convertWaypointClusterstoLatLng(res);
-    createPointInfoMap(waypoints);
+    let start = await getStartCoord();
+    let end = await getEndCoord();
+    createPointInfoMap(start, end, waypoints);
     createCheckBoxes(res);
 }
 
 /**
  * Get waypoints from the servlet and map each cluster of waypoints on the map in a different marker color.
  */
-function createPointInfoMap(waypoints) {
-    // let start = getStartCoord();
-    // let end = getEndCoord();
-    let start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
-    let end = new google.maps.LatLng(41.866940, -87.607105); // hardcoded end; will get from user later
+function createPointInfoMap(start, end, waypoints) {
     let map = initMap(start, 'point-map');
-    map.setZoom(10);
+    let bounds = createBounds(start, end, waypoints);
+    map.fitBounds(bounds);
 
     createMarker(map, start, 'start', google.maps.SymbolPath.CIRCLE, 'black');
     createMarker(map, end, 'end', google.maps.SymbolPath.CIRCLE, 'black');
@@ -141,6 +140,23 @@ function createPointInfoMap(waypoints) {
             letter = String.fromCharCode(letter.charCodeAt(0) + 1); // update the marker letter label to the next letter
         }
     }
+}
+
+/**
+ * Given a start and end coordinate and a map of waypoint labels to a list of LatLng waypoints, 
+ * create a Google Maps LatLngBounds object around which a map can be fit.
+ */
+function createBounds(start, end, waypoints) {
+    let bounds = new google.maps.LatLngBounds();
+    bounds.extend(start);
+    bounds.extend(end);
+    for (let i = 0; i < Object.entries(waypoints).length; i++) {
+        let [label, cluster] = Object.entries(waypoints)[i];
+        for (let pt of cluster) {
+            bounds.extend(pt);
+        }
+    }
+    return bounds;
 }
 
 /**
