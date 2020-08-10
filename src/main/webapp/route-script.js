@@ -113,18 +113,16 @@ async function getChosenPoints() {
 async function setupUserChoices() {
     let res = await getWaypoints();
     let waypoints = convertWaypointClusterstoLatLng(res);
-    createPointInfoMap(waypoints);
+    let start = await getStartCoord();
+    let end = await getEndCoord();
+    createPointInfoMap(start, end, waypoints);
     createCheckBoxes(res);
 }
 
 /**
  * Get waypoints from the servlet and map each cluster of waypoints on the map in a different marker color.
  */
-function createPointInfoMap(waypoints) {
-    // let start = getStartCoord();
-    // let end = getEndCoord();
-    let start = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
-    let end = new google.maps.LatLng(41.866940, -87.607105); // hardcoded end; will get from user later
+function createPointInfoMap(start, end, waypoints) {
     let map = initMap(start, 'point-map');
     map.setZoom(10);
 
@@ -142,6 +140,8 @@ function createPointInfoMap(waypoints) {
         }
     }
 }
+
+
 
 /**
  * Given options for a custom Google Maps marker, create the marker on the map.
