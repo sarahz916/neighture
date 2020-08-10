@@ -19,6 +19,7 @@ const FILL_COLORS = ["#FF0000", '#F1C40F', '#3498DB', '#154360', '#D1F2EB', '#D7
                     '#F8F000', '#F8006D', '#AB0500', '#2DC4BB'
                     ];
 const MAX_WAYPOINTS = 25;
+const CHOICE_AT_ONCE = 3; 
 
 window.onload = async function setup() {
     let startAddr = await getStartAddr();
@@ -164,7 +165,7 @@ function createMarker(map, pos, label, shape, color) {
     let marker = new google.maps.Marker(markerOpts);
 }
 
-//TODO: create already checked boxes for labels with only one choice.
+//TODO (zous): create already checked boxes for labels with only one choice.
 /** Takes ArrayList<ArrayList<Coordinates>> and creates checkboxes grouped by labels */
 function createCheckBoxes(waypointChoices) {
   submitEl = document.createElement("input");
@@ -190,7 +191,7 @@ function createCheckBoxSet(set, color) {
 
   let letter = 'A';
   set.forEach((choice)=>{
-      returnDiv.appendChild(createCheckBoxEl(choice, letter))
+      returnDiv.appendChild(createCheckBoxEl(choice, letter)) //WOULD PUT SEE MORE LINK/BUTTON HERE 
       letter = String.fromCharCode(letter.charCodeAt(0) + 1); // update the marker letter label to the next letter
   })
   return returnDiv;
