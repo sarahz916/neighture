@@ -59,7 +59,6 @@ public class WaypointQueryServlet extends HttpServlet {
   private static final ImmutableMap<String, Integer> NUMBER_MAP = ImmutableMap.<String, Integer>builder()
     .put("one", 1).put("two", 2).put("three", 3).put("four", 4).put("five", 5).put("six", 6).put("seven", 7)
     .put("eight", 8).put("nine", 9).put("ten", 10).put("eleven", 11).put("twelve", 12).put("fifteen", 15).put("twenty", 20).build(); 
-  
   private final ArrayList<String> FIELDS_MODIFIED = new ArrayList<String>( 
        Arrays.asList("queryFetched", "textFetched"));
   private final String FETCH_FIELD = "queryFetched";
