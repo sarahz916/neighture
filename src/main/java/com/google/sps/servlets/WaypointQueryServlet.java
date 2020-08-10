@@ -64,9 +64,12 @@ public class WaypointQueryServlet extends HttpServlet {
   private final String FETCH_FIELD = "queryFetched";
   private final String FETCH_PROPERTY = "waypoints";
   private final String ENTITY_TYPE = "Route";
+  private Coordinate midpoint;
+
   private static final String NOUN_SINGULAR_OR_MASS = "NN";
   private static final String NOUN_PLURAL = "NNS";
   private static final String PRONOUN = "PRP";
+
     
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -79,6 +82,8 @@ public class WaypointQueryServlet extends HttpServlet {
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     String input = request.getParameter("text-input");
+    SessionDataStore sessionDataStore = new SessionDataStore(request);
+    midpoint = getMidpoint(sessionDataStore);
     ArrayList<List<Coordinate>> waypoints;
     try {
       waypoints = getLocations(input);
@@ -86,7 +91,6 @@ public class WaypointQueryServlet extends HttpServlet {
       throw new ServletException(e);
     }
     String waypointsJSONstring = new Gson().toJson(waypoints);
-    SessionDataStore sessionDataStore = new SessionDataStore(request);
     // Store input text and waypoint in datastore.
     sessionDataStore.storeProperty(ENTITY_TYPE, "waypoints", waypointsJSONstring);
     sessionDataStore.storeProperty(ENTITY_TYPE, "text", input);
@@ -294,4 +298,13 @@ public class WaypointQueryServlet extends HttpServlet {
     return coordinates;
   }
 
+  /** Fetches midpoint from sessionDataStore. 
+    */
+ private Coordinate getMidpoint(SessionDataStore sessionDataStore){
+    JSONObject jsonObject = new JSONObject(sessionDataStore.fetchSessionEntity("StartEnd", "midpoint"));
+    Double x = jsonObject.getDouble("x");
+    Double y = jsonObject.getDouble("y");
+    midpoint = new Coordinate(x, y, "midpoint");
+    return midpoint;
+ }
 }
