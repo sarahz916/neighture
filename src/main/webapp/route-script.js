@@ -206,7 +206,7 @@ function createCheckBoxSet(set, color) {
   returnDiv.appendChild(colorbox);
 
   let letter = 'A';
-  set.forEach((choice,index)=>{
+  set.forEach((choice,index) => {
       if (index == CHOICE_AT_ONCE){ //create a new div that appears with "seemore button"
         //append a See More button
         seeMoreButton = document.createElement('button');
@@ -225,10 +225,10 @@ function createCheckBoxSet(set, color) {
         collapseBody.appendChild(createCheckBoxEl(choice, letter));
         collapseDiv.appendChild(collapseBody);
         returnDiv.appendChild(collapseDiv);
-      }else if (index > CHOICE_AT_ONCE){
+      } else if (index > CHOICE_AT_ONCE){
         const collapseDiv = document.getElementById(setName + "more");
         collapseDiv[0].appendChild(createCheckBoxEl(choice, letter));
-      } else{
+      } else {
         returnDiv.appendChild(createCheckBoxEl(choice, letter));
         //letter = String.fromCharCode(letter.charCodeAt(0) + 1); update the marker letter label to the next letter
       }
