@@ -474,4 +474,5 @@ function createSeeMore(setName){
     seeMoreButton.setAttribute('type', 'button');
     seeMoreButton.setAttribute('data-toggle', 'collapse');
     seeMoreButton.setAttribute('data-target', "#" + setName + "more");
+    return seeMoreButton;
 }
