@@ -19,6 +19,7 @@
  * npm install --save-dev jest -g
  */
 
+
 // mock the basic DOM of our webpage
 document.body.innerHTML = 
     '<form action="/chosen-waypoints" id="select-points"></form>' +
@@ -118,9 +119,21 @@ describe('createCheckBoxSet', function() {
         expect(checkboxset.childNodes[0].tagName).toEqual('H4');
         expect(checkboxset.childNodes[0].innerText).toEqual(testSet[0].label);
     });
+});
 
-    it('should return a div with (testSet.length) child checkbox elements with correct letter text', function() {
-        let checkboxset = createCheckBoxSet(testSet, testColor);
-        // TODO: write
+describe('createCheckBoxes', function() {
+    const createCheckBoxes = require('./route-script.js').createCheckBoxes;
+    const createCheckBoxSet = require('./route-script.js').createCheckBoxSet;
+
+    let testPts = [ [ { x : 1, y : 1, label : 'flower' } ] ];
+    createCheckBoxes(testPts);
+
+    it('should create a new submit HTML input element', function() {
+        expect(document.getElementById('submit-checkbox')).not.toBeUndefined();
+        expect(document.getElementById('submit-checkbox').tagName).toEqual('INPUT');
+    });
+
+    it('should add [waypointChoices.length + 1] children to the "select-points" HTML element for all the waypoint checkboxes and submit button', function() {
+        expect(document.getElementById('select-points').childNodes.length).toEqual(testPts.length + 1);
     });
 });

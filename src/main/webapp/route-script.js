@@ -205,7 +205,7 @@ function createCheckBoxSet(set, color) {
   returnDiv.appendChild(colorbox);
 
   let letter = 'A';
-  set.forEach((choice)=>{
+  set.forEach((choice) => {
       returnDiv.appendChild(createCheckBoxEl(choice, letter))
       letter = String.fromCharCode(letter.charCodeAt(0) + 1); // update the marker letter label to the next letter
   })
@@ -444,6 +444,7 @@ try {
     module.exports.createColorBoxElem = createColorBoxElem;
     module.exports.createCheckBoxEl = createCheckBoxEl;
     module.exports.createCheckBoxSet = createCheckBoxSet;
+    module.exports.createCheckBoxes = createCheckBoxes;
 } catch(error) {
     console.log("Not exporting code from this script")
 }
