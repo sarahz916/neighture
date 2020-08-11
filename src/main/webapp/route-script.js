@@ -20,6 +20,8 @@ const FILL_COLORS = ["#FF0000", '#F1C40F', '#3498DB', '#154360', '#D1F2EB', '#D7
                     ];
 const MAX_WAYPOINTS = 23;
 const CHOICE_AT_ONCE = 3; 
+const SC_REQUEST_ENTITY_TOO_LARGE = 413;
+const SC_BAD_REQUEST = 400;
 
 window.onload = async function setup(event) {
     event.preventDefault();
@@ -446,7 +448,17 @@ function convertWaypointstoLatLng(waypoints) {
  */
 async function getWaypoints() {
     let res = await fetch('/query');
+    console.log(res);
+
+    // Catch HTTP status error codes
+    if (res.status === SC_REQUEST_ENTITY_TOO_LARGE) {
+        alert('Too many waypoints in text input. Please try again.');
+    } else if (res.status === SC_BAD_REQUEST) {
+        alert('Malformed text input. Please try again.');
+    }
+
     let waypoints = await res.json();
+    console.log(waypoints);
     return waypoints;
 }
 
