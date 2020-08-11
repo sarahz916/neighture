@@ -90,6 +90,7 @@ public class WaypointQueryServlet extends HttpServlet {
     try {
       waypoints = getLocations(input);
     } catch (IllegalArgumentException e) { // User puts down a number that's out of range
+      System.out.println("ILLEGAL ARGUMENT");
       response.setStatus(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE);
     } catch (DataFormatException e ) { // User enters malformed input
       response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -109,7 +110,7 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Using the input text, fetches waypoints from the database to be 
     * used by the frontend. Returns possible waypoints. 
     */
-  public ArrayList<List<Coordinate>> getLocations(String input) throws Exception {
+  public ArrayList<List<Coordinate>> getLocations(String input) throws IllegalArgumentException, Exception {
     // Parse out feature requests from input
     ArrayList<WaypointDescription> waypointRequests = processInputText(input);
     ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();    
@@ -143,7 +144,7 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Parses the input string to separate out all the features
     * For each arraylist of strings, the first element is the general waypoint query
     */
-  public ArrayList<WaypointDescription> processInputText(String input) throws Exception {
+  public ArrayList<WaypointDescription> processInputText(String input) throws IllegalArgumentException, Exception {
     input = Normalizer.normalize(input, Normalizer.Form.NFKD);
     ArrayList<WaypointDescription> allWaypoints = new ArrayList<WaypointDescription>();
     // Separate on newlines and punctuation: semicolon, period, question mark, exclamation mark, plus sign
@@ -157,7 +158,7 @@ public class WaypointQueryServlet extends HttpServlet {
 
   /** Parses out the features from a waypoint query
     */
-  public ArrayList<WaypointDescription> parseWaypointQuery(String waypointQuery) throws Exception {
+  public ArrayList<WaypointDescription> parseWaypointQuery(String waypointQuery) throws IllegalArgumentException, Exception {
     waypointQuery = waypointQuery.toLowerCase().trim(); // determine -- keep lowercase or allow uppercase?
     ArrayList<WaypointDescription> waypointsFromQuery = new ArrayList<WaypointDescription>();
     // Separate on commas and spaces
@@ -185,6 +186,11 @@ public class WaypointQueryServlet extends HttpServlet {
         }
       } else {
         // Parsing for nouns/not pronouns
+        System.out.println(feature);
+        System.out.println(primaryTags[i]);
+        if (bigTags.length == 2) {
+          System.out.println(bigTags[1][i]);
+        }
         if (primaryTags[i].equals(NOUN_SINGULAR_OR_MASS) || primaryTags[i].equals(NOUN_PLURAL)) { // Doesn't look for proper nouns right now
           waypoint.addFeature(feature);
           waypoint.createLabel();
