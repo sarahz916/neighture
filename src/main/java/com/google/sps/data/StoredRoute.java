@@ -22,10 +22,12 @@ public final class StoredRoute {
   private final long id;
   private final String text;
   private final String waypoints;
+  private final String center;
 
-  public StoredRoute(long id, String text, String waypoints) {
+  public StoredRoute(long id, String text, String waypoints, String center) {
     this.id = id;
     this.text = text;
     this.waypoints = waypoints;
+    this.center = center;
   }
 }
