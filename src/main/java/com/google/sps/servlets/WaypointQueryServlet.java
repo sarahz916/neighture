@@ -161,6 +161,9 @@ public class WaypointQueryServlet extends HttpServlet {
     WaypointDescription waypoint = new WaypointDescription();
     for (int i = 0; i < featureQueries.length; i++) {
       String feature = featureQueries[i]; 
+      if (feature.isEmpty()) {
+        continue;
+      }
       if (isInt(feature)) {
         int maxAmount = wordToInt(feature);
         if (waypoint.hasFeatures()) { 
@@ -175,11 +178,17 @@ public class WaypointQueryServlet extends HttpServlet {
         // Parsing for nouns/not pronouns
         if (primaryTags[i].equals(NOUN_SINGULAR_OR_MASS) || primaryTags[i].equals(NOUN_PLURAL)) { // Doesn't look for proper nouns right now
           waypoint.addFeature(feature);
+          waypoint.createLabel();
+          waypointsFromQuery.add(waypoint);
+          waypoint = new WaypointDescription();
         } else if (bigTags.length == 2 && !primaryTags[i].equals(PRONOUN)) { 
           // Second chance: as long as it's not a pronoun, see if the word can still be a noun
           String[] secondaryTags = bigTags[1];
           if (secondaryTags[i].equals(NOUN_SINGULAR_OR_MASS) || secondaryTags[i].equals(NOUN_PLURAL)) {
             waypoint.addFeature(feature);
+            waypoint.createLabel();
+            waypointsFromQuery.add(waypoint);
+            waypoint = new WaypointDescription();
           }
         }
       }

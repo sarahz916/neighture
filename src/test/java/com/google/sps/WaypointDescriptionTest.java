@@ -30,6 +30,7 @@ public final class WaypointDescriptionTest {
   public static final int AMOUNT = 3;
   public static final int DEFAULT_AMOUNT = 5;
   public static final LinkedHashSet<String> SOME_FEATURES = new LinkedHashSet<String>(Arrays.asList("daisy", "clover"));
+  public static final LinkedHashSet<String> ONE_FEATURE = new LinkedHashSet<String>(Arrays.asList("raspberry"));
   public static final LinkedHashSet<String> MORE_FEATURES = new LinkedHashSet<String>(Arrays.asList("daisy", "clover", "raspberry"));
   public static final LinkedHashSet<String> NO_FEATURES = new LinkedHashSet<String>();
 
@@ -61,6 +62,17 @@ public final class WaypointDescriptionTest {
     Assert.assertEquals(DEFAULT_AMOUNT, description.getMaxAmount());
     Assert.assertEquals(DEFAULT_LABEL, description.getLabel());
     Assert.assertEquals(SOME_FEATURES, description.getFeatures());
+    Assert.assertFalse(description.hasLabel());
+    Assert.assertTrue(description.hasFeatures());
+    Assert.assertFalse(description.maxAmountWasSet());
+  }
+
+  @Test
+  public void constructWaypointDescriptionOneFeature() {
+    WaypointDescription description = new WaypointDescription(RASPBERRY_LABEL);
+    Assert.assertEquals(DEFAULT_AMOUNT, description.getMaxAmount());
+    Assert.assertEquals(DEFAULT_LABEL, description.getLabel());
+    Assert.assertEquals(ONE_FEATURE, description.getFeatures());
     Assert.assertFalse(description.hasLabel());
     Assert.assertTrue(description.hasFeatures());
     Assert.assertFalse(description.maxAmountWasSet());
