@@ -211,15 +211,10 @@ function createCheckBoxSet(set, color) {
   collapseDiv.setAttribute('id', setName + "more");
   //intialize letter 
   let letter = 'A';
-  set.forEach((choice,index) => {
+  set.forEach((choice,index)=>{
       if (index === CHOICE_AT_ONCE){ //create a new div that appears with "seemore button"
         //append a See More button
-        seeMoreButton = document.createElement('button');
-        seeMoreButton.setAttribute('class', 'btn btn-link');
-        seeMoreButton.setAttribute('type', 'button');
-        seeMoreButton.setAttribute('data-toggle', 'collapse');
-        seeMoreButton.setAttribute('data-target', "#" + setName + "more");
-        seeMoreButton.innerText = 'see more';
+        seeMoreButton = createSeeMore(setName);
         //add see more button to document
         returnDiv.appendChild(seeMoreButton);
         collapseDiv.appendChild(createCheckBoxEl(choice, letter));
@@ -501,4 +496,16 @@ try {
     module.exports.createCheckBoxes = createCheckBoxes;
 } catch(error) {
     console.log("Not exporting code from this script")
+}
+
+/**
+ * Creates see more/see less button linked to id = setName + 'more'
+ */
+function createSeeMore(setName){
+    seeMoreButton = document.createElement('button');
+    seeMoreButton.setAttribute('class', 'btn btn-link');
+    seeMoreButton.setAttribute('type', 'button');
+    seeMoreButton.setAttribute('data-toggle', 'collapse');
+    seeMoreButton.setAttribute('data-target', "#" + setName + "more");
+    return seeMoreButton;
 }

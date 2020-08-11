@@ -56,3 +56,12 @@
 #location {
     margin: 7px;
 }
+
+  /* Icon when the collapsible content is shown */
+  .btn:after {
+    content: "see less";
+  }
+  /* Icon when the collapsible content is hidden */
+  .btn.collapsed:after {
+    content: "see more";
+  }
