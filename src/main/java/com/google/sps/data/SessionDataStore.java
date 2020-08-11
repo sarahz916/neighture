@@ -116,6 +116,7 @@ public final class SessionDataStore {
             Entity newEntity = new Entity("StoredRoute");
             newEntity.setProperty("text", Entity.getProperty("text"));
             newEntity.setProperty("actual-route", Entity.getProperty("actual-route"));
+            newEntity.setProperty("center-of-mass", Entity.getProperty("center-of-mass"));
             datastore.put(txn, newEntity);
         }catch (EntityNotFoundException e){}
         txn.commit();

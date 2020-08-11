@@ -84,7 +84,6 @@ async function getStartEnd() {
  */
 async function createMapWithWaypoints() {
     var res = await getChosenPoints();
-    console.log(res);
     let waypoints = convertWaypointstoLatLng(res);
     let start = await getStartCoord();
     let end = await getEndCoord();
@@ -204,7 +203,11 @@ function createCheckBoxSet(set, color) {
   const colorbox = createColorBoxElem(color);
   returnDiv.appendChild(CheckBoxTitle);
   returnDiv.appendChild(colorbox);
-
+  // create collapse element
+  const collapseDiv = document.createElement('div');
+  collapseDiv.setAttribute('class', 'collapse');
+  collapseDiv.setAttribute('id', setName + "more");
+  //intialize letter 
   let letter = 'A';
   set.forEach((choice,index) => {
       if (index == CHOICE_AT_ONCE){ //create a new div that appears with "seemore button"
@@ -215,20 +218,15 @@ function createCheckBoxSet(set, color) {
         seeMoreButton.setAttribute('data-toggle', 'collapse');
         seeMoreButton.setAttribute('data-target', "#" + setName + "more");
         seeMoreButton.innerText = 'see more';
+        //add see more button to document
         returnDiv.appendChild(seeMoreButton);
-        // create collapse element
-        const collapseDiv = document.createElement('div');
-        collapseDiv.setAttribute('class', 'collapse');
-        collapseDiv.setAttribute('id', setName + "more");
-        const collapseBody = document.createElement('div');
-        //collapseBody.setAttribute('class', 'card card-body');
-        collapseBody.appendChild(createCheckBoxEl(choice, letter));
-        collapseDiv.appendChild(collapseBody);
+        collapseDiv.appendChild(createCheckBoxEl(choice, letter));
+        //only add collapse div if needed
         returnDiv.appendChild(collapseDiv);
-      } else if (index > CHOICE_AT_ONCE){
-        const collapseDiv = document.getElementById(setName + "more");
-        collapseDiv[0].appendChild(createCheckBoxEl(choice, letter));
-      } else {
+
+      }else if (index > CHOICE_AT_ONCE){//option will be seen in see more 
+        collapseDiv.appendChild(createCheckBoxEl(choice, letter));
+      } else{ //visible choices.
         returnDiv.appendChild(createCheckBoxEl(choice, letter));
         //letter = String.fromCharCode(letter.charCodeAt(0) + 1); update the marker letter label to the next letter
       }
