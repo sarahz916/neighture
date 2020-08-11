@@ -90,6 +90,7 @@ public class WaypointQueryServletTest {
     DAISY_CLOVER_RASPBERRY_FEATURES_ONLY.createLabel();
     DAISY_CLOVER_RASPBERRY_WITH_NUMBER.createLabel();
     DAISY_DESC.createLabel();
+    DAISY_DESC.setMaxAmount(5);
     CLOVER_DESC.createLabel();
     RASPBERRY_DESC.createLabel();
     TREE_DESC.createLabel();
@@ -178,7 +179,10 @@ public class WaypointQueryServletTest {
   public void testParseWaypointQueryCasing() throws Exception {
     ArrayList<WaypointDescription> features = servlet.parseWaypointQuery(MULT_FEATURES_ONE_WAYPOINT_QUERY);
     ArrayList<WaypointDescription> comparison = new ArrayList<WaypointDescription>();
-    comparison.add(DAISY_CLOVER_RASPBERRY_FEATURES_ONLY);
+    comparison.add(DAISY_DESC);
+    comparison.add(CLOVER_DESC);
+    comparison.add(RASPBERRY_DESC);
+    //comparison.add(DAISY_CLOVER_RASPBERRY_FEATURES_ONLY);
     assertEquals(features, comparison);
   }
 
@@ -187,7 +191,10 @@ public class WaypointQueryServletTest {
   public void testParseWaypointQuerySplit() throws Exception {
     ArrayList<WaypointDescription> features = servlet.parseWaypointQuery(MULT_FEATURES_ONE_WAYPOINT_QUERY.toLowerCase());
     ArrayList<WaypointDescription> comparison = new ArrayList<WaypointDescription>();
-    comparison.add(DAISY_CLOVER_RASPBERRY_FEATURES_ONLY);
+    comparison.add(DAISY_DESC);
+    comparison.add(CLOVER_DESC);
+    comparison.add(RASPBERRY_DESC);
+    //comparison.add(DAISY_CLOVER_RASPBERRY_FEATURES_ONLY);
     assertEquals(features, comparison);
   }
 
@@ -196,7 +203,11 @@ public class WaypointQueryServletTest {
   public void testParseWaypointQueryNumberBeginning() throws Exception {
     ArrayList<WaypointDescription> features = servlet.parseWaypointQuery(NUMBER_BEGINNING_QUERY);
     ArrayList<WaypointDescription> comparison = new ArrayList<WaypointDescription>();
-    comparison.add(DAISY_CLOVER_RASPBERRY_WITH_NUMBER);
+    DAISY_DESC.setMaxAmount(MAX_AMOUNT);
+    comparison.add(DAISY_DESC);
+    comparison.add(CLOVER_DESC);
+    comparison.add(RASPBERRY_DESC);
+    //comparison.add(DAISY_CLOVER_RASPBERRY_WITH_NUMBER);
     assertEquals(features, comparison);
   }
 
@@ -206,7 +217,11 @@ public class WaypointQueryServletTest {
     ArrayList<WaypointDescription> features = servlet.parseWaypointQuery(NUMBER_MIDDLE_QUERY);
     ArrayList<WaypointDescription> comparison = new ArrayList<WaypointDescription>();
     comparison.add(TREE_DESC);
-    comparison.add(DAISY_CLOVER_RASPBERRY_WITH_NUMBER);
+    DAISY_DESC.setMaxAmount(MAX_AMOUNT);
+    comparison.add(DAISY_DESC);
+    comparison.add(CLOVER_DESC);
+    comparison.add(RASPBERRY_DESC);
+    //comparison.add(DAISY_CLOVER_RASPBERRY_WITH_NUMBER);
     assertEquals(features, comparison);
   }
 
@@ -245,7 +260,10 @@ public class WaypointQueryServletTest {
   public void testProcessInputTextMultipleFeaturesWaypoints() throws Exception {
     ArrayList<WaypointDescription> features = servlet.processInputText(MULT_FEATURES_MULT_WAYPOINT_QUERY);
     ArrayList<WaypointDescription> comparison = new ArrayList<WaypointDescription>();
-    comparison.add(DAISY_CLOVER_RASPBERRY_FEATURES_ONLY);
+    comparison.add(DAISY_DESC);
+    comparison.add(CLOVER_DESC);
+    comparison.add(RASPBERRY_DESC);
+    //comparison.add(DAISY_CLOVER_RASPBERRY_FEATURES_ONLY);
     comparison.add(TREE_DESC);
     assertEquals(features, comparison);
   }
@@ -256,7 +274,7 @@ public class WaypointQueryServletTest {
     PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(NOTHING_BACKEND);
     ArrayList<List<Coordinate>> locations = servlet.getLocations("");
     ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
-    comparison.add(Arrays.asList());
+    //comparison.add(Arrays.asList());
     assertEquals(locations, comparison);
   }
 
