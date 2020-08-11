@@ -65,7 +65,7 @@ public class WaypointQueryServlet extends HttpServlet {
   private final String FETCH_PROPERTY = "waypoints";
   private final String ENTITY_TYPE = "Route";
   private Coordinate midpoint;
-
+  private static final Double BOUNDING_BOX_WIDTH = 0.07246376811; // 5 miles
   private static final String NOUN_SINGULAR_OR_MASS = "NN";
   private static final String NOUN_PLURAL = "NNS";
   private static final String PRONOUN = "PRP";
@@ -230,9 +230,10 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Sends a request for the input feature to the database
     * Returns the Coordinate matching the input feature 
     */ 
-  public static ArrayList<Coordinate> fetchFromDatabase(String feature, String label) throws IOException {
+  public ArrayList<Coordinate> fetchFromDatabase(String feature, String label) throws IOException {
     String startDate = getStartDate();
-    String json = sendGET(feature);
+    String[] boundaries = getBoundingBox();
+    String json = sendGET(feature, startDate, boundaries);
     if (json != null) {
       return jsonToCoordinates(json, label);
     }
@@ -252,12 +253,29 @@ public class WaypointQueryServlet extends HttpServlet {
     return dateString;
   }
 
+  /** Uses the midpoint coordinate to find the coordinates for the bounding box surrounding 
+    * the midpoint by BOUNDING_BOX_WIDTH on each side
+    * Returns list in order of bound: west, east, south, north
+    */
+  public String[] getBoundingBox() {
+    String[] boundaries = new String[4];
+    boundaries[0] = String.valueOf(midpoint.getX() - BOUNDING_BOX_WIDTH);
+    boundaries[1] = String.valueOf(midpoint.getX() + BOUNDING_BOX_WIDTH);
+    boundaries[2] = String.valueOf(midpoint.getY() - BOUNDING_BOX_WIDTH);
+    boundaries[3] = String.valueOf(midpoint.getY() + BOUNDING_BOX_WIDTH);
+    return boundaries;
+  }
+
   /** Sends a request for the input feature to the database and returns 
     * a JSON of the features
     */ 
-  public static String sendGET(String feature) throws IOException {
-    //URL obj = new URL("https://neighborhood-nature.appspot.com/database?q=" + feature);
-    URL obj = new URL("http://localhost:8080/database?q=" + feature);
+  public static String sendGET(String feature, String startDate, String[] bounds) throws IOException {
+    // Create query
+    String query = "https://www.inaturalist.org/observations.json?q=" + feature;
+    query += "&d1=" + startDate;
+    query += "&swlng=" + bounds[0] + "&nelng=" + bounds[1] + "&swlat=" + bounds[2] + "&nelat=" + bounds[3];
+    URL obj = new URL(query); 
+    
     HttpURLConnection con = (HttpURLConnection) obj.openConnection();
     con.setRequestMethod("GET");
     con.setRequestProperty("User-Agent", "Mozilla/5.0");
