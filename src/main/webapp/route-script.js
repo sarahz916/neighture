@@ -210,7 +210,7 @@ function createCheckBoxSet(set, color) {
   //intialize letter 
   let letter = 'A';
   set.forEach((choice,index)=>{
-      if (index == CHOICE_AT_ONCE){ //create a new div that appears with "seemore button"
+      if (index === CHOICE_AT_ONCE){ //create a new div that appears with "seemore button"
         //append a See More button
         seeMoreButton = document.createElement('button');
         seeMoreButton.setAttribute('class', 'btn btn-link');
