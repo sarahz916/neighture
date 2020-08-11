@@ -52,10 +52,12 @@ public class ChosenWaypointsServlet extends HttpServlet {
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         //TODO (zous): should we throw exceptions/error if there are no checked checkboxes
-        String waypoints = getWaypointsfromRequest(request);
+        ArrayList<Coordinate> waypoints = getWaypointsfromRequest(request);
         SessionDataStore sessionDataStore = new SessionDataStore(request);
         // Store input text and waypoint in datastore.
-        sessionDataStore.storeProperty(ENTITY_TYPE, FETCH_PROPERTY, waypoints);
+        sessionDataStore.storeProperty("Route", "actual-route", (String) new Gson().toJson(waypoints));
+        Coordinate centerOfmass = getCenterofMass(waypoints);
+        sessionDataStore.storeProperty("Route", "center-of-mass", (String) new Gson().toJson(centerOfmass));
         sessionDataStore.storeStoredRoute();
         sessionDataStore.setSessionAttributes(FIELDS_MODIFIED);
         // Redirect back to the index page.
@@ -63,9 +65,9 @@ public class ChosenWaypointsServlet extends HttpServlet {
     }
 
     /** Scans the checkbox form for checked coordinates and appends that to waypoints. 
-    *   Returns waypoints JSON String ArrayList<Coordinates>
+    *   Returns waypoints as ArrayList<Coordinates>
     */ 
-    public String getWaypointsfromRequest(HttpServletRequest request){
+    public ArrayList<Coordinate> getWaypointsfromRequest(HttpServletRequest request){
         Enumeration paramNames = request.getParameterNames();
         ArrayList<Coordinate> waypoints = new ArrayList<Coordinate>();
         while(paramNames.hasMoreElements()) {
@@ -78,8 +80,23 @@ public class ChosenWaypointsServlet extends HttpServlet {
             Coordinate featureCoordinate = new Coordinate(x, y, feature);
             waypoints.add(featureCoordinate);
         }
-        String json = new Gson().toJson(waypoints);
-        return json;
+        return waypoints;
+    }
+    /** Averages latitude and longititude of all waypoints and returns Coordinate of center. 
+    */ 
+    private Coordinate getCenterofMass(ArrayList<Coordinate> waypoints){
+        int num_pts = waypoints.size(); 
+        Double avg_x = 0.0;
+        Double avg_y = 0.0;
+        for (Coordinate pt: waypoints){
+            avg_x += pt.getX();
+            avg_y += pt.getY();
+        }
+        avg_x = avg_x / num_pts;
+        avg_y = avg_y / num_pts;
+        Coordinate center =  new Coordinate(avg_x, avg_y, "midpoint");
+        return center;
     }
 
+    
 }
