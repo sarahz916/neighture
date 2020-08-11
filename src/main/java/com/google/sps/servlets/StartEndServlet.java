@@ -73,8 +73,8 @@ public class StartEndServlet extends HttpServlet {
             sessionDataStore.storeProperty(ENTITY_TYPE, "start", new Gson().toJson(startCoord));
             sessionDataStore.storeProperty(ENTITY_TYPE, "end", new Gson().toJson(endCoord));
             sessionDataStore.storeProperty(ENTITY_TYPE, "midpoint", new Gson().toJson(midCoord));
-            // Redirect back to the index page.
-            response.sendRedirect("/index.html");
+            // Redirect back to the create-route page.
+            response.sendRedirect("/create-route.html");
         }catch(Exception e){
             response.sendRedirect("/error-page.html");
         }
