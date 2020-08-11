@@ -84,7 +84,6 @@ async function getStartEnd() {
  */
 async function createMapWithWaypoints() {
     var res = await getChosenPoints();
-    console.log(res);
     let waypoints = convertWaypointstoLatLng(res);
     let start = await getStartCoord();
     let end = await getEndCoord();
