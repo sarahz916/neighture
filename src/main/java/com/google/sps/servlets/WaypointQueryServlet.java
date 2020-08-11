@@ -95,8 +95,8 @@ public class WaypointQueryServlet extends HttpServlet {
     sessionDataStore.storeProperty(ENTITY_TYPE, "waypoints", waypointsJSONstring);
     sessionDataStore.storeProperty(ENTITY_TYPE, "text", input);
     sessionDataStore.setSessionAttributes(FIELDS_MODIFIED);
-    // Redirect back to the index page.
-    response.sendRedirect("/index.html");
+    // Redirect back to the create-route page.
+    response.sendRedirect("/create-route.html");
   }
 
 

@@ -61,7 +61,7 @@ public class ChosenWaypointsServlet extends HttpServlet {
         sessionDataStore.storeStoredRoute();
         sessionDataStore.setSessionAttributes(FIELDS_MODIFIED);
         // Redirect back to the index page.
-        response.sendRedirect("/index.html");
+        response.sendRedirect("/create-route.html");
     }
 
     /** Scans the checkbox form for checked coordinates and appends that to waypoints. 
