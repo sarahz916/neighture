@@ -12,29 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// 25 fill colors for markers (max number of waypoints is 25)
+// 25 fill colors for markers (max number of stops on route is 25)
 const FILL_COLORS = ["#FF0000", '#F1C40F', '#3498DB', '#154360', '#D1F2EB', '#D7BDE2', '#DC7633', 
                     '#145A32', '#641E16', '#5B2C6F', '#F1948A', '#FF00FF', '#C0C0C0', '#808080',
                     '#000000', '#33FF39', '#F5D3ED', '#D3F5F4', '#7371DE', '#110EEC', '#FFAA72',
                     '#F8F000', '#F8006D', '#AB0500', '#2DC4BB'
                     ];
-const MAX_WAYPOINTS = 25;
+const MAX_WAYPOINTS = 23;
 const CHOICE_AT_ONCE = 3; 
 
-window.onload = async function setup() {
+window.onload = async function setup(event) {
+    event.preventDefault();
     let startAddr = await getStartAddr();
     let endAddr = await getEndAddr();
+    let startCoord = await getStartCoord;
     await initStartEndDisplay(startAddr, endAddr);
 }
 
 document.getElementById('text-git statform').addEventListener('submit', setupUserChoices());
 document.getElementById('select-points').addEventListener('submit', createMapWithWaypoints());
 
-function catchCheckboxErrors() {
-    let numChecked = 4;
-
-    if (numChecked === )
-}
 /**
  * Get and displays the inputted start and end location addresses to the user.
  */
@@ -258,12 +255,41 @@ function createCheckBoxEl(choice, label){
     const checkBoxValue = JSON.stringify(choice);
     checkBoxEl.setAttribute("value", checkBoxValue);
     checkBoxEl.setAttribute("name", checkBoxValue);
+    checkBoxEl.setAttribute("class", "checkbox");
     const checkBoxLabel = document.createElement('label');
     checkBoxLabel.innerText = label;
     const labelAndBox = document.createElement('div');
+    labelAndBox.addEventListener('click', catchCheckboxErrors);
     labelAndBox.appendChild(checkBoxEl);
     labelAndBox.appendChild(checkBoxLabel);
     return labelAndBox;
+}
+
+/**
+ * Catch errors when the user selects too many checkboxes.
+ */
+function catchCheckboxErrors(event) {
+    const checkbox = event.target;
+    let numChecked = getNumChecked();
+    console.log(numChecked);
+    if (numChecked > MAX_WAYPOINTS) {
+        alert('You have selected too many waypoints. Please select up to 23 waypoints.');
+        checkbox.checked = false; // uncheck the checkbox
+    }
+}
+
+/**
+ * Get the number of waypoint checkboxes checked.
+ */
+function getNumChecked() {
+    let numChecked = 0;
+    let checkboxes = document.getElementsByClassName('checkbox');
+    Array.from(checkboxes).forEach(box => {
+        if (box.checked) {
+            numChecked++;
+        }
+    });
+    return numChecked;
 }
 
 /**
