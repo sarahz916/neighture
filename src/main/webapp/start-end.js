@@ -15,12 +15,27 @@
 window.onload = function() {
     initAutocomplete('startloc-input');
     initAutocomplete('endloc-input');
+    document.getElementById("one-way").addEventListener('click', showTabForm);
+    document.getElementById("loop").addEventListener('click', showTabForm);
 };
+
+function showTabForm(event) {
+    const target = event.target;
+    if (target.id === 'one-way') {
+        document.getElementById('loop-tab').style.display = 'none';
+    } else {
+        document.getElementById('one-way-tab').style.display = 'none';
+    }
+    let divID = `${target.id}-tab`;
+    document.getElementById(divID).style.display = 'block';
+}
 
 /**
  * Initializes an Autocomplete object and binds it to the given id'ed element.
  */
-function initAutocomplete(id) {
-    let input = document.getElementById(id);
-    var autocomplete = new google.maps.places.Autocomplete(input);
+function initAutocomplete(className) {
+    let inputs = document.getElementsByClassName(className);
+    Array.from(inputs).forEach(input => {
+        var autocomplete = new google.maps.places.Autocomplete(input);
+    });
 }

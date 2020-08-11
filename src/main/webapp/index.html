@@ -35,21 +35,38 @@
   </nav>
   <body>
       <div id="content">
-      <h1>Specify Start and End Points: </h1>
-      <form action="/start-end" method="POST" id="start-location">
-        <p>Enter a start location:</p>
+        <div id="tabs"> 
+            <button id="one-way" class="specify-route-type">One-Way Route</button>
+            <button id="loop" class="specify-route-type">Loop Route</button>
+        </div>
 
-        <input type="text" name="startloc-input" id="startloc-input"></input>
+        <div id="one-way-tab"> 
+            <h1>Specify Start and End Points: </h1>
+            <form action="/start-end" method="POST" id="one-way-form">
+                <p>Enter a start location:</p>
 
-        <p>Enter an end location:</p>
+                <input type="text" name="startloc-input" class="startloc-input"></input>
 
-        <input type="text" name="endloc-input" id="endloc-input"></input>
+                <p>Enter an end location:</p>
 
-        <input type="submit" value="Submit and Generate Route" id="start-end-submit"/>  
-     </form>
+                <input type="text" name="endloc-input" class="endloc-input"></input>
 
+                <input type="submit" value="Submit and Generate Route" id="start-end-submit"/>  
+            </form>
+        </div>
 
-     <a href='index.html'> Generate Route </a>
+        <div id="loop-tab"> 
+            <h1>Specify Start/End Point: </h1>
+            <form action="/start-end" method="POST" id="loop-form">
+                <p>Enter a start/end location:</p>
+
+                <input type="text" name="startloc-input" class="startloc-input"></input>
+
+                <input type="submit" value="Submit and Generate Route" id="start-end-submit"/>  
+            </form>
+        </div>
+
+        <a href='index.html'> Generate Route </a>
      </div>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
