@@ -61,8 +61,9 @@ public class RouteStoreServlet extends HttpServlet {
       long id = entity.getKey().getId();
       String text = (String) entity.getProperty("text");
       String waypointsJson = (String) entity.getProperty("actual-route");
+      String center = (String) entity.getProperty("center-of-mass");
       if (waypointsJson != null){
-        StoredRoute route = new StoredRoute(id, text, waypointsJson);
+        StoredRoute route = new StoredRoute(id, text, waypointsJson, center);
         routes.add(route);
       }
     }

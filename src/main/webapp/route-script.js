@@ -19,6 +19,7 @@ const FILL_COLORS = ["#FF0000", '#F1C40F', '#3498DB', '#154360', '#D1F2EB', '#D7
                     '#F8F000', '#F8006D', '#AB0500', '#2DC4BB'
                     ];
 const MAX_WAYPOINTS = 25;
+const CHOICE_AT_ONCE = 3; 
 
 window.onload = async function setup() {
     let startAddr = await getStartAddr();
@@ -83,7 +84,6 @@ async function getStartEnd() {
  */
 async function createMapWithWaypoints() {
     var res = await getChosenPoints();
-    console.log(res);
     let waypoints = convertWaypointstoLatLng(res);
     let start = await getStartCoord();
     let end = await getEndCoord();
@@ -180,7 +180,7 @@ function createMarker(map, pos, label, shape, color) {
     let marker = new google.maps.Marker(markerOpts);
 }
 
-//TODO: create already checked boxes for labels with only one choice.
+//TODO (zous): create already checked boxes for labels with only one choice.
 /** Takes ArrayList<ArrayList<Coordinates>> and creates checkboxes grouped by labels */
 function createCheckBoxes(waypointChoices) {
   submitEl = document.createElement("input");
@@ -203,11 +203,33 @@ function createCheckBoxSet(set, color) {
   const colorbox = createColorBoxElem(color);
   returnDiv.appendChild(CheckBoxTitle);
   returnDiv.appendChild(colorbox);
-
+  // create collapse element
+  const collapseDiv = document.createElement('div');
+  collapseDiv.setAttribute('class', 'collapse');
+  collapseDiv.setAttribute('id', setName + "more");
+  //intialize letter 
   let letter = 'A';
-  set.forEach((choice)=>{
-      returnDiv.appendChild(createCheckBoxEl(choice, letter))
-      letter = String.fromCharCode(letter.charCodeAt(0) + 1); // update the marker letter label to the next letter
+  set.forEach((choice,index)=>{
+      if (index == CHOICE_AT_ONCE){ //create a new div that appears with "seemore button"
+        //append a See More button
+        seeMoreButton = document.createElement('button');
+        seeMoreButton.setAttribute('class', 'btn btn-link');
+        seeMoreButton.setAttribute('type', 'button');
+        seeMoreButton.setAttribute('data-toggle', 'collapse');
+        seeMoreButton.setAttribute('data-target', "#" + setName + "more");
+        seeMoreButton.innerText = 'see more';
+        //add see more button to document
+        returnDiv.appendChild(seeMoreButton);
+        collapseDiv.appendChild(createCheckBoxEl(choice, letter));
+        //only add collapse div if needed
+        returnDiv.appendChild(collapseDiv);
+      }else if (index > CHOICE_AT_ONCE){//option will be seen in see more 
+        collapseDiv.appendChild(createCheckBoxEl(choice, letter));
+      } else{ //visible choices.
+        returnDiv.appendChild(createCheckBoxEl(choice, letter));
+        //letter = String.fromCharCode(letter.charCodeAt(0) + 1); update the marker letter label to the next letter
+      }
+      letter = String.fromCharCode(letter.charCodeAt(0) + 1);
   })
   return returnDiv;
 }
