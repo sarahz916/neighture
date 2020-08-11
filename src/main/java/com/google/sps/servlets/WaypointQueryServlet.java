@@ -58,7 +58,8 @@ public class WaypointQueryServlet extends HttpServlet {
   private static final Pattern PATTERN = Pattern.compile("^\\d+$"); // Improves performance by avoiding compile of pattern in every method call
   private static final ImmutableMap<String, Integer> NUMBER_MAP = ImmutableMap.<String, Integer>builder()
     .put("one", 1).put("two", 2).put("three", 3).put("four", 4).put("five", 5).put("six", 6).put("seven", 7)
-    .put("eight", 8).put("nine", 9).put("ten", 10).put("eleven", 11).put("twelve", 12).put("fifteen", 15).put("twenty", 20).build(); 
+    .put("eight", 8).put("nine", 9).put("ten", 10).build(); 
+  private static final int MAX_AMOUNT_ALLOWED = 10;
   private final ArrayList<String> FIELDS_MODIFIED = new ArrayList<String>( 
        Arrays.asList("queryFetched", "textFetched"));
   private final String FETCH_FIELD = "queryFetched";
@@ -161,6 +162,9 @@ public class WaypointQueryServlet extends HttpServlet {
     WaypointDescription waypoint = new WaypointDescription();
     for (int i = 0; i < featureQueries.length; i++) {
       String feature = featureQueries[i]; 
+      if (feature.isEmpty()) {
+        continue;
+      }
       if (isInt(feature)) {
         int maxAmount = wordToInt(feature);
         if (waypoint.hasFeatures()) { 
@@ -175,11 +179,17 @@ public class WaypointQueryServlet extends HttpServlet {
         // Parsing for nouns/not pronouns
         if (primaryTags[i].equals(NOUN_SINGULAR_OR_MASS) || primaryTags[i].equals(NOUN_PLURAL)) { // Doesn't look for proper nouns right now
           waypoint.addFeature(feature);
+          waypoint.createLabel();
+          waypointsFromQuery.add(waypoint);
+          waypoint = new WaypointDescription();
         } else if (bigTags.length == 2 && !primaryTags[i].equals(PRONOUN)) { 
           // Second chance: as long as it's not a pronoun, see if the word can still be a noun
           String[] secondaryTags = bigTags[1];
           if (secondaryTags[i].equals(NOUN_SINGULAR_OR_MASS) || secondaryTags[i].equals(NOUN_PLURAL)) {
             waypoint.addFeature(feature);
+            waypoint.createLabel();
+            waypointsFromQuery.add(waypoint);
+            waypoint = new WaypointDescription();
           }
         }
       }
@@ -222,7 +232,7 @@ public class WaypointQueryServlet extends HttpServlet {
     } else if (NUMBER_MAP.containsKey(word)) {
       return NUMBER_MAP.get(word);
     } else if (word.equals("all") || word.equals("every")) {
-      return Integer.MAX_VALUE;
+      return MAX_AMOUNT_ALLOWED;
     }
     throw new Exception("Word is not an integer!");
   }

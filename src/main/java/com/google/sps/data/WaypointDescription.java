@@ -44,6 +44,16 @@ public final class WaypointDescription {
     hasSetAmount = true;
   }
 
+  /** Creates a new waypoint description with one feature
+    */
+  public WaypointDescription(String feature) {
+    this.amount = DEFAULT_AMOUNT;
+    this.label = DEFAULT_LABEL;
+    this.features = new LinkedHashSet<String>();
+    features.add(feature);
+    hasSetAmount = false;
+  }
+
   /** Creates a new waypoint description with some features
     */
   public WaypointDescription(LinkedHashSet<String> features) {
