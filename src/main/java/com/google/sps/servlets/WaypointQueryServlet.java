@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.LinkedHashSet;
 import java.util.Calendar;
 import java.util.regex.Pattern;
+import java.util.zip.DataFormatException;
 import java.text.DecimalFormat;
 import java.text.Normalizer;
 
@@ -85,9 +86,13 @@ public class WaypointQueryServlet extends HttpServlet {
     String input = request.getParameter("text-input");
     SessionDataStore sessionDataStore = new SessionDataStore(request);
     midpoint = getMidpoint(sessionDataStore);
-    ArrayList<List<Coordinate>> waypoints;
+    ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();
     try {
       waypoints = getLocations(input);
+    } catch (IllegalArgumentException e) { // User puts down a number that's out of range
+      response.setStatus(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE);
+    } catch (DataFormatException e ) { // User enters malformed input
+      response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
     } catch (Exception e) {
       throw new ServletException(e);
     }
@@ -167,6 +172,9 @@ public class WaypointQueryServlet extends HttpServlet {
       }
       if (isInt(feature)) {
         int maxAmount = wordToInt(feature);
+        if (maxAmount > 10 || maxAmount < 1) {
+          throw new IllegalArgumentException("Number out of range! If you enter a number, please let it be from 1 to 10");
+        }
         if (waypoint.hasFeatures()) { 
           // Start a new waypoint description
           waypoint.createLabel();
