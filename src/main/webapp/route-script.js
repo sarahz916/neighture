@@ -30,6 +30,11 @@ window.onload = async function setup() {
 document.getElementById('text-git statform').addEventListener('submit', setupUserChoices());
 document.getElementById('select-points').addEventListener('submit', createMapWithWaypoints());
 
+function catchCheckboxErrors() {
+    let numChecked = 4;
+
+    if (numChecked === )
+}
 /**
  * Get and displays the inputted start and end location addresses to the user.
  */
@@ -210,7 +215,7 @@ function createCheckBoxSet(set, color) {
   //intialize letter 
   let letter = 'A';
   set.forEach((choice,index) => {
-      if (index == CHOICE_AT_ONCE){ //create a new div that appears with "seemore button"
+      if (index === CHOICE_AT_ONCE){ //create a new div that appears with "seemore button"
         //append a See More button
         seeMoreButton = document.createElement('button');
         seeMoreButton.setAttribute('class', 'btn btn-link');
@@ -224,14 +229,14 @@ function createCheckBoxSet(set, color) {
         //only add collapse div if needed
         returnDiv.appendChild(collapseDiv);
 
-      }else if (index > CHOICE_AT_ONCE){//option will be seen in see more 
+      } else if (index > CHOICE_AT_ONCE){//option will be seen in see more 
         collapseDiv.appendChild(createCheckBoxEl(choice, letter));
-      } else{ //visible choices.
+      } else { //visible choices.
         returnDiv.appendChild(createCheckBoxEl(choice, letter));
         //letter = String.fromCharCode(letter.charCodeAt(0) + 1); update the marker letter label to the next letter
       }
       letter = String.fromCharCode(letter.charCodeAt(0) + 1);
-  })
+  });
   return returnDiv;
 }
 
@@ -393,7 +398,7 @@ function convertWaypointClusterstoLatLng(waypoints) {
             let waypoint = new google.maps.LatLng(pt.y, pt.x);
             pts.push(waypoint);
          }
-         latlngWaypoints[cluster[0].label] = pts;
+         latlngWaypoints[cluster[0].label] = pts; // cluster[0] is undefined here when entering a sentence
     }
     return latlngWaypoints;
 }
