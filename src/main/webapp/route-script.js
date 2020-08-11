@@ -117,22 +117,28 @@ async function getChosenPoints() {
 async function setupUserChoices() {
     let res = await getWaypoints();
     let waypoints = convertWaypointClusterstoLatLng(res);
-    let start = await getStartCoord();
-    let end = await getEndCoord();
-    createPointInfoMap(start, end, waypoints);
+    let startCoord = await getStartCoord();
+    let endCoord = await getEndCoord();
+    let startName = await getStartAddr();
+    let endName = await getEndAddr();
+    createPointInfoMap(startCoord, endCoord, startName, endName, waypoints);
     createCheckBoxes(res);
 }
 
 /**
  * Get waypoints from the servlet and map each cluster of waypoints on the map in a different marker color.
  */
-function createPointInfoMap(start, end, waypoints) {
+function createPointInfoMap(start, end, startName, endName, waypoints) {
     let map = initMap(start, 'point-map');
     let bounds = createBounds(start, end, waypoints);
     map.fitBounds(bounds);
 
-    createMarker(map, start, 'start', google.maps.SymbolPath.CIRCLE, 'black');
-    createMarker(map, end, 'end', google.maps.SymbolPath.CIRCLE, 'black');
+    if (startName === endName) {
+        createMarker(map, start, 'start/end', google.maps.SymbolPath.CIRCLE, 'black');
+    } else {
+        createMarker(map, start, 'start', google.maps.SymbolPath.CIRCLE, 'black');
+        createMarker(map, end, 'end', google.maps.SymbolPath.CIRCLE, 'black');
+    }
 
 
     // Make one marker for each waypoint, in a different color.

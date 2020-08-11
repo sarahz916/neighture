@@ -92,10 +92,10 @@ public class StartEndServlet extends HttpServlet {
             .apiKey(API_KEY)
             .build();
         GeocodingResult[] results;
-        try{
+        try {
             results =  GeocodingApi.geocode(context,
                 placeQuery).await();
-        }catch(ApiException | InterruptedException ex){
+        } catch(ApiException | InterruptedException ex){
             return null;
         }
         Double y = results[0].geometry.location.lat;
