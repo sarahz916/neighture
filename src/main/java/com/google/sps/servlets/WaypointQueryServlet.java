@@ -55,7 +55,8 @@ import opennlp.tools.postag.POSTaggerME;
   */
 @WebServlet("/query")
 public class WaypointQueryServlet extends HttpServlet {
-  private static final Pattern PATTERN = Pattern.compile("^\\d+$"); // Improves performance by avoiding compile of pattern in every method call
+  private static final Pattern INT_PATTERN = Pattern.compile("^\\d+$"); // Improves performance by avoiding compile of pattern in every method call
+  private static final Pattern WAYPOINT_PATTERN = Pattern.compile("([^\"]\\S*|\".+?\")[\\s\\p{Punct}&&[\"]]*"); // Splitting on whitespace and punctuation unless there are double quotes
   private static final ImmutableMap<String, Integer> NUMBER_MAP = ImmutableMap.<String, Integer>builder()
     .put("one", 1).put("two", 2).put("three", 3).put("four", 4).put("five", 5).put("six", 6).put("seven", 7)
     .put("eight", 8).put("nine", 9).put("ten", 10).build(); 
@@ -118,22 +119,14 @@ public class WaypointQueryServlet extends HttpServlet {
       int maxNumberCoordinates = waypointDescription.getMaxAmount();
       String query = waypointDescription.getQuery();
       String feature = waypointDescription.getFeature();
-      boolean firstFeatureFound = false;
-      ArrayList<Coordinate> potentialCoordinates = new ArrayList<Coordinate>();
       // Make call to database
       ArrayList<Coordinate> locations = fetchFromDatabase(query, feature);
       if (locations.isEmpty()) { // Not in the database
         continue;
       } else {
-        if (firstFeatureFound) {
-          potentialCoordinates.retainAll(locations);
-        } else {
-          potentialCoordinates.addAll(locations);
-          firstFeatureFound = true;
-        }
+        List<Coordinate> locationsList = locations.subList(0, Math.min(maxNumberCoordinates, locations.size()));
+        waypoints.add(locationsList);
       }
-      List<Coordinate> locationsList = potentialCoordinates.subList(0, Math.min(maxNumberCoordinates, potentialCoordinates.size()));
-      waypoints.add(locationsList);
     }   
     return waypoints;
   }
@@ -145,11 +138,12 @@ public class WaypointQueryServlet extends HttpServlet {
     input = Normalizer.normalize(input, Normalizer.Form.NFKD);
     ArrayList<WaypointDescription> allWaypoints = new ArrayList<WaypointDescription>();
     // Separate on newlines and punctuation: semicolon, period, question mark, exclamation mark, plus sign
-    String[] waypointQueries = input.split("[;.?!+\\n]+");
-    for (String waypointQuery : waypointQueries) {
-      ArrayList<WaypointDescription> waypointsFromQuery = parseWaypointQuery(waypointQuery);
-      allWaypoints.addAll(waypointsFromQuery);
-    }
+    // String[] waypointQueries = input.split("[;.?!+\\n]+");
+    // for (String waypointQuery : waypointQueries) {
+    //   ArrayList<WaypointDescription> waypointsFromQuery = parseWaypointQuery(waypointQuery);
+    //   allWaypoints.addAll(waypointsFromQuery);
+    // }
+    ArrayList<WaypointDescription> waypointsFromQuery = parseWaypointQuery(input);
     return allWaypoints;
   }
 
@@ -159,7 +153,16 @@ public class WaypointQueryServlet extends HttpServlet {
     waypointQuery = waypointQuery.toLowerCase().trim(); // determine -- keep lowercase or allow uppercase?
     ArrayList<WaypointDescription> waypointsFromQuery = new ArrayList<WaypointDescription>();
     // Separate on commas and spaces
-    String[] featureQueries = waypointQuery.split("[,\\s]+"); 
+    //String[] featureQueries = waypointQuery.split("[,\\s]+"); 
+    List<String> list = new ArrayList<>
+    Matcher m = Pattern.compile("([^\"]\\S*|\".+?\")\\s*").matcher(str);
+    while (m.find()) {
+      list.add(m.group(1).replace("\"", ""));
+    }
+    for (String el : list) {
+      System.out.println(el);
+    }
+    String[] featureQueries = list.toArray(new String[0]);
     String[][] bigTags = getTags(featureQueries);
     String[] primaryTags = bigTags[0];
     WaypointDescription waypoint = new WaypointDescription();
