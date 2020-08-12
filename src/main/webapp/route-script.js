@@ -121,8 +121,8 @@ async function setupUserChoices() {
     let endCoord = await getEndCoord();
     let startName = await getStartAddr();
     let endName = await getEndAddr();
-    createPointInfoMap(startCoord, endCoord, startName, endName, waypoints);
     createCheckBoxes(res);
+    createPointInfoMap(startCoord, endCoord, startName, endName, waypoints);
 }
 
 /**
@@ -155,18 +155,52 @@ function createPointInfoMap(start, end, startName, endName, waypoints) {
  * Create a dynamic marker with an InfoWindow that appears with the label upon clicking.
  */
 function createCheckableMarker(map, pt, label, letter, icon, color) {
-    let infowindow = createInfoWindow(`${letter}: ${label}`);
+    let infowindow = createInfoWindow(`${letter}: ${label}`, pt);
     let marker = createMarker(map, pt, letter, icon, color);
     marker.addListener('click', function() {
         infowindow.open(map, marker);
     });
 }
 
-function createInfoWindow(text) {
+/**
+ * Toggle the given checkbox to the opposite setting.
+ */
+function toggleCheckbox(box) {
+    if (box.checked) {
+        box.checked = false;
+    } else {
+        box.checked = true;
+    }
+}
+
+/**
+ * Creates a Google Maps InfoWindow object with the given text.
+ */
+function createInfoWindow(text, pt) {
+    const html = createInfoWindowHTML(text);
     const infowindow = new google.maps.InfoWindow({
-        content: text
+        content: html
+    });
+    let realCheckbox = getCheckboxFromMarker(pt);
+    let markerCheckbox = html.getElementsByTagName('input')[0];
+    markerCheckbox.addEventListener('click', function() {
+        toggleCheckbox(realCheckbox);
     });
     return infowindow;
+}
+
+/**
+ * Create the HTML that goes inside an InfoWindow with the given text.
+ */
+function createInfoWindowHTML(text) {
+    let html = document.createElement('div');
+    const textContent = document.createElement('p');
+    textContent.textContent = text;
+    const markerCheckbox = document.createElement('input');
+    markerCheckbox.setAttribute('type', 'checkbox');
+    html.appendChild(textContent);
+    html.appendChild(markerCheckbox);
+    return html;
 }
 
 /**
@@ -208,7 +242,21 @@ function createMarker(map, pos, label, shape, color) {
     return marker;
 }
 
-//TODO (zous): create already checked boxes for labels with only one choice.
+/**
+ * Given a Google Maps LatLng location (from a marker), return the corresponding checkbox.
+ */
+function getCheckboxFromMarker(location) {
+    let checkboxes = document.getElementsByClassName('checkbox');
+    let boxFound = null;
+    Array.from(checkboxes).forEach(box => {
+        const pt = JSON.parse(box.value);
+        if(pt.y === location.lat() && pt.x === location.lng()) {
+            boxFound = box;
+        }
+    });
+    return boxFound;
+}
+
 /** Takes ArrayList<ArrayList<Coordinates>> and creates checkboxes grouped by labels */
 function createCheckBoxes(waypointChoices) {
   submitEl = document.createElement("input");
@@ -292,7 +340,6 @@ function createCheckBoxEl(choice, label){
 function catchCheckboxErrors(event) {
     const checkbox = event.target;
     let numChecked = getNumChecked();
-    console.log(numChecked);
     if (numChecked > MAX_WAYPOINTS) {
         alert('You have selected too many waypoints. Please select up to 23 waypoints.');
         checkbox.checked = false; // uncheck the checkbox
@@ -472,7 +519,6 @@ function convertWaypointstoLatLng(waypoints) {
  */
 async function getWaypoints() {
     let res = await fetch('/query');
-    console.log(res);
 
     // Catch HTTP status error codes
     if (res.status === SC_REQUEST_ENTITY_TOO_LARGE) {
@@ -482,7 +528,6 @@ async function getWaypoints() {
     }
 
     let waypoints = await res.json();
-    console.log(waypoints);
     return waypoints;
 }
 
