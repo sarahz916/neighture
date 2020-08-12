@@ -249,7 +249,7 @@ public class WaypointQueryServlet extends HttpServlet {
     */ 
   public ArrayList<Coordinate> fetchFromDatabase(String query, String label, Coordinate midpoint) throws IOException {
     String startDate = getStartDate();
-    String[] boundaries = getBoundingBox();
+    String[] boundaries = getBoundingBox(midpoint);
     String json = sendGET(query, startDate, boundaries);
     if (json != null) {
       return jsonToCoordinates(json, label);

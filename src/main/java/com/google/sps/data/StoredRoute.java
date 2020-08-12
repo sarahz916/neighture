@@ -15,6 +15,7 @@
 package com.google.sps.data;
 import com.google.sps.Coordinate;
 import java.util.ArrayList;
+import com.google.appengine.api.datastore.GeoPt;
 
 /** A stored route with associated text and waypoints*/
 public final class StoredRoute {
@@ -22,9 +23,9 @@ public final class StoredRoute {
   private final long id;
   private final String text;
   private final String waypoints;
-  private final String center;
+  private final GeoPt center;
 
-  public StoredRoute(long id, String text, String waypoints, String center) {
+  public StoredRoute(long id, String text, String waypoints, GeoPt center) {
     this.id = id;
     this.text = text;
     this.waypoints = waypoints;

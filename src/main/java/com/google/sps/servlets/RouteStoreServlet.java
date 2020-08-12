@@ -19,17 +19,13 @@ import java.net.URL;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
-import com.google.appengine.api.datastore.DatastoreService;
-import com.google.appengine.api.datastore.DatastoreServiceFactory;
-import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.PreparedQuery;
-import com.google.appengine.api.datastore.Query;
-import com.google.appengine.api.datastore.Query.SortDirection;
+import com.google.appengine.api.datastore.*;
+import com.google.appengine.api.datastore.Query.*;
+import com.google.appengine.api.datastore.Query.StContainsFilter;
+import com.google.appengine.api.datastore.Query.GeoRegion.Rectangle;  
 import java.io.IOException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.*;
 import java.util.ArrayList;
 import java.util.List;
 import com.google.gson.Gson;
@@ -49,10 +45,17 @@ public class RouteStoreServlet extends HttpServlet {
      
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-     // Show all the generated routes stored. 
-
-    //TODO(zous): Put a limit on how many StoredRoutes sent to the dropdown menu in generatedroutes.html
-    Query query = new Query("StoredRoute");
+    HttpSession session = request.getSession();
+     // Show all the generated routes stored within boundaries
+    Double max_x = (Double) session.getAttribute("max_x");
+    Double min_x = (Double) session.getAttribute("min_x");
+    Double max_y = (Double) session.getAttribute("max_y");
+    Double min_y = (Double) session.getAttribute("min_y");
+    //create GeoPt for southwest and northeast
+    GeoPt northeast = new GeoPt(max_y.floatValue(), max_x.floatValue());
+    GeoPt southwest = new GeoPt(min_y.floatValue(), min_x.floatValue());
+    Query query = new Query("StoredRoute")
+        .setFilter(new StContainsFilter("center-of-mass", new Rectangle(southwest, northeast)));
 
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     PreparedQuery results = datastore.prepare(query);
@@ -61,7 +64,7 @@ public class RouteStoreServlet extends HttpServlet {
       long id = entity.getKey().getId();
       String text = (String) entity.getProperty("text");
       String waypointsJson = (String) entity.getProperty("actual-route");
-      String center = (String) entity.getProperty("center-of-mass");
+      GeoPt center = (GeoPt) entity.getProperty("center-of-mass");
       if (waypointsJson != null){
         StoredRoute route = new StoredRoute(id, text, waypointsJson, center);
         routes.add(route);
