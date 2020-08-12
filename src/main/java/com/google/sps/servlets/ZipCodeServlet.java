@@ -39,7 +39,7 @@ public class ZipCodeServlet extends HttpServlet{
         String zip = (String) session.getAttribute("zip-code");
         // need try catch here
         try{
-            setBounds(request, zip);
+            setBounds(session, zip);
 
         }catch(Exception e){}
         response.getWriter().println(zip);
@@ -57,7 +57,7 @@ public class ZipCodeServlet extends HttpServlet{
     }
 
       /** Gets bounds of zipcode and sets bounds in session attributes. */ 
-    private void setBounds(HttpServletRequest request, String zipcode) throws IOException {
+    private void setBounds(HttpSession session, String zipcode) throws IOException {
         GeoApiContext context = new GeoApiContext.Builder(new GaeRequestHandler.Builder())
             .apiKey(API_KEY)
             .build();
@@ -72,7 +72,6 @@ public class ZipCodeServlet extends HttpServlet{
         Double max_y = results[0].geometry.bounds.northeast.lat;
         Double min_x = results[0].geometry.bounds.southwest.lng;
         Double min_y = results[0].geometry.bounds.southwest.lat;
-        HttpSession session = request.getSession();
         session.setAttribute("max_x", max_x);
         session.setAttribute("min_x", min_x);
         session.setAttribute("max_y", max_y);

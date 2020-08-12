@@ -47,15 +47,15 @@ public class RouteStoreServlet extends HttpServlet {
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     HttpSession session = request.getSession();
      // Show all the generated routes stored within boundaries
-    Double max_x = (Double) session.getAttribute("max_x");
+    /*Double max_x = (Double) session.getAttribute("max_x");
     Double min_x = (Double) session.getAttribute("min_x");
     Double max_y = (Double) session.getAttribute("max_y");
     Double min_y = (Double) session.getAttribute("min_y");
     //create GeoPt for southwest and northeast
     GeoPt northeast = new GeoPt(max_y.floatValue(), max_x.floatValue());
-    GeoPt southwest = new GeoPt(min_y.floatValue(), min_x.floatValue());
-    Query query = new Query("StoredRoute")
-        .setFilter(new StContainsFilter("center-of-mass", new Rectangle(southwest, northeast)));
+    GeoPt southwest = new GeoPt(min_y.floatValue(), min_x.floatValue());*/
+    Query query = new Query("StoredRoute");
+        //.setFilter(new StContainsFilter("center-of-mass", new Rectangle(southwest, northeast)));
 
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     PreparedQuery results = datastore.prepare(query);
@@ -64,9 +64,9 @@ public class RouteStoreServlet extends HttpServlet {
       long id = entity.getKey().getId();
       String text = (String) entity.getProperty("text");
       String waypointsJson = (String) entity.getProperty("actual-route");
-      GeoPt center = (GeoPt) entity.getProperty("center-of-mass");
+      //GeoPt center = (GeoPt) entity.getProperty("center-of-mass");
       if (waypointsJson != null){
-        StoredRoute route = new StoredRoute(id, text, waypointsJson, center);
+        StoredRoute route = new StoredRoute(id, text, waypointsJson);
         routes.add(route);
       }
     }

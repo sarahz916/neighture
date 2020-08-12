@@ -30,6 +30,7 @@ import com.google.maps.GaeRequestHandler;
 import com.google.maps.errors.ApiException;
 import java.lang.InterruptedException;
 import org.json.JSONObject;
+import org.json.JSONException;
 
 /** Servlet that returns text input data */
 @WebServlet(
@@ -45,15 +46,19 @@ public class StartEndServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
       SessionDataStore sessionDataStore = new SessionDataStore(request);
-      JSONObject start = new JSONObject(sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "start"));
-      JSONObject end = new JSONObject(sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "end"));
-      JSONObject midpoint = new JSONObject(sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "midpoint"));
-      JSONObject startendmid = new JSONObject();
-      startendmid.put("start", start);
-      startendmid.put("end", end);
-      startendmid.put("midpoint", midpoint);
-      response.setContentType("application/json");
-      response.getWriter().println(startendmid.toString());
+      try{
+          JSONObject start = new JSONObject(sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "start"));
+          JSONObject end = new JSONObject(sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "end"));
+          JSONObject midpoint = new JSONObject(sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "midpoint"));
+          JSONObject startendmid = new JSONObject();
+          startendmid.put("start", start);
+          startendmid.put("end", end);
+          startendmid.put("midpoint", midpoint);
+          response.setContentType("application/json");
+          response.getWriter().println(startendmid.toString());
+      }catch(JSONException e){
+          response.getWriter().println("[]");
+      }
   }
 
  /** Stores start, end and midpoint locations as JSON Strings of Coordinates with Session ID */
