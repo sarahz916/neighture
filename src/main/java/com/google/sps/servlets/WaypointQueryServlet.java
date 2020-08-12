@@ -37,7 +37,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.LinkedHashSet;
 import java.util.Calendar;
 import java.util.regex.Pattern;
 import java.util.zip.DataFormatException;
@@ -117,26 +116,24 @@ public class WaypointQueryServlet extends HttpServlet {
 
     for (WaypointDescription waypointDescription : waypointRequests) {
       int maxNumberCoordinates = waypointDescription.getMaxAmount();
-      String waypointLabel = waypointDescription.getLabel();
-      LinkedHashSet<String> featureRequests = waypointDescription.getFeatures();
+      String query = waypointDescription.getQuery();
+      String feature = waypointDescription.getFeature();
       boolean firstFeatureFound = false;
       ArrayList<Coordinate> potentialCoordinates = new ArrayList<Coordinate>();
-      // first is the arraylist index of the first feature in the database
-      for (String featureRequest : featureRequests) {
-        // Make call to database
-        ArrayList<Coordinate> locations = fetchFromDatabase(featureRequest, waypointLabel);
-        if (!locations.isEmpty()) { // The feature is in the database
-          if (firstFeatureFound) {
-            potentialCoordinates.retainAll(locations);
-          } else {
-            potentialCoordinates.addAll(locations);
-            firstFeatureFound = true;
-          }
+      // Make call to database
+      ArrayList<Coordinate> locations = fetchFromDatabase(query, feature);
+      if (locations.isEmpty()) { // Not in the database
+        continue;
+      } else {
+        if (firstFeatureFound) {
+          potentialCoordinates.retainAll(locations);
+        } else {
+          potentialCoordinates.addAll(locations);
+          firstFeatureFound = true;
         }
       }
-
-      List<Coordinate> locations = potentialCoordinates.subList(0, Math.min(maxNumberCoordinates, potentialCoordinates.size()));
-      waypoints.add(locations);
+      List<Coordinate> locationsList = potentialCoordinates.subList(0, Math.min(maxNumberCoordinates, potentialCoordinates.size()));
+      waypoints.add(locationsList);
     }   
     return waypoints;
   }
@@ -162,7 +159,7 @@ public class WaypointQueryServlet extends HttpServlet {
     waypointQuery = waypointQuery.toLowerCase().trim(); // determine -- keep lowercase or allow uppercase?
     ArrayList<WaypointDescription> waypointsFromQuery = new ArrayList<WaypointDescription>();
     // Separate on commas and spaces
-    String[] featureQueries = waypointQuery.split("[,\\s]+"); // TODO: only include numbers (adjectives?) and nouns
+    String[] featureQueries = waypointQuery.split("[,\\s]+"); 
     String[][] bigTags = getTags(featureQueries);
     String[] primaryTags = bigTags[0];
     WaypointDescription waypoint = new WaypointDescription();
@@ -176,9 +173,8 @@ public class WaypointQueryServlet extends HttpServlet {
         if (maxAmount > 10 || maxAmount < 1) {
           throw new IllegalArgumentException("Number out of range! If you enter a number, please let it be from 1 to 10");
         }
-        if (waypoint.hasFeatures()) { 
+        if (waypoint.hasFeature()) { 
           // Start a new waypoint description
-          waypoint.createLabel();
           waypointsFromQuery.add(waypoint);
           waypoint = new WaypointDescription(maxAmount);
         } else {
@@ -186,14 +182,13 @@ public class WaypointQueryServlet extends HttpServlet {
         }
       } else {
         // Parsing for nouns/not pronouns
-        System.out.println(feature);
-        System.out.println(primaryTags[i]);
-        if (bigTags.length == 2) {
-          System.out.println(bigTags[1][i]);
-        }
+        // System.out.println(feature);
+        // System.out.println(primaryTags[i]);
+        // if (bigTags.length == 2) {
+        //   System.out.println(bigTags[1][i]);
+        // }
         if (primaryTags[i].equals(NOUN_SINGULAR_OR_MASS) || primaryTags[i].equals(NOUN_PLURAL)) { // Doesn't look for proper nouns right now
           waypoint.addFeature(feature);
-          waypoint.createLabel();
           waypointsFromQuery.add(waypoint);
           waypoint = new WaypointDescription();
         } else if (bigTags.length == 2 && !primaryTags[i].equals(PRONOUN)) { 
@@ -201,15 +196,13 @@ public class WaypointQueryServlet extends HttpServlet {
           String[] secondaryTags = bigTags[1];
           if (secondaryTags[i].equals(NOUN_SINGULAR_OR_MASS) || secondaryTags[i].equals(NOUN_PLURAL)) {
             waypoint.addFeature(feature);
-            waypoint.createLabel();
             waypointsFromQuery.add(waypoint);
             waypoint = new WaypointDescription();
           }
         }
       }
     }
-    if (waypoint.hasFeatures()) {
-      waypoint.createLabel();
+    if (waypoint.hasFeature()) {
       waypointsFromQuery.add(waypoint);
     }
     return waypointsFromQuery;
@@ -219,7 +212,6 @@ public class WaypointQueryServlet extends HttpServlet {
     */
   public String[][] getTags(String[] tokens) throws Exception {
     //Loading Parts of speech-maxent model      
-    //InputStream inputStream = new FileInputStream("src/main/webapp/WEB-INF/en-pos-maxent.bin") ;
     InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("en-pos-maxent.bin");
     POSModel model = new POSModel(inputStream); 
       
@@ -254,10 +246,10 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Sends a request for the input feature to the database
     * Returns the Coordinate matching the input feature 
     */ 
-  public ArrayList<Coordinate> fetchFromDatabase(String feature, String label) throws IOException {
+  public ArrayList<Coordinate> fetchFromDatabase(String query, String label) throws IOException {
     String startDate = getStartDate();
     String[] boundaries = getBoundingBox();
-    String json = sendGET(feature, startDate, boundaries);
+    String json = sendGET(query, startDate, boundaries);
     if (json != null) {
       return jsonToCoordinates(json, label);
     }
