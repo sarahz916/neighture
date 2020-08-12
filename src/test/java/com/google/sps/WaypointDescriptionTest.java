@@ -13,9 +13,6 @@
 // limitations under the License.
 
 package com.google.sps;
-import java.util.LinkedHashSet;
-import java.util.Arrays;
-
 import org.junit.Test;
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -24,24 +21,21 @@ import org.junit.Assert;
 
 @RunWith(JUnit4.class)
 public final class WaypointDescriptionTest {
-  public static final String LABEL = "daisy, clover";
-  public static final String RASPBERRY_LABEL = "raspberry";
-  public static final String DEFAULT_LABEL = "UNLABELED";  
+  public static final String LONG_LABEL = "great blue heron";
+  public static final String LONG_QUERY = "great%20blue%20heron";
+  public static final String GREAT_BLUE = "great blue";
+  public static final String HERON = "heron";
+  public static final String DEFAULT_TEXT = "";  
   public static final int AMOUNT = 3;
   public static final int DEFAULT_AMOUNT = 5;
-  public static final LinkedHashSet<String> SOME_FEATURES = new LinkedHashSet<String>(Arrays.asList("daisy", "clover"));
-  public static final LinkedHashSet<String> ONE_FEATURE = new LinkedHashSet<String>(Arrays.asList("raspberry"));
-  public static final LinkedHashSet<String> MORE_FEATURES = new LinkedHashSet<String>(Arrays.asList("daisy", "clover", "raspberry"));
-  public static final LinkedHashSet<String> NO_FEATURES = new LinkedHashSet<String>();
 
   @Test
   public void constructFullWaypointDescription() {
-    WaypointDescription description = new WaypointDescription(AMOUNT, SOME_FEATURES);
+    WaypointDescription description = new WaypointDescription(AMOUNT, HERON);
     Assert.assertEquals(AMOUNT, description.getMaxAmount());
-    Assert.assertEquals(DEFAULT_LABEL, description.getLabel());
-    Assert.assertEquals(SOME_FEATURES, description.getFeatures());
-    Assert.assertFalse(description.hasLabel());
-    Assert.assertTrue(description.hasFeatures());
+    Assert.assertEquals(HERON, description.getFeature());
+    Assert.assertEquals(HERON, description.getQuery());
+    Assert.assertTrue(description.hasFeature());
     Assert.assertTrue(description.maxAmountWasSet());
   }
 
@@ -49,32 +43,19 @@ public final class WaypointDescriptionTest {
   public void constructWaypointDescriptionAmount() {
     WaypointDescription description = new WaypointDescription(AMOUNT);
     Assert.assertEquals(AMOUNT, description.getMaxAmount());
-    Assert.assertEquals(DEFAULT_LABEL, description.getLabel());
-    Assert.assertEquals(NO_FEATURES, description.getFeatures());
-    Assert.assertFalse(description.hasLabel());
-    Assert.assertFalse(description.hasFeatures());
+    Assert.assertEquals(DEFAULT_TEXT, description.getFeature());
+    Assert.assertEquals(DEFAULT_TEXT, description.getQuery());
+    Assert.assertFalse(description.hasFeature());
     Assert.assertTrue(description.maxAmountWasSet());
-  }
-  
-  @Test
-  public void constructWaypointDescriptionFeatures() {
-    WaypointDescription description = new WaypointDescription(SOME_FEATURES);
-    Assert.assertEquals(DEFAULT_AMOUNT, description.getMaxAmount());
-    Assert.assertEquals(DEFAULT_LABEL, description.getLabel());
-    Assert.assertEquals(SOME_FEATURES, description.getFeatures());
-    Assert.assertFalse(description.hasLabel());
-    Assert.assertTrue(description.hasFeatures());
-    Assert.assertFalse(description.maxAmountWasSet());
   }
 
   @Test
-  public void constructWaypointDescriptionOneFeature() {
-    WaypointDescription description = new WaypointDescription(RASPBERRY_LABEL);
+  public void constructWaypointDescriptionFeature() {
+    WaypointDescription description = new WaypointDescription(HERON);
     Assert.assertEquals(DEFAULT_AMOUNT, description.getMaxAmount());
-    Assert.assertEquals(DEFAULT_LABEL, description.getLabel());
-    Assert.assertEquals(ONE_FEATURE, description.getFeatures());
-    Assert.assertFalse(description.hasLabel());
-    Assert.assertTrue(description.hasFeatures());
+    Assert.assertEquals(HERON, description.getQuery());
+    Assert.assertEquals(HERON, description.getFeature());
+    Assert.assertTrue(description.hasFeature());
     Assert.assertFalse(description.maxAmountWasSet());
   }
 
@@ -82,27 +63,10 @@ public final class WaypointDescriptionTest {
   public void constructEmptyWaypointDescription() {
     WaypointDescription description = new WaypointDescription();
     Assert.assertEquals(DEFAULT_AMOUNT, description.getMaxAmount());
-    Assert.assertEquals(DEFAULT_LABEL, description.getLabel());
-    Assert.assertEquals(NO_FEATURES, description.getFeatures());
-    Assert.assertFalse(description.hasLabel());
-    Assert.assertFalse(description.hasFeatures());
+    Assert.assertEquals(DEFAULT_TEXT, description.getQuery());
+    Assert.assertEquals(DEFAULT_TEXT, description.getFeature());
+    Assert.assertFalse(description.hasFeature());
     Assert.assertFalse(description.maxAmountWasSet());
-  }
-
-  @Test
-  public void successfullyCreateLabel() {
-    WaypointDescription description = new WaypointDescription(AMOUNT, SOME_FEATURES);
-    description.createLabel();
-    Assert.assertEquals(LABEL, description.getLabel());
-    Assert.assertTrue(description.hasLabel());
-  }
-
-  @Test
-  public void createLabelFail() { // Fails because there are no features
-    WaypointDescription description = new WaypointDescription(AMOUNT);
-    description.createLabel();
-    Assert.assertEquals(DEFAULT_LABEL, description.getLabel());
-    Assert.assertFalse(description.hasLabel());
   }
 
   @Test
@@ -115,8 +79,9 @@ public final class WaypointDescriptionTest {
 
   @Test
   public void addFeatures() { 
-    WaypointDescription description = new WaypointDescription(SOME_FEATURES);
-    description.addFeature(RASPBERRY_LABEL);
-    Assert.assertEquals(MORE_FEATURES, description.getFeatures());
+    WaypointDescription description = new WaypointDescription(GREAT_BLUE);
+    description.addFeature(HERON);
+    Assert.assertEquals(LONG_LABEL, description.getFeature());
+    Assert.assertEquals(LONG_QUERY, description.getQuery());
   }
 }

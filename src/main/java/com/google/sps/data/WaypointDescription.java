@@ -13,25 +13,23 @@
 // limitations under the License.
 
 package com.google.sps;
-import java.util.LinkedHashSet;
-import java.util.Iterator;
 
-/** Description of a user's waypoint query: how many the user wants, the label, and the features in the waypoint. */
+/** Description of a user's waypoint query: how many the user wants, the feature, and the query equivalent. */
 public final class WaypointDescription {
   // The maximum number of coordinates will be an optional input by the user, with 5 as the default
   private static final int DEFAULT_AMOUNT = 5;
-  private static final String DEFAULT_LABEL = "UNLABELED";
+  private static final String DEFAULT_TEXT = "";
   private int amount;
   private boolean hasSetAmount;
-  private String label;
-  private final LinkedHashSet<String> features;
+  private String query;
+  private String feature; // Also doubles as the label
 
   /** Creates a new waypoint description with all needed information
     */
-  public WaypointDescription(int amount, LinkedHashSet<String> features) {
+  public WaypointDescription(int amount, String feature) {
     this.amount = amount;
-    this.label = DEFAULT_LABEL;
-    this.features = features;
+    this.feature = feature;
+    createQuery();
     hasSetAmount = true;
   }
 
@@ -39,27 +37,17 @@ public final class WaypointDescription {
     */
   public WaypointDescription(int amount) {
     this.amount = amount;
-    this.label = DEFAULT_LABEL;
-    this.features = new LinkedHashSet<String>();
+    this.query = DEFAULT_TEXT;
+    this.feature = DEFAULT_TEXT;
     hasSetAmount = true;
   }
 
-  /** Creates a new waypoint description with one feature
+  /** Creates a new waypoint description with a feature
     */
   public WaypointDescription(String feature) {
     this.amount = DEFAULT_AMOUNT;
-    this.label = DEFAULT_LABEL;
-    this.features = new LinkedHashSet<String>();
-    features.add(feature);
-    hasSetAmount = false;
-  }
-
-  /** Creates a new waypoint description with some features
-    */
-  public WaypointDescription(LinkedHashSet<String> features) {
-    this.amount = DEFAULT_AMOUNT;
-    this.label = DEFAULT_LABEL;
-    this.features = features;
+    this.feature = feature;
+    createQuery();
     hasSetAmount = false;
   }
 
@@ -67,8 +55,8 @@ public final class WaypointDescription {
     */
   public WaypointDescription() {
     this.amount = DEFAULT_AMOUNT;
-    this.label = DEFAULT_LABEL;
-    this.features = new LinkedHashSet<String>();
+    this.query = DEFAULT_TEXT;
+    this.feature = DEFAULT_TEXT;
     hasSetAmount = false;
   }
 
@@ -91,49 +79,39 @@ public final class WaypointDescription {
     amount = newAmount;
   }
 
-  /** Returns the label of this waypoint description.
+  /** Returns the query string of this waypoint description.
     */
-  public String getLabel() {
-    return label;
-  }
-
-  /** Checks whether this waypoint description has a label
-    */
-  public boolean hasLabel() {
-    return (!label.equals(DEFAULT_LABEL));
+  public String getQuery() {
+    return query;
   }
   
-  /** Returns the y coordinate of this waypoint description.
+  /** Returns the feature of this waypoint description.
     */
-  public LinkedHashSet<String> getFeatures() {
-    return features;
+  public String getFeature() {
+    return feature;
   }
 
   /** Checks whether this waypoint description has any features
     */
-  public boolean hasFeatures() {
-    return (!features.isEmpty());
+  public boolean hasFeature() {
+    return (!feature.equals(DEFAULT_TEXT));
   }
 
   /** Add a feature to the waypoint
     */
   public void addFeature(String feature) {
-    features.add(feature);
+    if (hasFeature()) {
+      this.feature += " " + feature;
+    } else {
+      this.feature = feature;
+    }
+    createQuery();
   }
 
-  /** Waypoint description is done being made, so a label can be made
-    * Returns whether or not the description was successfully finalized
+  /** Make the query to go along with the feature/label
     */
-  public boolean createLabel() {
-    if (hasFeatures()) {
-      Iterator<String> iterator = features.iterator();
-      label = iterator.next();
-      while( iterator.hasNext() ){
-        label += ", " + iterator.next();
-      }
-      return true;
-    }
-    return false;
+  private void createQuery() {
+    query = feature.replace(" ", "%20");
   }
 
   @Override
@@ -153,6 +131,6 @@ public final class WaypointDescription {
     WaypointDescription otherWaypoint = (WaypointDescription) other; 
       
     // Compare the data members and return accordingly 
-    return (amount == otherWaypoint.getMaxAmount() && label.equals(otherWaypoint.getLabel()));
+    return (amount == otherWaypoint.getMaxAmount() && feature.equals(otherWaypoint.getFeature()));
   }
 }
