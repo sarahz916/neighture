@@ -32,6 +32,7 @@ public class ZipCodeServlet extends HttpServlet{
     private static final Double BOUNDING_BOX_WIDTH = 0.07246376811; // 5 miles
     private final String API_KEY = "AIzaSyBaBCxBuGqZx0IGQ4lb9eKrICwU8Rduz3c";
 
+    /** Sets zip code bounds in session attribute. */ 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         HttpSession session = request.getSession();
@@ -44,7 +45,7 @@ public class ZipCodeServlet extends HttpServlet{
         response.getWriter().println(zip);
     }
     
-    
+    /** Formats and stores zipcode in session attributes. */ 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         Integer value = Integer.parseInt(request.getParameter("zip-code"));
@@ -55,7 +56,7 @@ public class ZipCodeServlet extends HttpServlet{
         response.sendRedirect("/generated-routes.html");
     }
 
-      /** Gets geoLocation via GeoEncoding API and returns Coordinate of place */ 
+      /** Gets bounds of zipcode and sets bounds in session attributes. */ 
     private void setBounds(HttpServletRequest request, String zipcode) throws IOException {
         GeoApiContext context = new GeoApiContext.Builder(new GaeRequestHandler.Builder())
             .apiKey(API_KEY)
