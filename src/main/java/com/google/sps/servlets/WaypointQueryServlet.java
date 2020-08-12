@@ -66,7 +66,6 @@ public class WaypointQueryServlet extends HttpServlet {
   private final String FETCH_FIELD = "queryFetched";
   private final String FETCH_PROPERTY = "waypoints";
   private final String ENTITY_TYPE = "Route";
-  private Coordinate midpoint;
   private static final Double BOUNDING_BOX_WIDTH = 0.07246376811; // 5 miles
   private static final String NOUN_SINGULAR_OR_MASS = "NN";
   private static final String NOUN_PLURAL = "NNS";
@@ -85,10 +84,12 @@ public class WaypointQueryServlet extends HttpServlet {
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     String input = request.getParameter("text-input");
     SessionDataStore sessionDataStore = new SessionDataStore(request);
-    midpoint = getMidpoint(sessionDataStore);
+    Coordinate midpoint = getMidpoint(sessionDataStore);
+    Coordinate start = getStart(sessionDataStore);
+    Coordinate end = getEnd(sessionDataStore);
     ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();
     try {
-      waypoints = getLocations(input);
+      waypoints = getLocations(input, midpoint);
     } catch (IllegalArgumentException e) { // User puts down a number that's out of range
       System.out.println("ILLEGAL ARGUMENT");
       response.setStatus(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE);
@@ -110,7 +111,7 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Using the input text, fetches waypoints from the database to be 
     * used by the frontend. Returns possible waypoints. 
     */
-  public ArrayList<List<Coordinate>> getLocations(String input) throws IllegalArgumentException, Exception {
+  public ArrayList<List<Coordinate>> getLocations(String input, Coordinate midpoint) throws IllegalArgumentException, Exception {
     // Parse out feature requests from input
     ArrayList<WaypointDescription> waypointRequests = processInputText(input);
     ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();    
@@ -124,7 +125,7 @@ public class WaypointQueryServlet extends HttpServlet {
       // first is the arraylist index of the first feature in the database
       for (String featureRequest : featureRequests) {
         // Make call to database
-        ArrayList<Coordinate> locations = fetchFromDatabase(featureRequest, waypointLabel);
+        ArrayList<Coordinate> locations = fetchFromDatabase(featureRequest, waypointLabel, midpoint);
         if (!locations.isEmpty()) { // The feature is in the database
           if (firstFeatureFound) {
             potentialCoordinates.retainAll(locations);
@@ -254,9 +255,9 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Sends a request for the input feature to the database
     * Returns the Coordinate matching the input feature 
     */ 
-  public ArrayList<Coordinate> fetchFromDatabase(String feature, String label) throws IOException {
+  public ArrayList<Coordinate> fetchFromDatabase(String feature, String label, Coordinate midpoint) throws IOException {
     String startDate = getStartDate();
-    String[] boundaries = getBoundingBox();
+    String[] boundaries = getBoundingBox(midpoint);
     String json = sendGET(feature, startDate, boundaries);
     if (json != null) {
       return jsonToCoordinates(json, label);
@@ -281,7 +282,7 @@ public class WaypointQueryServlet extends HttpServlet {
     * the midpoint by BOUNDING_BOX_WIDTH on each side
     * Returns list in order of bound: west, east, south, north
     */
-  public String[] getBoundingBox() {
+  public String[] getBoundingBox(Coordinate midpoint) {
     String[] boundaries = new String[4];
     boundaries[0] = String.valueOf(midpoint.getX() - BOUNDING_BOX_WIDTH);
     boundaries[1] = String.valueOf(midpoint.getX() + BOUNDING_BOX_WIDTH);
@@ -346,7 +347,27 @@ public class WaypointQueryServlet extends HttpServlet {
     JSONObject jsonObject = new JSONObject(sessionDataStore.fetchSessionEntity("StartEnd", "midpoint"));
     Double x = jsonObject.getDouble("x");
     Double y = jsonObject.getDouble("y");
-    midpoint = new Coordinate(x, y, "midpoint");
+    Coordinate midpoint = new Coordinate(x, y, "midpoint");
     return midpoint;
+ }
+
+   /** Fetches start from sessionDataStore. 
+    */
+ private Coordinate getStart(SessionDataStore sessionDataStore){
+    JSONObject jsonObject = new JSONObject(sessionDataStore.fetchSessionEntity("StartEnd", "start"));
+    Double x = jsonObject.getDouble("x");
+    Double y = jsonObject.getDouble("y");
+    Coordinate start = new Coordinate(x, y, "start");
+    return start;
+ }
+
+   /** Fetches end from sessionDataStore. 
+    */
+ private Coordinate getEnd(SessionDataStore sessionDataStore){
+    JSONObject jsonObject = new JSONObject(sessionDataStore.fetchSessionEntity("StartEnd", "end"));
+    Double x = jsonObject.getDouble("x");
+    Double y = jsonObject.getDouble("y");
+    Coordinate end = new Coordinate(x, y, "end");
+    return end;
  }
 }
