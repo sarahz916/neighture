@@ -140,16 +140,33 @@ function createPointInfoMap(start, end, startName, endName, waypoints) {
         createMarker(map, end, 'end', google.maps.SymbolPath.CIRCLE, 'black');
     }
 
-
     // Make one marker for each waypoint, in a different color.
     for (let i = 0; i < Object.entries(waypoints).length; i++) {
         let [label, cluster] = Object.entries(waypoints)[i];
         let letter = 'A';
         for (let pt of cluster) {
-            createMarker(map, pt, letter, google.maps.SymbolPath.BACKWARD_CLOSED_ARROW, FILL_COLORS[i % MAX_WAYPOINTS]);
+            createCheckableMarker(map, pt, label, letter, google.maps.SymbolPath.BACKWARD_CLOSED_ARROW, FILL_COLORS[i % MAX_WAYPOINTS]);
             letter = String.fromCharCode(letter.charCodeAt(0) + 1); // update the marker letter label to the next letter
         }
     }
+}
+
+/**
+ * Create a dynamic marker with an InfoWindow that appears with the label upon clicking.
+ */
+function createCheckableMarker(map, pt, label, letter, icon, color) {
+    let infowindow = createInfoWindow(`${letter}: ${label}`);
+    let marker = createMarker(map, pt, letter, icon, color);
+    marker.addListener('click', function() {
+        infowindow.open(map, marker);
+    });
+}
+
+function createInfoWindow(text) {
+    const infowindow = new google.maps.InfoWindow({
+        content: text
+    });
+    return infowindow;
 }
 
 /**
@@ -188,6 +205,7 @@ function createMarker(map, pos, label, shape, color) {
         }
     };
     let marker = new google.maps.Marker(markerOpts);
+    return marker;
 }
 
 //TODO (zous): create already checked boxes for labels with only one choice.
