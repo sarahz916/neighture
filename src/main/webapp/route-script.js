@@ -19,14 +19,6 @@ const FILL_COLORS = ['#F1C40F', '#3498DB', '#154360', '#D1F2EB', '#D7BDE2', '#DC
                     '#F8F000', '#F8006D', '#AB0500', '#2DC4BB'
                     ];
 const CHECKED_COLOR = "#FF0000";
-const CHECKED_ICON = {
-                        path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-                        fillColor: CHECKED_COLOR,
-                        fillOpacity: 100,
-                        scale: 5,
-                        strokeWeight: 4,
-                        labelOrigin: { x: 0, y: 2}
-                    };
 const MAX_WAYPOINTS = 23;
 const CHOICE_AT_ONCE = 3; 
 const SC_REQUEST_ENTITY_TOO_LARGE = 413;
@@ -187,6 +179,14 @@ function toggleCheckbox(box) {
  */
 function createInfoWindow(text, pt, marker) {
     const uncheckedIcon = marker.getIcon();
+    const CHECKED_ICON = {
+                        path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                        fillColor: CHECKED_COLOR,
+                        fillOpacity: 100,
+                        scale: 5,
+                        strokeWeight: 4,
+                        labelOrigin: { x: 0, y: 2}
+                    };
     const html = createInfoWindowHTML(text);
     const infowindow = new google.maps.InfoWindow({
         content: html
