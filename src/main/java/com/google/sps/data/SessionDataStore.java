@@ -77,7 +77,7 @@ public final class SessionDataStore {
         } catch (EntityNotFoundException e) {
             Entity = new Entity(EntityType, this.sessionID);
         }
-        Entity.setProperty(PropertyName, value);
+        Entity.setUnindexedProperty(PropertyName, value);
         datastore.put(txn, Entity);
         txn.commit();
     }
