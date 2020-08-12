@@ -12,18 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// 25 fill colors for markers (max number of waypoints is 25)
+// 25 fill colors for markers (max number of stops on route is 25)
 const FILL_COLORS = ["#FF0000", '#F1C40F', '#3498DB', '#154360', '#D1F2EB', '#D7BDE2', '#DC7633', 
                     '#145A32', '#641E16', '#5B2C6F', '#F1948A', '#FF00FF', '#C0C0C0', '#808080',
                     '#000000', '#33FF39', '#F5D3ED', '#D3F5F4', '#7371DE', '#110EEC', '#FFAA72',
                     '#F8F000', '#F8006D', '#AB0500', '#2DC4BB'
                     ];
-const MAX_WAYPOINTS = 25;
+const MAX_WAYPOINTS = 23;
 const CHOICE_AT_ONCE = 3; 
+const SC_REQUEST_ENTITY_TOO_LARGE = 413;
+const SC_BAD_REQUEST = 400;
 
-window.onload = async function setup() {
+window.onload = async function setup(event) {
+    event.preventDefault();
     let startAddr = await getStartAddr();
     let endAddr = await getEndAddr();
+    let startCoord = await getStartCoord;
     await initStartEndDisplay(startAddr, endAddr);
 }
 
@@ -113,22 +117,28 @@ async function getChosenPoints() {
 async function setupUserChoices() {
     let res = await getWaypoints();
     let waypoints = convertWaypointClusterstoLatLng(res);
-    let start = await getStartCoord();
-    let end = await getEndCoord();
-    createPointInfoMap(start, end, waypoints);
+    let startCoord = await getStartCoord();
+    let endCoord = await getEndCoord();
+    let startName = await getStartAddr();
+    let endName = await getEndAddr();
+    createPointInfoMap(startCoord, endCoord, startName, endName, waypoints);
     createCheckBoxes(res);
 }
 
 /**
  * Get waypoints from the servlet and map each cluster of waypoints on the map in a different marker color.
  */
-function createPointInfoMap(start, end, waypoints) {
+function createPointInfoMap(start, end, startName, endName, waypoints) {
     let map = initMap(start, 'point-map');
     let bounds = createBounds(start, end, waypoints);
     map.fitBounds(bounds);
 
-    createMarker(map, start, 'start', google.maps.SymbolPath.CIRCLE, 'black');
-    createMarker(map, end, 'end', google.maps.SymbolPath.CIRCLE, 'black');
+    if (startName === endName) {
+        createMarker(map, start, 'start/end', google.maps.SymbolPath.CIRCLE, 'black');
+    } else {
+        createMarker(map, start, 'start', google.maps.SymbolPath.CIRCLE, 'black');
+        createMarker(map, end, 'end', google.maps.SymbolPath.CIRCLE, 'black');
+    }
 
 
     // Make one marker for each waypoint, in a different color.
@@ -218,14 +228,15 @@ function createCheckBoxSet(set, color) {
         collapseDiv.appendChild(createCheckBoxEl(choice, letter));
         //only add collapse div if needed
         returnDiv.appendChild(collapseDiv);
-      }else if (index > CHOICE_AT_ONCE){//option will be seen in see more 
+
+      } else if (index > CHOICE_AT_ONCE){//option will be seen in see more 
         collapseDiv.appendChild(createCheckBoxEl(choice, letter));
-      } else{ //visible choices.
+      } else { //visible choices.
         returnDiv.appendChild(createCheckBoxEl(choice, letter));
         //letter = String.fromCharCode(letter.charCodeAt(0) + 1); update the marker letter label to the next letter
       }
       letter = String.fromCharCode(letter.charCodeAt(0) + 1);
-  })
+  });
   return returnDiv;
 }
 
@@ -247,12 +258,41 @@ function createCheckBoxEl(choice, label){
     const checkBoxValue = JSON.stringify(choice);
     checkBoxEl.setAttribute("value", checkBoxValue);
     checkBoxEl.setAttribute("name", checkBoxValue);
+    checkBoxEl.setAttribute("class", "checkbox");
     const checkBoxLabel = document.createElement('label');
     checkBoxLabel.innerText = label;
     const labelAndBox = document.createElement('div');
+    labelAndBox.addEventListener('click', catchCheckboxErrors);
     labelAndBox.appendChild(checkBoxEl);
     labelAndBox.appendChild(checkBoxLabel);
     return labelAndBox;
+}
+
+/**
+ * Catch errors when the user selects too many checkboxes.
+ */
+function catchCheckboxErrors(event) {
+    const checkbox = event.target;
+    let numChecked = getNumChecked();
+    console.log(numChecked);
+    if (numChecked > MAX_WAYPOINTS) {
+        alert('You have selected too many waypoints. Please select up to 23 waypoints.');
+        checkbox.checked = false; // uncheck the checkbox
+    }
+}
+
+/**
+ * Get the number of waypoint checkboxes checked.
+ */
+function getNumChecked() {
+    let numChecked = 0;
+    let checkboxes = document.getElementsByClassName('checkbox');
+    Array.from(checkboxes).forEach(box => {
+        if (box.checked) {
+            numChecked++;
+        }
+    });
+    return numChecked;
 }
 
 /**
@@ -387,7 +427,7 @@ function convertWaypointClusterstoLatLng(waypoints) {
             let waypoint = new google.maps.LatLng(pt.y, pt.x);
             pts.push(waypoint);
          }
-         latlngWaypoints[cluster[0].label] = pts;
+         latlngWaypoints[cluster[0].label] = pts; // cluster[0] is undefined here when entering a sentence
     }
     return latlngWaypoints;
 }
@@ -414,7 +454,17 @@ function convertWaypointstoLatLng(waypoints) {
  */
 async function getWaypoints() {
     let res = await fetch('/query');
+    console.log(res);
+
+    // Catch HTTP status error codes
+    if (res.status === SC_REQUEST_ENTITY_TOO_LARGE) {
+        alert('Too many waypoints in text input. Please try again.');
+    } else if (res.status === SC_BAD_REQUEST) {
+        alert('Malformed text input. Please try again.');
+    }
+
     let waypoints = await res.json();
+    console.log(waypoints);
     return waypoints;
 }
 
@@ -461,6 +511,7 @@ try {
     module.exports.createColorBoxElem = createColorBoxElem;
     module.exports.createCheckBoxEl = createCheckBoxEl;
     module.exports.createCheckBoxSet = createCheckBoxSet;
+    module.exports.createCheckBoxes = createCheckBoxes;
 } catch(error) {
     console.log("Not exporting code from this script")
 }

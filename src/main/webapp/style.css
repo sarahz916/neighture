@@ -57,11 +57,16 @@
     margin: 7px;
 }
 
-  /* Icon when the collapsible content is shown */
-  .btn:after {
+/* Icon when the collapsible content is shown */
+.btn:after {
     content: "see less";
-  }
-  /* Icon when the collapsible content is hidden */
-  .btn.collapsed:after {
+}
+
+/* Icon when the collapsible content is hidden */
+    .btn.collapsed:after {
     content: "see more";
-  }
+}
+
+#one-way-tab, #loop-tab {
+    display: none;
+}
