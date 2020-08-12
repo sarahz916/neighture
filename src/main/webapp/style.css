@@ -42,6 +42,10 @@
   flex-grow: 1;
 }
 
+.checkbox-set {
+    display: none;
+}
+
 #legend {
     padding: 3px;
     width: 500px;

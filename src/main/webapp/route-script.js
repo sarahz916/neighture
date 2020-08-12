@@ -13,11 +13,20 @@
 // limitations under the License.
 
 // 25 fill colors for markers (max number of stops on route is 25)
-const FILL_COLORS = ["#FF0000", '#F1C40F', '#3498DB', '#154360', '#D1F2EB', '#D7BDE2', '#DC7633', 
+const FILL_COLORS = ['#F1C40F', '#3498DB', '#154360', '#D1F2EB', '#D7BDE2', '#DC7633', 
                     '#145A32', '#641E16', '#5B2C6F', '#F1948A', '#FF00FF', '#C0C0C0', '#808080',
                     '#000000', '#33FF39', '#F5D3ED', '#D3F5F4', '#7371DE', '#110EEC', '#FFAA72',
                     '#F8F000', '#F8006D', '#AB0500', '#2DC4BB'
                     ];
+const CHECKED_COLOR = "#FF0000";
+const CHECKED_ICON = {
+                        path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                        fillColor: CHECKED_COLOR,
+                        fillOpacity: 100,
+                        scale: 5,
+                        strokeWeight: 4,
+                        labelOrigin: { x: 0, y: 2}
+                    };
 const MAX_WAYPOINTS = 23;
 const CHOICE_AT_ONCE = 3; 
 const SC_REQUEST_ENTITY_TOO_LARGE = 413;
@@ -155,8 +164,8 @@ function createPointInfoMap(start, end, startName, endName, waypoints) {
  * Create a dynamic marker with an InfoWindow that appears with the label upon clicking.
  */
 function createCheckableMarker(map, pt, label, letter, icon, color) {
-    let infowindow = createInfoWindow(`${letter}: ${label}`, pt);
     let marker = createMarker(map, pt, letter, icon, color);
+    let infowindow = createInfoWindow(`${letter}: ${label}`, pt, marker);
     marker.addListener('click', function() {
         infowindow.open(map, marker);
     });
@@ -176,7 +185,8 @@ function toggleCheckbox(box) {
 /**
  * Creates a Google Maps InfoWindow object with the given text.
  */
-function createInfoWindow(text, pt) {
+function createInfoWindow(text, pt, marker) {
+    const uncheckedIcon = marker.getIcon();
     const html = createInfoWindowHTML(text);
     const infowindow = new google.maps.InfoWindow({
         content: html
@@ -184,6 +194,11 @@ function createInfoWindow(text, pt) {
     let realCheckbox = getCheckboxFromMarker(pt);
     let markerCheckbox = html.getElementsByTagName('input')[0];
     markerCheckbox.addEventListener('click', function() {
+        if (markerCheckbox.checked) {
+            marker.setIcon(CHECKED_ICON);
+        } else {
+            marker.setIcon(uncheckedIcon);
+        }
         toggleCheckbox(realCheckbox);
     });
     return infowindow;
@@ -234,7 +249,7 @@ function createMarker(map, pos, label, shape, color) {
             fillColor: color,
             fillOpacity: 100,
             scale: 5,
-            strokeWeight: 2,
+            strokeWeight: 1,
             labelOrigin: { x: 0, y: 2}
         }
     };
@@ -274,6 +289,7 @@ function createCheckBoxes(waypointChoices) {
 function createCheckBoxSet(set, color) {
   const setName = set[0].label;
   const returnDiv = document.createElement('div');
+  returnDiv.setAttribute('class', 'checkbox-set');
   const CheckBoxTitle = document.createElement('h4');
   CheckBoxTitle.innerText = setName;
   const colorbox = createColorBoxElem(color);
