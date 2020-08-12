@@ -59,10 +59,16 @@ public class StartEndServlet extends HttpServlet {
  /** Stores start, end and midpoint locations as JSON Strings of Coordinates with Session ID */
  @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        try{
+        try {
             //Get StartEnd from request
             String start = request.getParameter("startloc-input");
-            String end = request.getParameter("endloc-input");
+            String end;
+            // Check if this is a loop or one-way route and get the end accordingly.
+            if (request.getParameterMap().containsKey("endloc-input")) {
+                end = request.getParameter("endloc-input");
+            } else {
+                end = start;
+            }
             //Request GeoCoding API for coordinates
             Coordinate startCoord = getGeoLocation(start);
             Coordinate endCoord = getGeoLocation(end);
@@ -75,7 +81,7 @@ public class StartEndServlet extends HttpServlet {
             sessionDataStore.storeProperty(ENTITY_TYPE, "midpoint", new Gson().toJson(midCoord));
             // Redirect back to the create-route page.
             response.sendRedirect("/create-route.html");
-        }catch(Exception e){
+        } catch(Exception e){
             response.sendRedirect("/error-page.html");
         }
     }
@@ -86,10 +92,10 @@ public class StartEndServlet extends HttpServlet {
             .apiKey(API_KEY)
             .build();
         GeocodingResult[] results;
-        try{
+        try {
             results =  GeocodingApi.geocode(context,
                 placeQuery).await();
-        }catch(ApiException | InterruptedException ex){
+        } catch(ApiException | InterruptedException ex){
             return null;
         }
         Double y = results[0].geometry.location.lat;

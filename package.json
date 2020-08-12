@@ -1,0 +1,23 @@
+{
+  "name": "neigh-nature",
+  "version": "1.0.0",
+  "description": "Link to design doc: [go/neighborhood_nature_design](https://docs.google.com/document/d/1BnRnIR6EMvhhJG4jlYIN1QwnX7rDls_Fsa_Vs0WV-bc/edit)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sarahz916/neigh-nature.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sarahz916/neigh-nature/issues"
+  },
+  "homepage": "https://github.com/sarahz916/neigh-nature#readme",
+  "devDependencies": {
+    "jest-google-maps-mock": "^1.0.3"
+  }
+}
