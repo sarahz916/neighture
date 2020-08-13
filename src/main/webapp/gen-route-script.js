@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-window.onload = function setup() {
-    // Inialize and create a map with no directions on it when the page is reloaded.
-    var chicago = new google.maps.LatLng(41.850033, -87.6500523); // hardcoded start; will get from user later
-    initMap(chicago, 'route-map');
+window.onload = async function setup() {
+    event.preventDefault();
+    let startAddr = await getStartAddr();
+    let endAddr = await getEndAddr();
+    let startCoord = await getStartCoord;
     setupGenRouteDropDown();
 }
 
@@ -29,6 +30,7 @@ async function setupGenRouteDropDown() {
 /** Given stored text create dropdown form with those options */
 function createDropDown(dropDowns) {
   const dropDownEl = document.getElementById('routes-drop-down');
+  dropDownEl.innerHTML = "";
   dropDowns.forEach((route) => {
     dropDownEl.appendChild(createOptionEl(route));
   });

@@ -15,39 +15,63 @@
 package com.google.sps.servlets;
 import com.google.sps.Coordinate;
 import java.net.HttpURLConnection;
-import java.net.URL; 
+import java.net.URL;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.appengine.api.datastore.*;
 import com.google.appengine.api.datastore.Query.*;
-import com.google.appengine.api.datastore.Query.StContainsFilter;
-import com.google.appengine.api.datastore.Query.GeoRegion.Rectangle;  
 import java.io.IOException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import com.google.gson.Gson;
 import com.google.sps.data.StoredRoute;
+import com.google.sps.data.SortedStoredRoute;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 
 
 
-/** Servlet that returns comment data */
+/** Servlet returns stored route data based off of user input zipcode */
 @WebServlet(
     name = "RouteStore",
     description = "RouteStore: stores text input and associated waypoints",
     urlPatterns = "/route-store"
 )
 public class RouteStoreServlet extends HttpServlet {
+  private final Integer NUM_RESULTS = 10;
      
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     HttpSession session = request.getSession();
-    Query query = new Query("StoredRoute");
+    ArrayList<StoredRoute> routes;
+    try{    
+        //If there is zipcode attributes, return StoredRoutes with closest Routes to zipcode first.
+        Double zip_lng = (Double) session.getAttribute("zip_x");
+        Double zip_lat = (Double) session.getAttribute("zip_y");
+        GeoPt zip = new GeoPt(zip_lat.floatValue(), zip_lng.floatValue());
+        routes = getOrderedStoredRoutes(zip);
+    }catch(Exception e){  
+        //If there is no zipcode or someother error just return StoredRoutes in no particular order.
+        routes = getUnorderedStoredRoutes();
+    }
+    Gson gson = new Gson();
 
+    response.setContentType("application/json");
+    response.getWriter().println(gson.toJson(routes));
+  }
+
+/** Returns sum of squared latitude difference and squared longitude differnce between two GeoPt */
+  private float getDistance(GeoPt one, GeoPt two){
+      float lat_dif = one.getLatitude() - two.getLatitude();
+      float lng_dif = one.getLongitude() - two.getLongitude();
+      return (lat_dif*lat_dif + lng_dif*lng_dif);
+  }
+
+/** Returns ArrayList of StoredRoutes in no particular order. */
+  private ArrayList<StoredRoute> getUnorderedStoredRoutes(){
+    Query query = new Query("StoredRoute");
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     PreparedQuery results = datastore.prepare(query);
     ArrayList<StoredRoute> routes = new ArrayList<>();
@@ -55,16 +79,50 @@ public class RouteStoreServlet extends HttpServlet {
       long id = entity.getKey().getId();
       String text = (String) entity.getProperty("text");
       String waypointsJson = (String) entity.getProperty("actual-route");
-      GeoPt center = (GeoPt) entity.getProperty("center-of-mass");
-      if (waypointsJson != null){
-        StoredRoute route = new StoredRoute(id, text, waypointsJson);
-        routes.add(route);
+      if(routes.size() <= NUM_RESULTS){ //only want to return NUM_RESULTS routes
+        if (waypointsJson != null){
+            StoredRoute route = new StoredRoute(id, text, waypointsJson);
+            routes.add(route);
+        }
+      }
+      else{
+          break;
       }
     }
-    Gson gson = new Gson();
+    return routes;
+  }
 
-    response.setContentType("application/json");
-    response.getWriter().println(gson.toJson(routes));
+/** Returns ArrayList of StoredRoutes with closest routes to zipcode first. */
+  private ArrayList<StoredRoute> getOrderedStoredRoutes(GeoPt zip){
+    PriorityQueue<SortedStoredRoute> priorityQueue = new PriorityQueue<>();
+    Query query = new Query("StoredRoute");
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+    PreparedQuery results = datastore.prepare(query);
+    ArrayList<StoredRoute> routes = new ArrayList<>();
+    for (Entity entity : results.asIterable()) {
+      long id = entity.getKey().getId();
+      String text = (String) entity.getProperty("text");
+      String waypointsJson = (String) entity.getProperty("actual-route");
+      GeoPt center;
+      try{
+        center = (GeoPt) entity.getProperty("center-of-mass");
+      }catch(Exception e){ //Some datastore center-of-mass if not as GeoPt, don't include those
+          continue;
+      }
+      //have function to calculate distance from zip code center
+      float distancefromZip = getDistance(center, zip);
+      if (waypointsJson != null){
+        StoredRoute route = new StoredRoute(id, text, waypointsJson);
+        SortedStoredRoute sortRoute = new SortedStoredRoute(distancefromZip, route);
+        priorityQueue.add(sortRoute);
+      }
+    }
+    while(routes.size() <= NUM_RESULTS){
+        SortedStoredRoute sortRoute = priorityQueue.poll();
+        if (sortRoute == null) break;
+        routes.add(sortRoute.getRoute());
+    }
+    return routes;
   }
 
 }
