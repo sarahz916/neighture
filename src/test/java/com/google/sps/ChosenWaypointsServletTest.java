@@ -50,11 +50,11 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(ChosenWaypointsServlet.class)
 public class ChosenWaypointsServletTest {
-  public static final Coordinate DAISY = new Coordinate(-87.629454, 41.848653, "daisy");
-  public static final Coordinate CLOVER = new Coordinate(-87.635604, 41.855967, "clover");
-  public static final Coordinate BELLFLOWER = new Coordinate(-87.64748, 41.843539, "bellflower");
-  public static final String EXPECTED_MULTIPLE = "[{\"x\":-87.629454,\"y\":41.848653,\"label\":\"daisy\"},{\"x\":-87.635604,\"y\":41.855967,\"label\":\"clover\"},{\"x\":-87.64748,\"y\":41.843539,\"label\":\"bellflower\"}]\n";
-  public static final String EXPECTED_ONE = "[{\"x\":-87.629454,\"y\":41.848653,\"label\":\"daisy\"}]\n";
+  public static final Coordinate DAISY = new Coordinate(-87.629454, 41.848653, "daisy", "daisy");
+  public static final Coordinate CLOVER = new Coordinate(-87.635604, 41.855967, "clover", "clover");
+  public static final Coordinate BELLFLOWER = new Coordinate(-87.64748, 41.843539, "bellflower", "bellflower");
+  public static final String EXPECTED_MULTIPLE = "[{\"x\":-87.629454,\"y\":41.848653,\"label\":\"daisy\",\"species\":\"daisy\"},{\"x\":-87.635604,\"y\":41.855967,\"label\":\"clover\",\"species\":\"clover\"},{\"x\":-87.64748,\"y\":41.843539,\"label\":\"bellflower\",\"species\":\"bellflower\"}]\n";
+  public static final String EXPECTED_ONE = "[{\"x\":-87.629454,\"y\":41.848653,\"label\":\"daisy\",\"species\":\"daisy\"}]\n";
   public static final String EXPECTED_EMPTY = "[]\n";
   //Create Strings of Selected Coordinates as JSONS
   public static final String JSON_STRING_DAISY = new Gson().toJson(DAISY);

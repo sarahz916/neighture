@@ -25,11 +25,13 @@ public final class CoordinateTest {
     public static final String LABEL = "name";
     public static final Double X = 3.0;
     public static final Double Y = 4.0;
+    public static final String SPECIES = "bird";
     @Test
     public void canConstructSimpleCoordinateObject() {
-        Coordinate point = new Coordinate(X, Y, LABEL);
+        Coordinate point = new Coordinate(X, Y, LABEL, SPECIES);
         Assert.assertEquals(X, point.getX());
         Assert.assertEquals(Y, point.getY());
         Assert.assertEquals(LABEL, point.getLabel());
+        Assert.assertEquals(SPECIES, point.getSpecies());
     }
 }
