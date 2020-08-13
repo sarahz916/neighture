@@ -13,7 +13,7 @@
 // limitations under the License.
 package com.google.sps.servlets;
 import com.google.sps.Coordinate;
-
+import com.google.gson.Gson;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
@@ -25,7 +25,7 @@ import com.google.maps.GaeRequestHandler;
 import com.google.maps.errors.ApiException;
 import java.lang.InterruptedException;
 
-/** Servlet creates bounding box for searching generated routes off of zipcode input. 
+/** Servlet saves location of zipcode for searching generated routes off of zipcode input. 
   */ 
 @WebServlet("/zip-code")
 public class ZipCodeServlet extends HttpServlet{
@@ -39,10 +39,15 @@ public class ZipCodeServlet extends HttpServlet{
         String zip = (String) session.getAttribute("zip-code");
         // need try catch here
         try{
-            setBounds(session, zip);
+            Coordinate zipLocation = setBounds(zip);
+            session.setAttribute("zip_x", zipLocation.getX());
+            session.setAttribute("zip_y", zipLocation.getY());
+            response.getWriter().println(zip);
+            response.getWriter().println(new Gson().toJson(zipLocation));           
+        }catch(Exception e){
+            response.getWriter().println("Cannot find zip code location");
+        }
 
-        }catch(Exception e){}
-        response.getWriter().println(zip);
     }
     
     /** Formats and stores zipcode in session attributes. */ 
@@ -56,8 +61,8 @@ public class ZipCodeServlet extends HttpServlet{
         response.sendRedirect("/generated-routes.html");
     }
 
-      /** Gets bounds of zipcode and sets bounds in session attributes. */ 
-    private void setBounds(HttpSession session, String zipcode) throws IOException {
+      /** Gets center lat and lng of zipcode. */ 
+    private Coordinate setBounds(String zipcode) throws IOException {
         GeoApiContext context = new GeoApiContext.Builder(new GaeRequestHandler.Builder())
             .apiKey(API_KEY)
             .build();
@@ -66,15 +71,10 @@ public class ZipCodeServlet extends HttpServlet{
             results =  GeocodingApi.geocode(context,
                 zipcode).await();
         } catch(ApiException | InterruptedException ex){
-            return;
+            return null;
         }
-        Double max_x = results[0].geometry.bounds.northeast.lng;
-        Double max_y = results[0].geometry.bounds.northeast.lat;
-        Double min_x = results[0].geometry.bounds.southwest.lng;
-        Double min_y = results[0].geometry.bounds.southwest.lat;
-        session.setAttribute("max_x", max_x);
-        session.setAttribute("min_x", min_x);
-        session.setAttribute("max_y", max_y);
-        session.setAttribute("min_y", min_y);
+        Double y = results[0].geometry.location.lat;
+        Double x = results[0].geometry.location.lng;
+        return new Coordinate(x, y, "midpoint");
     }
 }
