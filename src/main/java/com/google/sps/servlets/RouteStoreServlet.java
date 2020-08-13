@@ -19,17 +19,13 @@ import java.net.URL;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
-import com.google.appengine.api.datastore.DatastoreService;
-import com.google.appengine.api.datastore.DatastoreServiceFactory;
-import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.PreparedQuery;
-import com.google.appengine.api.datastore.Query;
-import com.google.appengine.api.datastore.Query.SortDirection;
+import com.google.appengine.api.datastore.*;
+import com.google.appengine.api.datastore.Query.*;
+import com.google.appengine.api.datastore.Query.StContainsFilter;
+import com.google.appengine.api.datastore.Query.GeoRegion.Rectangle;  
 import java.io.IOException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.*;
 import java.util.ArrayList;
 import java.util.List;
 import com.google.gson.Gson;
@@ -49,9 +45,7 @@ public class RouteStoreServlet extends HttpServlet {
      
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-     // Show all the generated routes stored. 
-
-    //TODO(zous): Put a limit on how many StoredRoutes sent to the dropdown menu in generatedroutes.html
+    HttpSession session = request.getSession();
     Query query = new Query("StoredRoute");
 
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
@@ -61,9 +55,9 @@ public class RouteStoreServlet extends HttpServlet {
       long id = entity.getKey().getId();
       String text = (String) entity.getProperty("text");
       String waypointsJson = (String) entity.getProperty("actual-route");
-      String center = (String) entity.getProperty("center-of-mass");
+      GeoPt center = (GeoPt) entity.getProperty("center-of-mass");
       if (waypointsJson != null){
-        StoredRoute route = new StoredRoute(id, text, waypointsJson, center);
+        StoredRoute route = new StoredRoute(id, text, waypointsJson);
         routes.add(route);
       }
     }

@@ -57,7 +57,7 @@ public class ChosenWaypointsServlet extends HttpServlet {
         // Store input text and waypoint in datastore.
         sessionDataStore.storeProperty("Route", "actual-route", (String) new Gson().toJson(waypoints));
         Coordinate centerOfmass = getCenterofMass(waypoints);
-        sessionDataStore.storeProperty("Route", "center-of-mass", (String) new Gson().toJson(centerOfmass));
+        sessionDataStore.storeIndexedProperty("Route", "center-of-mass", centerOfmass);
         sessionDataStore.storeStoredRoute();
         sessionDataStore.setSessionAttributes(FIELDS_MODIFIED);
         // Redirect back to the index page.

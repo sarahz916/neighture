@@ -13,11 +13,12 @@
 // limitations under the License.
 
 // 25 fill colors for markers (max number of stops on route is 25)
-const FILL_COLORS = ["#FF0000", '#F1C40F', '#3498DB', '#154360', '#D1F2EB', '#D7BDE2', '#DC7633', 
+const FILL_COLORS = ['#F1C40F', '#3498DB', '#154360', '#D1F2EB', '#D7BDE2', '#DC7633', 
                     '#145A32', '#641E16', '#5B2C6F', '#F1948A', '#FF00FF', '#C0C0C0', '#808080',
                     '#000000', '#33FF39', '#F5D3ED', '#D3F5F4', '#7371DE', '#110EEC', '#FFAA72',
                     '#F8F000', '#F8006D', '#AB0500', '#2DC4BB'
                     ];
+const CHECKED_COLOR = "#FF0000";
 const MAX_WAYPOINTS = 23;
 const CHOICE_AT_ONCE = 3; 
 const SC_REQUEST_ENTITY_TOO_LARGE = 413;
@@ -121,8 +122,8 @@ async function setupUserChoices() {
     let endCoord = await getEndCoord();
     let startName = await getStartAddr();
     let endName = await getEndAddr();
-    createPointInfoMap(startCoord, endCoord, startName, endName, waypoints);
     createCheckBoxes(res);
+    createPointInfoMap(startCoord, endCoord, startName, endName, waypoints);
 }
 
 /**
@@ -140,16 +141,81 @@ function createPointInfoMap(start, end, startName, endName, waypoints) {
         createMarker(map, end, 'end', google.maps.SymbolPath.CIRCLE, 'black');
     }
 
-
     // Make one marker for each waypoint, in a different color.
     for (let i = 0; i < Object.entries(waypoints).length; i++) {
         let [label, cluster] = Object.entries(waypoints)[i];
         let letter = 'A';
         for (let pt of cluster) {
-            createMarker(map, pt, letter, google.maps.SymbolPath.BACKWARD_CLOSED_ARROW, FILL_COLORS[i % MAX_WAYPOINTS]);
+            createCheckableMarker(map, pt, label, letter, google.maps.SymbolPath.BACKWARD_CLOSED_ARROW, FILL_COLORS[i % MAX_WAYPOINTS]);
             letter = String.fromCharCode(letter.charCodeAt(0) + 1); // update the marker letter label to the next letter
         }
     }
+}
+
+/**
+ * Create a dynamic marker with an InfoWindow that appears with the label upon clicking.
+ */
+function createCheckableMarker(map, pt, label, letter, icon, color) {
+    let marker = createMarker(map, pt, letter, icon, color);
+    let infowindow = createInfoWindow(`${letter}: ${label}`, pt, marker);
+    marker.addListener('click', function() {
+        infowindow.open(map, marker);
+    });
+}
+
+/**
+ * Toggle the given checkbox to the opposite setting.
+ */
+function toggleCheckbox(box) {
+    if (box.checked) {
+        box.checked = false;
+    } else {
+        box.checked = true;
+    }
+}
+
+/**
+ * Creates a Google Maps InfoWindow object with the given text.
+ */
+function createInfoWindow(text, pt, marker) {
+    const uncheckedIcon = marker.getIcon();
+    const CHECKED_ICON = {
+                        path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                        fillColor: CHECKED_COLOR,
+                        fillOpacity: 100,
+                        scale: 5,
+                        strokeWeight: 4,
+                        labelOrigin: { x: 0, y: 2}
+                    };
+    const html = createInfoWindowHTML(text);
+    const infowindow = new google.maps.InfoWindow({
+        content: html
+    });
+    let realCheckbox = getCheckboxFromMarker(pt);
+    let markerCheckbox = html.getElementsByTagName('input')[0];
+    markerCheckbox.addEventListener('click', function() {
+        if (markerCheckbox.checked) {
+            marker.setIcon(CHECKED_ICON);
+        } else {
+            marker.setIcon(uncheckedIcon);
+        }
+        toggleCheckbox(realCheckbox);
+    });
+    return infowindow;
+}
+
+/**
+ * Create the HTML that goes inside an InfoWindow with the given text.
+ */
+function createInfoWindowHTML(text) {
+    let html = document.createElement('div');
+    const textContent = document.createElement('p');
+    textContent.textContent = text;
+    const markerCheckbox = document.createElement('input');
+    markerCheckbox.setAttribute('type', 'checkbox');
+    html.appendChild(textContent);
+    html.appendChild(markerCheckbox);
+    return html;
 }
 
 /**
@@ -183,14 +249,29 @@ function createMarker(map, pos, label, shape, color) {
             fillColor: color,
             fillOpacity: 100,
             scale: 5,
-            strokeWeight: 2,
+            strokeWeight: 1,
             labelOrigin: { x: 0, y: 2}
         }
     };
     let marker = new google.maps.Marker(markerOpts);
+    return marker;
 }
 
-//TODO (zous): create already checked boxes for labels with only one choice.
+/**
+ * Given a Google Maps LatLng location (from a marker), return the corresponding checkbox.
+ */
+function getCheckboxFromMarker(location) {
+    let checkboxes = document.getElementsByClassName('checkbox');
+    let boxFound = null;
+    Array.from(checkboxes).forEach(box => {
+        const pt = JSON.parse(box.value);
+        if(pt.y === location.lat() && pt.x === location.lng()) {
+            boxFound = box;
+        }
+    });
+    return boxFound;
+}
+
 /** Takes ArrayList<ArrayList<Coordinates>> and creates checkboxes grouped by labels */
 function createCheckBoxes(waypointChoices) {
   submitEl = document.createElement("input");
@@ -208,6 +289,7 @@ function createCheckBoxes(waypointChoices) {
 function createCheckBoxSet(set, color) {
   const setName = set[0].label;
   const returnDiv = document.createElement('div');
+  returnDiv.setAttribute('class', 'checkbox-set');
   const CheckBoxTitle = document.createElement('h4');
   CheckBoxTitle.innerText = setName;
   const colorbox = createColorBoxElem(color);
@@ -274,7 +356,6 @@ function createCheckBoxEl(choice, label){
 function catchCheckboxErrors(event) {
     const checkbox = event.target;
     let numChecked = getNumChecked();
-    console.log(numChecked);
     if (numChecked > MAX_WAYPOINTS) {
         alert('You have selected too many waypoints. Please select up to 23 waypoints.');
         checkbox.checked = false; // uncheck the checkbox
@@ -454,7 +535,6 @@ function convertWaypointstoLatLng(waypoints) {
  */
 async function getWaypoints() {
     let res = await fetch('/query');
-    console.log(res);
 
     // Catch HTTP status error codes
     if (res.status === SC_REQUEST_ENTITY_TOO_LARGE) {
@@ -464,7 +544,6 @@ async function getWaypoints() {
     }
 
     let waypoints = await res.json();
-    console.log(waypoints);
     return waypoints;
 }
 
