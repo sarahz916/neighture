@@ -1,9 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Thasadith&display=swap');
 
+html,body { height:100%; }
+
 #body {
-  background-color:rgba(190, 233, 195, 0.336);
+  background-color:rgb(236, 247, 238);
   font-family: 'Thasadith', Srisakdi;
-  height: auto;
+  height: 100%;
 }
 
 #content {
