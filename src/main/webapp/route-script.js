@@ -276,6 +276,7 @@ function createCheckBoxes(waypointChoices) {
   submitEl = document.createElement("input");
   submitEl.setAttribute("type", "submit");
   submitEl.setAttribute('id', 'submit-checkbox');
+  submitEl.setAttribute('class', 'button');
 
   const waypointChoiceEl = document.getElementById('select-points');
   for (let i = 0; i < waypointChoices.length; i++) {

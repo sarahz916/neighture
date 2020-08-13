@@ -20,13 +20,15 @@ public final class Coordinate {
   private final Double x;
   private final Double y;
   private final String label;
+  private final String species;
 
   /** Creates a new coordinate with a label
     */
-  public Coordinate(Double x, Double y, String label) {
+  public Coordinate(Double x, Double y, String label, String species) {
     this.x = x;
     this.y = y;
     this.label = label;
+    this.species = species;
   }
 
   /** Returns the x coordinate of this point.
@@ -45,6 +47,12 @@ public final class Coordinate {
     */
   public String getLabel() {
     return label;
+  }
+
+  /** Returns the label of this point.
+    */
+  public String getSpecies() {
+    return species;
   }
 
   @Override

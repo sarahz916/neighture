@@ -34,31 +34,24 @@
         </ul>
     </div>
   </nav>
-  <body>
-    
-
-    <div class="container-fliud">
-        <div id="header">
-        <div class="row">
-            <h1> Neighborhood Nature </h1>
-        </div>
-        </div>
+  <body id="body">
+    <div class="container-fluid">
         <div class="d-flex flex-row justify-content-center">
             <div class="p-1">
             </div>
             <div class="p-2">
                 <h2> Generated Routes: </h2>
-                <!--<form action = "/zip-code" method ="POST" id ="zip-code-form">
+                <form action = "/zip-code" method ="POST" id ="zip-code-form">
                     <label for="zip-code">Enter your zip code:</label> 
                     <input type="number" id="zip-code" name="zip-code" min="501" max="99950">
                     <input type="submit">
-                </form>-->
+                </form>
                 <form action="/gen-route" method="POST" id="select-points">
                     <label for="routes-drop-down"> Choose a route: </label>
                     <select name="routes-drop-down" id ="routes-drop-down">
                     </select>
                     <br><br>
-                    <input type="submit">
+                    <input type="submit" class="button">
                 </form>
             </div>
             <div class="p-7">
