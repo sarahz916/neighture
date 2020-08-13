@@ -1,3 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Thasadith&display=swap');
+
+html,body { height:100%; }
+
+#body {
+  background-color:rgb(236, 247, 238);
+  font-family: 'Thasadith', Srisakdi;
+  height: 100%;
+}
 
 #content {
   margin-left: auto;
@@ -10,6 +19,8 @@
   margin-right: auto;
   text-align: center;
   width: 650px;
+  font-weight: bold;
+  font-style: italic;
 }
 
 .map {
@@ -73,4 +84,31 @@
 
 #one-way-tab, #loop-tab {
     display: none;
+}
+
+.specify-route-type {
+  font-size: 120%;
+}
+
+.center {
+  align-content: center;
+  align-items: center;
+  align-self: center;
+  text-align: center;
+}
+
+span ~ span {
+padding-left: 100px;
+}
+
+.button {
+  background-color: rgb(10, 71, 10);
+  color: white;
+  font-weight: bold;
+  border-width: thin;
+}
+
+.button:hover {
+  background-color: gray;
+  color: white;
 }

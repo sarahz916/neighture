@@ -235,13 +235,8 @@ public class WaypointQueryServletTest {
     ArrayList<WaypointDescription> features = servlet.parseInput(ONE_FEATURE_MULT_WAYPOINT_QUERY);
     ArrayList<WaypointDescription> comparison = new ArrayList<WaypointDescription>();
     comparison.add(MUSHROOM_DESC);
-    //comparison.add(CLOVER_DESC);
     comparison.add(RASPBERRY_DESC);
     comparison.add(TREE_DESC);
-    for (WaypointDescription feature : features) {
-      System.out.println(feature.getFeature());
-      //System.out.println(feature.getMaxAmount());
-    }
     assertEquals(features, comparison);
   }
 
@@ -251,7 +246,6 @@ public class WaypointQueryServletTest {
     ArrayList<WaypointDescription> features = servlet.parseInput(MULT_FEATURES_MULT_WAYPOINT_QUERY);
     ArrayList<WaypointDescription> comparison = new ArrayList<WaypointDescription>();
     comparison.add(MUSHROOM_DESC);
-    //comparison.add(CLOVER_DESC);
     comparison.add(RASPBERRY_DESC);
     comparison.add(TREE_DESC);
     assertEquals(features, comparison);

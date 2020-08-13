@@ -33,27 +33,11 @@
         </ul>
     </div>
   </nav>
-  <body>
-    
-
-    <div class="container-fliud">
-        <div id="header">
-        <div class="row">
-            <h1> Neighborhood Nature </h1>
-        </div>
-        </div>
+  <body id="body">
+    <div class="container-fluid">
         <div class="d-flex flex-row justify-content-center">
-            <div class="p-1">
-            </div>
             <div class="p-3">
             <h3> Step 1: </h3>
-            <p> 
-            Type in whatever plants or animals you want to see! You can specify a limit to how many 
-            results you want for each feature(s)! If you want to query a specific multi-word phrase, put it in
-            quotation marks
-            <br>
-            <i> Example: robin, 2 clovers, and "california poppy" </i>
-            </p>
             <form action="/query" method="POST" id ="text-git statform">
 
                 <p>Enter text:</p>
@@ -61,7 +45,7 @@
                 <textarea name="text-input" id="text-input"></textarea>
 
                 <br>
-                <input type="submit" id="submit-text"/>
+                <input type="submit" id="submit-text" class="button"/>
             </form>
 
             <b id="start-display"></b>
@@ -71,17 +55,11 @@
             </div>
             <div class="p-3">
                 <h3> Step 2: </h3>
+                <form action="/chosen-waypoints" method="POST" id="select-points" style="margin-bottom:10px;">
                 <p> 
-                Use checkboxes to clarify some points:
-                <br><br>
-                Default is five choices per a feature. Use the below form to change number of 
-                locations per a feature.
+                    Clarify your points:
                 </p>
-                
-                <form action="/chosen-waypoints" method="POST" id="select-points">
-
-                <form>
-                <br>
+                </form>
                 <div id="point-map" class="map"></div>
 
             </div>

@@ -157,11 +157,6 @@ public class WaypointQueryServlet extends HttpServlet {
     WaypointDescription waypoint = new WaypointDescription();
     for (int i = 0; i < featureQueries.length; i++) {
       String feature = featureQueries[i]; 
-      // System.out.print(feature + "  " + primaryTags[i]);
-      // if (bigTags.length == 2) {
-      //   System.out.println("   " + bigTags[1][i]);
-      // }
-
       if (feature.isEmpty()) {
         continue;
       }
@@ -336,7 +331,6 @@ public class WaypointQueryServlet extends HttpServlet {
       Double y = observation.getDouble("latitude");
       y = Math.round(y * 25000.0)/25000.0;
       String species = observation.getString("species_guess");
-      System.out.println(species);
       Coordinate featureCoordinate = new Coordinate(x, y, label, species);
       coordinates.add(featureCoordinate);
       index += 1;
