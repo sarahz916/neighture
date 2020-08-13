@@ -1,4 +1,8 @@
 
+#body {
+    font-family: 'Montserrat';
+}
+
 #content {
   margin-left: auto;
   margin-right: auto;
@@ -14,6 +18,11 @@
 
 .map {
   border: thin solid black;
+}
+
+#navbar-logo {
+    width: 100px;
+    height: 100px;
 }
 
 #route-map {
