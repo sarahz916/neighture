@@ -14,6 +14,8 @@
 
 package com.google.sps;
 
+import com.google.sps.Coordinate;
+
 import com.google.appengine.api.datastore.*;
 import com.google.appengine.api.datastore.Query.*;
 
@@ -65,7 +67,7 @@ public final class SessionDataStore {
         }
     }
 
-    /** Stores Entity with Property Value with Session ID as id in DataStore for easy retrieval.
+    /** Stores Entity with unindexed Property Value with Session ID as id in DataStore for easy retrieval.
     */ 
     public void storeProperty(String EntityType, String PropertyName, String value){
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
@@ -77,7 +79,78 @@ public final class SessionDataStore {
         } catch (EntityNotFoundException e) {
             Entity = new Entity(EntityType, this.sessionID);
         }
+        Entity.setUnindexedProperty(PropertyName, value);
+        datastore.put(txn, Entity);
+        txn.commit();
+    }
+
+    /** Stores Entity with indexed Property Value with Session ID as id in DataStore for easy retrieval.
+    */ 
+    public void storeIndexedProperty(String EntityType, String PropertyName, String value){
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        Transaction txn = datastore.beginTransaction();
+        Entity Entity;
+        try {
+            Key ID = KeyFactory.createKey(EntityType, this.sessionID);
+            Entity = datastore.get(ID);
+        } catch (EntityNotFoundException e) {
+            Entity = new Entity(EntityType, this.sessionID);
+        }
         Entity.setProperty(PropertyName, value);
+        datastore.put(txn, Entity);
+        txn.commit();
+    }
+
+    /** Stores Entity with indexed Property Value with Session ID as id in DataStore for easy retrieval.
+    */ 
+    public void storeIndexedProperty(String EntityType, String PropertyName, Double value){
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        Transaction txn = datastore.beginTransaction();
+        Entity Entity;
+        try {
+            Key ID = KeyFactory.createKey(EntityType, this.sessionID);
+            Entity = datastore.get(ID);
+        } catch (EntityNotFoundException e) {
+            Entity = new Entity(EntityType, this.sessionID);
+        }
+        Entity.setProperty(PropertyName, value);
+        datastore.put(txn, Entity);
+        txn.commit();
+    }
+
+    /** Stores Entity with GeoPt Property Value with Session ID as id in DataStore for easy retrieval.
+    */ 
+    public void storeIndexedProperty(String EntityType, String PropertyName, GeoPt value){
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        Transaction txn = datastore.beginTransaction();
+        Entity Entity;
+        try {
+            Key ID = KeyFactory.createKey(EntityType, this.sessionID);
+            Entity = datastore.get(ID);
+        } catch (EntityNotFoundException e) {
+            Entity = new Entity(EntityType, this.sessionID);
+        }
+        Entity.setProperty(PropertyName, value);
+        datastore.put(txn, Entity);
+        txn.commit();
+    }
+
+    /** Stores Entity with GeoPt Property Value with Session ID as id in DataStore for easy retrieval.
+    */ 
+    public void storeIndexedProperty(String EntityType, String PropertyName, Coordinate value){
+        float lng = value.getX().floatValue();
+        float lat = value.getY().floatValue();
+        GeoPt geopt = new GeoPt(lat, lng);
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        Transaction txn = datastore.beginTransaction();
+        Entity Entity;
+        try {
+            Key ID = KeyFactory.createKey(EntityType, this.sessionID);
+            Entity = datastore.get(ID);
+        } catch (EntityNotFoundException e) {
+            Entity = new Entity(EntityType, this.sessionID);
+        }
+        Entity.setProperty(PropertyName, geopt);
         datastore.put(txn, Entity);
         txn.commit();
     }
@@ -114,8 +187,8 @@ public final class SessionDataStore {
             Key ID = KeyFactory.createKey("Route", this.sessionID);
             Entity Entity = datastore.get(ID);
             Entity newEntity = new Entity("StoredRoute");
-            newEntity.setProperty("text", Entity.getProperty("text"));
-            newEntity.setProperty("actual-route", Entity.getProperty("actual-route"));
+            newEntity.setUnindexedProperty("text", Entity.getProperty("text"));
+            newEntity.setUnindexedProperty("actual-route", Entity.getProperty("actual-route"));
             newEntity.setProperty("center-of-mass", Entity.getProperty("center-of-mass"));
             datastore.put(txn, newEntity);
         }catch (EntityNotFoundException e){}
