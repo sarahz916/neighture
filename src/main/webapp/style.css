@@ -74,3 +74,9 @@
 #one-way-tab, #loop-tab {
     display: none;
 }
+
+.small-map {
+  border: thin solid black;
+  height: 300px;
+  width: 300px;
+}
