@@ -77,7 +77,8 @@ public class ChosenWaypointsServlet extends HttpServlet {
             Double x = jsonObject.getDouble("x");
             Double y = jsonObject.getDouble("y");
             String feature = jsonObject.getString("label");
-            Coordinate featureCoordinate = new Coordinate(x, y, feature);
+            String species = jsonObject.getString("species");
+            Coordinate featureCoordinate = new Coordinate(x, y, feature, species);
             waypoints.add(featureCoordinate);
         }
         return waypoints;
@@ -94,7 +95,7 @@ public class ChosenWaypointsServlet extends HttpServlet {
         }
         avg_x = avg_x / num_pts;
         avg_y = avg_y / num_pts;
-        Coordinate center =  new Coordinate(avg_x, avg_y, "midpoint");
+        Coordinate center =  new Coordinate(avg_x, avg_y, "midpoint", "");
         return center;
     }
 

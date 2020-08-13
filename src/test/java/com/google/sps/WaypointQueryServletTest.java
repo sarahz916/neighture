@@ -43,19 +43,17 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(WaypointQueryServlet.class)
 public class WaypointQueryServletTest {
-  public static final ArrayList<Coordinate> MUSHROOM = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62944, 41.84864, "mushroom")));
-  public static final ArrayList<Coordinate> CLOVER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.63566666666667, 41.856, "clover")));
-  public static final ArrayList<Coordinate> BELLFLOWER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.6475, 41.8435, "bellflower")));
-  public static final ArrayList<Coordinate> RASPBERRY = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62212, 41.89796, "raspberry"), new Coordinate(-87.62456, 41.89696, "raspberry"), new Coordinate(-87.62392, 41.88844, "raspberry")));
-  public static final ArrayList<Coordinate> TREE_LICHEN = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62224, 41.8972, "tree,lichen")));
-  public static final ArrayList<Coordinate> MEADOWSWEET_SUNFLOWER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.61992, 41.89752, "meadowsweet,sunflower")));
+  public static final ArrayList<Coordinate> MUSHROOM = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62944, 41.84864, "mushroom", "red mushroom")));
+  public static final ArrayList<Coordinate> CLOVER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.63566666666667, 41.856, "clover", "four-leaf clover")));
+  public static final ArrayList<Coordinate> BELLFLOWER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.6475, 41.8435, "bellflower", "yellow bellflower")));
+  public static final ArrayList<Coordinate> RASPBERRY = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62212, 41.89796, "raspberry", "big raspberry"), new Coordinate(-87.62456, 41.89696, "raspberry", "big raspberry"), new Coordinate(-87.62392, 41.88844, "raspberry", "big raspberry")));
+  public static final ArrayList<Coordinate> TREE = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62224, 41.8972, "tree", "pine tree")));
   public static final ArrayList<Coordinate> NOTHING = new ArrayList<Coordinate>();
-  public static final String MUSHROOM_BACKEND = "[{\"latitude\": 41.848653, \"longitude\": -87.629454, \"common_name\": {\"name\": \"mushroom\"}}]";
-  public static final String RASPBERRY_BACKEND = "[{\"latitude\": 41.897946, \"longitude\": -87.622112, \"common_name\": {\"name\": \"raspberry\"}}, {\"latitude\": 41.896968, \"longitude\": -87.624580, \"common_name\": {\"name\": \"raspberry\"}}, {\"latitude\": 41.888454, \"longitude\": -87.623920, \"common_name\": {\"name\": \"raspberry\"}}]";
-  public static final String TREE_BACKEND = "[{\"latitude\": 41.897219, \"longitude\": -87.622235, \"common_name\": {\"name\": \"tree\"}}]";
-  public static final String LICHEN_BACKEND = "[{\"latitude\": 41.897219, \"longitude\": -87.622235, \"common_name\": {\"name\": \"lichen\"}}]";
-  public static final String MEADOWSWEET_BACKEND = "[{\"latitude\": 41.897523, \"longitude\": -87.619934, \"common_name\": {\"name\": \"meadowsweet\"}}]";
-  public static final String SUNFLOWER_BACKEND = "[{\"latitude\": 41.897521, \"longitude\": -87.619934, \"common_name\": {\"name\": \"sunflower\"}}]";
+  public static final String MUSHROOM_BACKEND = "[{\"latitude\": 41.848653, \"longitude\": -87.629454, \"species_guess\": \"red mushroom\", \"common_name\": {\"name\": \"mushroom\"}}]";
+  public static final String RASPBERRY_BACKEND = "[{\"latitude\": 41.897946, \"longitude\": -87.622112, \"species_guess\": \"big raspberry\", \"common_name\": {\"name\": \"raspberry\"}}, "
+    + "{\"latitude\": 41.896968, \"longitude\": -87.624580, \"species_guess\": \"big raspberry\", \"common_name\": {\"name\": \"raspberry\"}}, "
+    + "{\"latitude\": 41.888454, \"longitude\": -87.623920, \"species_guess\": \"big raspberry\", \"common_name\": {\"name\": \"raspberry\"}}]";
+  public static final String TREE_BACKEND = "[{\"latitude\": 41.897219, \"longitude\": -87.622235, \"species_guess\": \"pine tree\", \"common_name\": {\"name\": \"tree\"}}]";
   public static final String NOTHING_BACKEND = "[]";
   public static final String COMPARISON_DATE = "2019-08-01";
   public static final String MULT_FEATURES_ONE_WAYPOINT_QUERY = "mushroom,cLover     raSpbeRRy   ";
@@ -75,8 +73,8 @@ public class WaypointQueryServletTest {
   public static final ArrayList<String> MUSHROOM_WORD = new ArrayList<String>(Arrays.asList("mushroom"));
   public static final ArrayList<String> CLOVER_WORD = new ArrayList<String>(Arrays.asList("clover"));
   public static final ArrayList<String> RASPBERRY_WORD = new ArrayList<String>(Arrays.asList("raspberry"));
-  private static final Coordinate START = new Coordinate(-87.62940, 41.84865, "start");
-  private static final Coordinate END = new Coordinate(-87.62942, 41.84861, "end");
+  private static final Coordinate START = new Coordinate(-87.62940, 41.84865, "start", "");
+  private static final Coordinate END = new Coordinate(-87.62942, 41.84861, "end", "");
   private static final String[] LOOP_COMPARISON = {"-87.70186376811", "-87.55693623189", "41.77618623189", "41.92111376811"};
   private static final String[] ONE_WAY_COMPARISON = {"-87.6330431884", "-87.6257768116", "41.8449868116", "41.8522731884"};
   private WaypointQueryServlet servlet;
@@ -122,7 +120,7 @@ public class WaypointQueryServletTest {
   public void testFetchFromDatabaseResult() throws Exception {
     PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(TREE_BACKEND);
     ArrayList<Coordinate> coordinateResult = servlet.fetchFromDatabase("tree", "tree,lichen", START, START);
-    assertEquals(coordinateResult, TREE_LICHEN);
+    assertEquals(coordinateResult, TREE);
   }
 
   /* Testing fetchFromDatabase when result doesn't exist; mock sendGET */
@@ -297,40 +295,4 @@ public class WaypointQueryServletTest {
     comparison.add(Arrays.asList(RASPBERRY.get(0)));
     assertEquals(locations, comparison);
   }
-
-  // /* Testing getLocations with two features that have the exact same coordinates, stubbing database call */
-  // @Test
-  // public void testServletPostSameCoordinates() throws Exception {
-  //   PowerMockito.mockStatic(WaypointQueryServlet.class);
-  //   PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "jsonToCoordinates", anyString(), anyString());
-  //   ((PowerMockitoStubber) PowerMockito.doReturn(TREE_BACKEND, LICHEN_BACKEND)).when(WaypointQueryServlet.class, "sendGET", anyString(), anyString(), eq(MIDPOINT_COMPARISON));
-  //   ArrayList<List<Coordinate>> locations = servlet.getLocations("tree, lichen");
-  //   ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
-  //   comparison.add(TREE_LICHEN);
-  //   assertEquals(locations, comparison);
-  // }
-
-  // /* Testing getLocations with two features that have similar coordinates, stubbing database call */
-  // @Test
-  // public void testServletPostSimilarCoordinates() throws Exception {
-  //   PowerMockito.mockStatic(WaypointQueryServlet.class);
-  //   PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "jsonToCoordinates", anyString(), anyString());
-  //   ((PowerMockitoStubber) PowerMockito.doReturn(MEADOWSWEET_BACKEND, SUNFLOWER_BACKEND)).when(WaypointQueryServlet.class, "sendGET", anyString(), anyString(), any(String[].class));
-  //   ArrayList<List<Coordinate>> locations = servlet.getLocations("meadowsweet, sunflower");
-  //   ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
-  //   comparison.add(MEADOWSWEET_SUNFLOWER);
-  //   assertEquals(locations, comparison);
-  // }
-
-  // /* Testing getLocations with two features that have different coordinates, stubbing database call */
-  // @Test
-  // public void testServletPostDifferentCoordinates() throws Exception {
-  //   PowerMockito.mockStatic(WaypointQueryServlet.class);
-  //   PowerMockito.doCallRealMethod().when(WaypointQueryServlet.class, "jsonToCoordinates", anyString(), anyString());
-  //   ((PowerMockitoStubber) PowerMockito.doReturn(TREE_BACKEND, RASPBERRY_BACKEND)).when(WaypointQueryServlet.class, "sendGET", anyString(), anyString(), any(String[].class));
-  //   ArrayList<List<Coordinate>> locations = servlet.getLocations("tree, raspberry");
-  //   ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
-  //   comparison.add(NOTHING);
-  //   assertEquals(locations, comparison);
-  // }
 }
