@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Calendar;
 import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import java.util.zip.DataFormatException;
 import java.text.DecimalFormat;
 import java.text.Normalizer;
@@ -55,7 +56,8 @@ import opennlp.tools.postag.POSTaggerME;
   */
 @WebServlet("/query")
 public class WaypointQueryServlet extends HttpServlet {
-  private static final Pattern PATTERN = Pattern.compile("^\\d+$"); // Improves performance by avoiding compile of pattern in every method call
+  private static final Pattern INT_PATTERN = Pattern.compile("^\\d+$"); // Improves performance by avoiding compile of pattern in every method call
+  private static final Pattern WAYPOINT_PATTERN = Pattern.compile("([^\"]\\w*|\".+?\")\\s*"); // Splitting on whitespace and punctuation unless there are double quotes
   private static final ImmutableMap<String, Integer> NUMBER_MAP = ImmutableMap.<String, Integer>builder()
     .put("one", 1).put("two", 2).put("three", 3).put("four", 4).put("five", 5).put("six", 6).put("seven", 7)
     .put("eight", 8).put("nine", 9).put("ten", 10).build(); 
@@ -65,7 +67,8 @@ public class WaypointQueryServlet extends HttpServlet {
   private final String FETCH_FIELD = "queryFetched";
   private final String FETCH_PROPERTY = "waypoints";
   private final String ENTITY_TYPE = "Route";
-  private static final Double BOUNDING_BOX_WIDTH = 0.07246376811; // 5 miles
+  private static final Double LOOP_BOUNDING_BOX_WIDTH = 0.07246376811; // 5 miles
+  private static final Double ONE_WAY_BOUNDING_BOX_WIDTH = 0.0036231884; // 0.25 miles
   private static final String NOUN_SINGULAR_OR_MASS = "NN";
   private static final String NOUN_PLURAL = "NNS";
   private static final String PRONOUN = "PRP";
@@ -88,7 +91,7 @@ public class WaypointQueryServlet extends HttpServlet {
     Coordinate end = getEnd(sessionDataStore);
     ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();
     try {
-      waypoints = getLocations(input, midpoint);
+      waypoints = getLocations(input, start, end);
     } catch (IllegalArgumentException e) { // User puts down a number that's out of range
       System.out.println("ILLEGAL ARGUMENT");
       response.setStatus(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE);
@@ -110,62 +113,55 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Using the input text, fetches waypoints from the database to be 
     * used by the frontend. Returns possible waypoints. 
     */
-  public ArrayList<List<Coordinate>> getLocations(String input, Coordinate midpoint) throws IllegalArgumentException, Exception {
+  public ArrayList<List<Coordinate>> getLocations(String input, Coordinate start, Coordinate end) throws IllegalArgumentException, Exception {
     // Parse out feature requests from input
-    ArrayList<WaypointDescription> waypointRequests = processInputText(input);
+    ArrayList<WaypointDescription> waypointRequests = parseInput(input);
     ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();    
 
     for (WaypointDescription waypointDescription : waypointRequests) {
       int maxNumberCoordinates = waypointDescription.getMaxAmount();
       String query = waypointDescription.getQuery();
       String feature = waypointDescription.getFeature();
-      boolean firstFeatureFound = false;
-      ArrayList<Coordinate> potentialCoordinates = new ArrayList<Coordinate>();
       // Make call to database
-      ArrayList<Coordinate> locations = fetchFromDatabase(query, feature, midpoint);
+      ArrayList<Coordinate> locations = fetchFromDatabase(query, feature, start, end);
       if (locations.isEmpty()) { // Not in the database
         continue;
       } else {
-        if (firstFeatureFound) {
-          potentialCoordinates.retainAll(locations);
-        } else {
-          potentialCoordinates.addAll(locations);
-          firstFeatureFound = true;
-        }
+        List<Coordinate> locationsList = locations.subList(0, Math.min(maxNumberCoordinates, locations.size()));
+        waypoints.add(locationsList);
       }
-      List<Coordinate> locationsList = potentialCoordinates.subList(0, Math.min(maxNumberCoordinates, potentialCoordinates.size()));
-      waypoints.add(locationsList);
     }   
     return waypoints;
   }
 
-  /** Parses the input string to separate out all the features
+  /** Parses out the features/waypoints from an input query
     * For each arraylist of strings, the first element is the general waypoint query
     */
-  public ArrayList<WaypointDescription> processInputText(String input) throws IllegalArgumentException, Exception {
+  public ArrayList<WaypointDescription> parseInput(String input) throws IllegalArgumentException, Exception {
     input = Normalizer.normalize(input, Normalizer.Form.NFKD);
     ArrayList<WaypointDescription> allWaypoints = new ArrayList<WaypointDescription>();
-    // Separate on newlines and punctuation: semicolon, period, question mark, exclamation mark, plus sign
-    String[] waypointQueries = input.split("[;.?!+\\n]+");
-    for (String waypointQuery : waypointQueries) {
-      ArrayList<WaypointDescription> waypointsFromQuery = parseWaypointQuery(waypointQuery);
-      allWaypoints.addAll(waypointsFromQuery);
-    }
-    return allWaypoints;
-  }
-
-  /** Parses out the features from a waypoint query
-    */
-  public ArrayList<WaypointDescription> parseWaypointQuery(String waypointQuery) throws IllegalArgumentException, Exception {
-    waypointQuery = waypointQuery.toLowerCase().trim(); // determine -- keep lowercase or allow uppercase?
-    ArrayList<WaypointDescription> waypointsFromQuery = new ArrayList<WaypointDescription>();
+    String waypointQuery = input.toLowerCase().trim(); // determine -- keep lowercase or allow uppercase?
     // Separate on commas and spaces
-    String[] featureQueries = waypointQuery.split("[,\\s]+"); 
+    //String[] featureQueries = waypointQuery.split("[,\\s]+"); 
+    List<String> list = new ArrayList<String>();
+    Matcher m = WAYPOINT_PATTERN.matcher(waypointQuery);
+    while (m.find()) {
+      String queryString = m.group(1).replaceAll("\\p{Punct}", "");
+      if (!queryString.isEmpty()) {
+        list.add(queryString);
+      }
+    }
+    String[] featureQueries = list.toArray(new String[0]);
     String[][] bigTags = getTags(featureQueries);
     String[] primaryTags = bigTags[0];
     WaypointDescription waypoint = new WaypointDescription();
     for (int i = 0; i < featureQueries.length; i++) {
       String feature = featureQueries[i]; 
+      System.out.print(feature + "  " + primaryTags[i]);
+      if (bigTags.length == 2) {
+        System.out.println("   " + bigTags[1][i]);
+      }
+
       if (feature.isEmpty()) {
         continue;
       }
@@ -176,37 +172,32 @@ public class WaypointQueryServlet extends HttpServlet {
         }
         if (waypoint.hasFeature()) { 
           // Start a new waypoint description
-          waypointsFromQuery.add(waypoint);
+          allWaypoints.add(waypoint);
           waypoint = new WaypointDescription(maxAmount);
         } else {
           waypoint.setMaxAmount(maxAmount);
         }
       } else {
         // Parsing for nouns/not pronouns
-        // System.out.println(feature);
-        // System.out.println(primaryTags[i]);
-        // if (bigTags.length == 2) {
-        //   System.out.println(bigTags[1][i]);
-        // }
         if (primaryTags[i].equals(NOUN_SINGULAR_OR_MASS) || primaryTags[i].equals(NOUN_PLURAL)) { // Doesn't look for proper nouns right now
           waypoint.addFeature(feature);
-          waypointsFromQuery.add(waypoint);
+          allWaypoints.add(waypoint);
           waypoint = new WaypointDescription();
         } else if (bigTags.length == 2 && !primaryTags[i].equals(PRONOUN)) { 
           // Second chance: as long as it's not a pronoun, see if the word can still be a noun
           String[] secondaryTags = bigTags[1];
           if (secondaryTags[i].equals(NOUN_SINGULAR_OR_MASS) || secondaryTags[i].equals(NOUN_PLURAL)) {
             waypoint.addFeature(feature);
-            waypointsFromQuery.add(waypoint);
+            allWaypoints.add(waypoint);
             waypoint = new WaypointDescription();
           }
         }
       }
     }
     if (waypoint.hasFeature()) {
-      waypointsFromQuery.add(waypoint);
+      allWaypoints.add(waypoint);
     }
-    return waypointsFromQuery;
+    return allWaypoints;
   }
 
   /** Gets the part of speech tags for a sentence of tokens
@@ -227,14 +218,14 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Determines if the passed in string is a number 
     */
   public boolean isInt(String word) {
-    return PATTERN.matcher(word).matches() || NUMBER_MAP.containsKey(word)
+    return INT_PATTERN.matcher(word).matches() || NUMBER_MAP.containsKey(word)
       || word.equals("all") || word.equals("every");
   }
 
   /** Assuming that the passed in string is a number, converts it to an int
     */
   public int wordToInt(String word) throws Exception {
-    if (PATTERN.matcher(word).matches()) {
+    if (INT_PATTERN.matcher(word).matches()) {
       return Integer.parseInt(word);
     } else if (NUMBER_MAP.containsKey(word)) {
       return NUMBER_MAP.get(word);
@@ -247,9 +238,9 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Sends a request for the input feature to the database
     * Returns the Coordinate matching the input feature 
     */ 
-  public ArrayList<Coordinate> fetchFromDatabase(String query, String label, Coordinate midpoint) throws IOException {
+  public ArrayList<Coordinate> fetchFromDatabase(String query, String label, Coordinate start, Coordinate end) throws IOException {
     String startDate = getStartDate();
-    String[] boundaries = getBoundingBox(midpoint);
+    String[] boundaries = getBoundingBox(start, end);
     String json = sendGET(query, startDate, boundaries);
     if (json != null) {
       return jsonToCoordinates(json, label);
@@ -274,12 +265,29 @@ public class WaypointQueryServlet extends HttpServlet {
     * the midpoint by BOUNDING_BOX_WIDTH on each side
     * Returns list in order of bound: west, east, south, north
     */
-  public String[] getBoundingBox(Coordinate midpoint) {
+  public static String[] getBoundingBox(Coordinate start, Coordinate end) {
     String[] boundaries = new String[4];
-    boundaries[0] = String.valueOf(midpoint.getX() - BOUNDING_BOX_WIDTH);
-    boundaries[1] = String.valueOf(midpoint.getX() + BOUNDING_BOX_WIDTH);
-    boundaries[2] = String.valueOf(midpoint.getY() - BOUNDING_BOX_WIDTH);
-    boundaries[3] = String.valueOf(midpoint.getY() + BOUNDING_BOX_WIDTH);
+    if (start.equals(end)) { // loop
+      boundaries[0] = String.valueOf(start.getX() - LOOP_BOUNDING_BOX_WIDTH);
+      boundaries[1] = String.valueOf(start.getX() + LOOP_BOUNDING_BOX_WIDTH);
+      boundaries[2] = String.valueOf(start.getY() - LOOP_BOUNDING_BOX_WIDTH);
+      boundaries[3] = String.valueOf(start.getY() + LOOP_BOUNDING_BOX_WIDTH);
+    } else { // one-way
+      if (start.getX() > end.getX()) {
+        boundaries[0] = String.valueOf(end.getX() - ONE_WAY_BOUNDING_BOX_WIDTH);
+        boundaries[1] = String.valueOf(start.getX() + ONE_WAY_BOUNDING_BOX_WIDTH);
+      } else {
+        boundaries[0] = String.valueOf(start.getX() - ONE_WAY_BOUNDING_BOX_WIDTH);
+        boundaries[1] = String.valueOf(end.getX() + ONE_WAY_BOUNDING_BOX_WIDTH);
+      }
+      if (start.getY() > end.getY()) {
+        boundaries[2] = String.valueOf(end.getY() - ONE_WAY_BOUNDING_BOX_WIDTH);
+        boundaries[3] = String.valueOf(start.getY() + ONE_WAY_BOUNDING_BOX_WIDTH);
+      } else {
+        boundaries[2] = String.valueOf(start.getY() - ONE_WAY_BOUNDING_BOX_WIDTH);
+        boundaries[3] = String.valueOf(end.getY() + ONE_WAY_BOUNDING_BOX_WIDTH);
+      }
+    }
     return boundaries;
   }
 
@@ -291,6 +299,7 @@ public class WaypointQueryServlet extends HttpServlet {
     String query = "https://www.inaturalist.org/observations.json?q=" + feature;
     query += "&d1=" + startDate;
     query += "&swlng=" + bounds[0] + "&nelng=" + bounds[1] + "&swlat=" + bounds[2] + "&nelat=" + bounds[3];
+    query += "&quality_grade=research";
     URL obj = new URL(query); 
     
     HttpURLConnection con = (HttpURLConnection) obj.openConnection();
