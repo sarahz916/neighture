@@ -62,6 +62,8 @@ public class WaypointQueryServletTest {
   public static final String ONE_FEATURE_MULT_WAYPOINT_QUERY = "mushroom;+.raspberry!!?\ntree";
   public static final String MULT_FEATURES_MULT_WAYPOINT_QUERY = "mushroom,  raspberry; tree";
   public static final int MAX_AMOUNT = 2;
+  public static final Double DEFAULT_RADIUS = 0.07246376811;
+  public static final Double CUSTOM_RADIUS = 0.04347826086;
   public static final WaypointDescription MUSHROOM_DESC = new WaypointDescription("mushroom");
   public static final WaypointDescription MUSHROOM_WITH_NUMBER = new WaypointDescription(MAX_AMOUNT, "mushroom");
   public static final WaypointDescription CLOVER_DESC = new WaypointDescription("clover");
@@ -75,7 +77,8 @@ public class WaypointQueryServletTest {
   public static final ArrayList<String> RASPBERRY_WORD = new ArrayList<String>(Arrays.asList("raspberry"));
   private static final Coordinate START = new Coordinate(-87.62940, 41.84865, "start", "");
   private static final Coordinate END = new Coordinate(-87.62942, 41.84861, "end", "");
-  private static final String[] LOOP_COMPARISON = {"-87.70186376811", "-87.55693623189", "41.77618623189", "41.92111376811"};
+  private static final String[] LOOP_CUSTOM_COMPARISON = {"-87.67287826086", "-87.58592173914", "41.80517173914", "41.89212826086"};
+  private static final String[] LOOP_DEFAULT_COMPARISON = {"-87.70186376811", "-87.55693623189", "41.77618623189", "41.92111376811"};
   private static final String[] ONE_WAY_COMPARISON = {"-87.6330431884", "-87.6257768116", "41.8449868116", "41.8522731884"};
   private WaypointQueryServlet servlet;
 
@@ -94,17 +97,24 @@ public class WaypointQueryServletTest {
     assertEquals(date, COMPARISON_DATE);
   }
 
-  /* Testing getBoundingBox loop */
+  /* Testing getBoundingBox loop with default radius */
   @Test 
-  public void testGetBoundingBoxLoop() throws Exception {
-    String[] bounds = servlet.getBoundingBox(START, START);
-    assertEquals(bounds, LOOP_COMPARISON);
+  public void testGetBoundingBoxLoopDefault() throws Exception {
+    String[] bounds = servlet.getBoundingBox(START, START, DEFAULT_RADIUS);
+    assertEquals(bounds, LOOP_DEFAULT_COMPARISON);
+  }
+
+  /* Testing getBoundingBox loop with custom radius */
+  @Test 
+  public void testGetBoundingBoxLoopCustom() throws Exception {
+    String[] bounds = servlet.getBoundingBox(START, START, CUSTOM_RADIUS);
+    assertEquals(bounds, LOOP_CUSTOM_COMPARISON);
   }
 
   /* Testing getBoundingBox one-way */
   @Test 
   public void testGetBoundingBoxOneWay() throws Exception {
-    String[] bounds = servlet.getBoundingBox(START, END);
+    String[] bounds = servlet.getBoundingBox(START, END, 0.0); // radius doesn't matter here
     assertEquals(bounds, ONE_WAY_COMPARISON);
   }
 
@@ -119,7 +129,7 @@ public class WaypointQueryServletTest {
   @Test 
   public void testFetchFromDatabaseResult() throws Exception {
     PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(TREE_BACKEND);
-    ArrayList<Coordinate> coordinateResult = servlet.fetchFromDatabase("tree", "tree,lichen", START, START);
+    ArrayList<Coordinate> coordinateResult = servlet.fetchFromDatabase("tree", "tree,lichen", START, START, DEFAULT_RADIUS);
     assertEquals(coordinateResult, TREE);
   }
 
@@ -127,7 +137,7 @@ public class WaypointQueryServletTest {
   @Test 
   public void testFetchFromDatabaseNoResult() throws Exception {
     PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(NOTHING_BACKEND);
-    ArrayList<Coordinate> coordinateResult = servlet.fetchFromDatabase("trash", "trash", START, START);
+    ArrayList<Coordinate> coordinateResult = servlet.fetchFromDatabase("trash", "trash", START, START, DEFAULT_RADIUS);
     assertEquals(coordinateResult, NOTHING);
   }
 
@@ -265,7 +275,7 @@ public class WaypointQueryServletTest {
   @Test
   public void testGetLocationsEmpty() throws Exception {
     PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(NOTHING_BACKEND);
-    ArrayList<List<Coordinate>> locations = servlet.getLocations("", START, START);
+    ArrayList<List<Coordinate>> locations = servlet.getLocations("", START, START, DEFAULT_RADIUS);
     ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
     assertEquals(locations, comparison);
   }
@@ -274,7 +284,7 @@ public class WaypointQueryServletTest {
   @Test
   public void testGetLocationsOne() throws Exception {
     PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(RASPBERRY_BACKEND);
-    ArrayList<List<Coordinate>> locations = servlet.getLocations("raspberry", START, START);
+    ArrayList<List<Coordinate>> locations = servlet.getLocations("raspberry", START, START, DEFAULT_RADIUS);
     ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
     comparison.add(RASPBERRY);
     assertEquals(locations, comparison);
@@ -284,7 +294,7 @@ public class WaypointQueryServletTest {
   @Test
   public void testGetLocationsNumber() throws Exception {
     PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(RASPBERRY_BACKEND);
-    ArrayList<List<Coordinate>> locations = servlet.getLocations("1 raspberry", START, START);
+    ArrayList<List<Coordinate>> locations = servlet.getLocations("1 raspberry", START, START, DEFAULT_RADIUS);
     ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
     comparison.add(Arrays.asList(RASPBERRY.get(0)));
     assertEquals(locations, comparison);
