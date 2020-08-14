@@ -72,6 +72,6 @@ public class ZipCodeServlet extends HttpServlet{
         }
         Double y = results[0].geometry.location.lat;
         Double x = results[0].geometry.location.lng;
-        return new Coordinate(x, y, "midpoint");
+        return new Coordinate(x, y, "midpoint", "");
     }
 }

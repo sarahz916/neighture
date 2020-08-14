@@ -12,7 +12,8 @@
       
   </head>
   <nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="index.html">N N</a>
+    <!--<a class="navbar-brand" href="index.html">N N</a> -->
+    <img src="images/NNlogo.png" alt="Neighborhood Nature logo" id="navbar-logo" class="logo">
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
@@ -33,11 +34,38 @@
         </ul>
     </div>
   </nav>
-  <body>
+  <body id="body">
       <div id="content">
-        <div id="tabs"> 
-            <button id="one-way" class="specify-route-type">One-Way Route</button>
-            <button id="loop" class="specify-route-type">Loop Route</button>
+        <br>
+        <div id="header">
+          <div class="center">
+              <h1> Neighborhood Nature </h1>
+          </div>
+        </div>
+        <br>
+        <div class="index-text">
+          <h3> Create your next favorite leisure walking/jogging route to check out nature in your area! </h3>
+            <p> 
+            After you select your start/end point(s), click "Submit and Generate Route"!
+            On the next page, type in whatever plants or animals you want to see! 
+            You can specify a limit to how many 
+            results you want for each feature(s)! The default is five choices per a feature.
+            If you want to query a specific multi-word phrase, put it in
+            quotation marks
+            <br>
+            <i> Example: robin, 2 clovers, and "california poppy" </i>
+            <br>
+            </p>
+            <p>
+            After you submit your features, click on the markers on the map 
+            to select the points you want on your route, and we'll generate a map for you!
+            The link on the bottom of the map allows you to open the route on Google Maps!
+            <br><br>
+            </p>
+        </div>
+        <div id="tabs" class="center"> 
+            <button id="one-way" class="specify-route-type button">One-Way Route</button>
+            <button id="loop" class="specify-route-type button" style="margin-left:20px;">Loop Route</button>
         </div>
 
         <div id="one-way-tab"> 
@@ -53,6 +81,7 @@
 
                 <input type="submit" value="Submit and Generate Route" id="start-end-submit"/>  
             </form>
+            <a href='index.html'> Clear Entries </a>
         </div>
 
         <div id="loop-tab"> 
@@ -64,9 +93,8 @@
 
                 <input type="submit" value="Submit and Generate Route" id="start-end-submit"/>  
             </form>
+            <a href='index.html'> Clear Entries </a>
         </div>
-
-        <a href='index.html'> Generate Route </a>
      </div>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>

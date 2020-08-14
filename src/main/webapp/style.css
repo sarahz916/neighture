@@ -1,3 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Thasadith&display=swap');
+
+html,body { height:100%; }
+
+#body {
+  background-color:rgb(236, 247, 238);
+  font-family: 'Thasadith', Srisakdi;
+  height: 100%;
+}
+
+#body {
+    font-family: 'Montserrat';
+}
 
 #content {
   margin-left: auto;
@@ -10,10 +23,17 @@
   margin-right: auto;
   text-align: center;
   width: 650px;
+  font-weight: bold;
+  font-style: italic;
 }
 
 .map {
   border: thin solid black;
+}
+
+#navbar-logo {
+    width: 100px;
+    height: 100px;
 }
 
 #route-map {
@@ -91,3 +111,32 @@
     padding: 3px;
     width: 500px;
 }
+
+
+.specify-route-type {
+  font-size: 120%;
+}
+
+.center {
+  align-content: center;
+  align-items: center;
+  align-self: center;
+  text-align: center;
+}
+
+span ~ span {
+padding-left: 100px;
+}
+
+.button {
+  background-color: rgb(10, 71, 10);
+  color: white;
+  font-weight: bold;
+  border-width: thin;
+}
+
+.button:hover {
+  background-color: gray;
+  color: white;
+}
+

@@ -24,8 +24,7 @@ const CHOICE_AT_ONCE = 3;
 const SC_REQUEST_ENTITY_TOO_LARGE = 413;
 const SC_BAD_REQUEST = 400;
 
-window.onload = async function setup(event) {
-    event.preventDefault();
+window.onload = async function setup() {
     let startAddr = await getStartAddr();
     let endAddr = await getEndAddr();
     let startCoord = await getStartCoord;
@@ -277,6 +276,7 @@ function createCheckBoxes(waypointChoices) {
   submitEl = document.createElement("input");
   submitEl.setAttribute("type", "submit");
   submitEl.setAttribute('id', 'submit-checkbox');
+  submitEl.setAttribute('class', 'button');
 
   const waypointChoiceEl = document.getElementById('select-points');
   for (let i = 0; i < waypointChoices.length; i++) {
@@ -482,7 +482,6 @@ function convertHoursToMinutes(time) {
  * return the label matching the given LatLng object.
  */
 function getLabelFromLatLng(pt, waypointsWithLabels) {
-    console.log(waypointsWithLabels);
     for (let [label, waypoints] of waypointsWithLabels.entries()) {
         // Calculate the difference between the lat/long of the points and 
         // check if its within a certain range.
