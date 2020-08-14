@@ -116,7 +116,9 @@ async function getChosenPoints() {
  */
 async function setupUserChoices() {
     let res = await getWaypoints();
+    console.log(res);
     let waypoints = convertWaypointClusterstoLatLng(res);
+    console.log(waypoints);
     let startCoord = await getStartCoord();
     let endCoord = await getEndCoord();
     let startName = await getStartAddr();
@@ -141,11 +143,12 @@ function createPointInfoMap(start, end, startName, endName, waypoints) {
     }
 
     // Make one marker for each waypoint, in a different color.
-    for (let i = 0; i < Object.entries(waypoints).length; i++) {
-        let [label, cluster] = Object.entries(waypoints)[i];
-        let letter = 'A';
+    // for (let i = 0; i < Object.entries(waypoints).length; i++) {
+    for (let i = 0; i < waypoints.length; i++) {
+        // let [label, cluster] = Object.entries(waypoints)[i];
+        let cluster = waypoints[i];
         for (let pt of cluster) {
-            createCheckableMarker(map, pt, label, letter, google.maps.SymbolPath.BACKWARD_CLOSED_ARROW, FILL_COLORS[i % MAX_WAYPOINTS]);
+            createCheckableMarker(map, pt.latlng, pt.label, letter, google.maps.SymbolPath.BACKWARD_CLOSED_ARROW, FILL_COLORS[i % MAX_WAYPOINTS]);
             letter = String.fromCharCode(letter.charCodeAt(0) + 1); // update the marker letter label to the next letter
         }
     }
@@ -501,14 +504,17 @@ function getLabelFromLatLng(pt, waypointsWithLabels) {
  * Convert waypoint clusters in JSON form returned by servlet to Google Maps LatLng objects.
  */
 function convertWaypointClusterstoLatLng(waypoints) {
-     let latlngWaypoints = {};
+     let latlngWaypoints = [];
+     // let latlngWaypoints = {};
      for (let cluster of waypoints) {
          pts = [];
          for (let pt of cluster) {
             let waypoint = new google.maps.LatLng(pt.y, pt.x);
-            pts.push(waypoint);
+            //pts.push(waypoint);
+            pts.push({ latlng : waypoint, label : pt.label, species : pt.species });
          }
-         latlngWaypoints[cluster[0].label] = pts; // cluster[0] is undefined here when entering a sentence
+         //latlngWaypoints[cluster[0].label] = pts; // cluster[0] is undefined here when entering a sentence
+         latlngWaypoints.push(pts);
     }
     return latlngWaypoints;
 }

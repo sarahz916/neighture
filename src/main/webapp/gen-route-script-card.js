@@ -17,65 +17,114 @@ window.onload = async function setup() {
     let startAddr = await getStartAddr();
     let endAddr = await getEndAddr();
     let startCoord = await getStartCoord;
-    setupGenRouteDropDown();
+    setupGenRouteCards();
+}
+/** Feteches routes from routestore and creates cards to displayed on the page. */
+async function setupGenRouteCards() {
+    let routes = await getRouteStore();
+    createCards(routes);
 }
 
-document.getElementById('select-points').addEventListener('submit', createMapWithWaypoints());
-
-async function setupGenRouteDropDown() {
-    let res = await getRouteStore();
-    createDropDown(res);
-}
-
-/** Given stored text create dropdown form with those options */
-function createDropDown(dropDowns) {
-  const dropDownEl = document.getElementById('routes-drop-down');
-  dropDownEl.innerHTML = "";
-  dropDowns.forEach((route) => {
-    dropDownEl.appendChild(createOptionEl(route));
+/** Given stored text create cards with maps
+    Create card with maps in card decks of two. */
+function createCards(routes) {
+  const cardDivEl = document.getElementById('cards');
+  cardDivEl.innerHTML = "";
+  var CardDeck = newCardDeck();
+  routes.forEach((route, index) => {
+    CardDeck.appendChild(createCardEl(route));
+    if ((index % 2) === 1){
+        cardDivEl.appendChild(CardDeck);
+        CardDeck = newCardDeck();
+    }
   });
 }
 
-/** Creates an option element */
-function createOptionEl(route){
-    const optionEl = document.createElement('option');
-    // set value as id value of route in datastore
-    optionEl.setAttribute("value", route.waypoints);
-    optionEl.innerText = route.text;
-    return optionEl;
+/**Create new card deck */
+function newCardDeck(){
+    const CardDeck = document.createElement('div');
+    CardDeck.setAttribute('class', 'card-deck');
+    return CardDeck;
+}
+
+/** Creates an card map element */
+function createCardEl(route){
+    const cardEl = document.createElement('div');
+    cardEl.setAttribute('class', 'card');
+    cardEl.appendChild(createCardBody(route));
+    cardEl.appendChild(createURLEl(route));
+    const mapID = route.text + 'map';
+    const legendID = route.text + 'legend';
+    const urlID = route.text + 'url';
+    createMapWithWaypoints(route, mapID, legendID, urlID);
+    return cardEl;
+}
+
+/** Creates an card body map element */
+function createCardBody(route){
+    const cardBody = document.createElement('div');
+    cardBody.setAttribute('class', 'card-body');
+    cardBody.appendChild(createTitleEl(route.text));
+    cardBody.appendChild(createMapEl(route));
+    cardBody.appendChild(createLegendEl(route));
+    return cardBody;
+}
+
+/** Creates an card title */
+function createTitleEl(text){
+    const cardTitle = document.createElement('h5');
+    cardTitle.setAttribute('class', 'card-title');
+    cardTitle.innerText = text;
+    return cardTitle;
+}
+
+/** Creates an map element with id route.text + 'map' */
+function createMapEl(route){
+    const mapEl = document.createElement('div');
+    const mapID = route.text + 'map';
+    mapEl.setAttribute('id', mapID);
+    mapEl.setAttribute('class', 'small-map');
+    return mapEl;
+}
+/** Creates an url element as card-footer with id route.text + 'url' */
+function createURLEl(route){
+    const URLEl = document.createElement('div');
+    const urlID = route.text + 'url';
+    URLEl.setAttribute('id', urlID);
+    URLEl.setAttribute('class', 'card-footer');
+    return URLEl;
+}
+/** Creates an legend element with id route.text + 'legend' */
+function createLegendEl(route){
+    const legendEl = document.createElement('div');
+    const legendID = route.text + 'legend';
+    legendEl.setAttribute('id', legendID);
+    legendEl.setAttribute('class', 'legend');
+    return legendEl;
 }
 
 /**
  * Create a route and map from a waypoint entered by the user.
  */
-async function createMapWithWaypoints() {
-    setupGenRouteDropDown();
-    var res = await getPickedRoute();
-    let waypoints = convertWaypointstoLatLng(res);
+async function createMapWithWaypoints(route,  mapID, legendID, urlID) {
+    let waypointjson = JSON.parse(route.waypoints);
+    let waypoints = convertWaypointstoLatLng(waypointjson);
     let start = await getStartCoord();
     let end = await getEndCoord();
-    let map = initMap(start, 'route-map');
+    let map = initMap(start, mapID);
     let directionsService = new google.maps.DirectionsService();
     let directionsRenderer = new google.maps.DirectionsRenderer({
         map: map
     });
-    calcRoute(directionsService, directionsRenderer, start, end, waypoints);
-    generateURL (start, end, waypoints);
-}
-/**
- * Fetch the generated route from gen-route servlet
- */
-async function getPickedRoute() {
-    let res = await fetch('/gen-route');
-    let waypoints = await res.json();
-    return waypoints;
+    calcRoute(directionsService, directionsRenderer, start, end, waypoints, legendID);
+    generateURL (start, end, waypoints, urlID);
 }
 
 /**
  * Given a DirectionsService object, a DirectionsRenderer object, start/end coordinates and a list
  * of waypoint coordinates, generate a route using the Google Maps API.
  */
-function calcRoute(directionsService, directionsRenderer, start, end, waypoints) {
+function calcRoute(directionsService, directionsRenderer, start, end, waypoints, legendID) {
     var waypointsWithLabels = waypoints;
     let waypointsData = [];
     waypoints.forEach((pts, label) => pts.forEach(pt => waypointsData.push({ location: pt })));
@@ -89,7 +138,7 @@ function calcRoute(directionsService, directionsRenderer, start, end, waypoints)
     directionsService.route(request, function(result, status) {
         if (status == 'OK') {
             directionsRenderer.setDirections(result);
-            createWaypointLegend(result.routes[0], waypointsWithLabels);
+            createWaypointLegend(result.routes[0], waypointsWithLabels, legendID);
         } else {
             alert(`Could not display directions: ${status}`);
         }
@@ -106,8 +155,8 @@ function addNewLegendElem(parent, text) {
  * Given a generated route and a JSON object containing waypoint locations with their labels as inputted
  * by the user, create a legend that maps a marker on the map to corresponding user input.
  */
-async function createWaypointLegend(route, waypointsWithLabels) {
-    let legend = document.getElementById('legend');
+async function createWaypointLegend(route, waypointsWithLabels, legendID) {
+    let legend = document.getElementById(legendID);
     let marker = 'A';
     addNewLegendElem(legend, `${marker}: start`);
     let i;
@@ -176,19 +225,21 @@ function convertHoursToMinutes(time) {
  * return the label matching the given LatLng object.
  */
 function getLabelFromLatLng(pt, waypointsWithLabels) {
-    for (let [label, waypoint] of Object.entries(waypointsWithLabels)) {
+    for (let [label, waypoints] of waypointsWithLabels.entries()) {
         // Calculate the difference between the lat/long of the points and 
         // check if its within a certain range.
-        let latDiff = Math.abs(waypoint.lat() - pt.lat());
-        let lngDiff = Math.abs(waypoint.lng() - pt.lng());
-        const range = 0.001;
-        console.log(label);
-        if (latDiff < range && lngDiff < range) {
-            return label;
+        for (let waypoint of waypoints) {
+            let latDiff = Math.abs(waypoint.lat() - pt.lat());
+            let lngDiff = Math.abs(waypoint.lng() - pt.lng());
+            const range = 0.001;
+            if (latDiff < range && lngDiff < range) {
+                return label;
+            }
         }
     }
     return '';
 }
+
 
 /**
  * Get a list of StoredRouts from fetching from /route-store
@@ -213,13 +264,13 @@ function initMap(center, id) {
 /**
  * Creates a URL based on Maps URLs that will open the generated route on Google Maps on any device.
  */
-function generateURL(start, end, waypoints){
+function generateURL(start, end, waypoints, urlID){
     let globalURL = 'https://www.google.com/maps/dir/?api=1';
     globalURL = globalURL + '&origin=' + start + '&destination=' + end;
     globalURL += '&waypoints='
     waypoints.forEach((pts, label) => pts.forEach(pt => globalURL += pt + '|'));
     globalURL = globalURL + '&travelmode=walking';
-    const URLcontainer = document.getElementById('globalURL');
+    const URLcontainer = document.getElementById(urlID);
     globalURL = globalURL.split(" ").join("") //need to get rid of white space for link to work
     URLcontainer.innerHTML = '<a href ='+ globalURL  + '>' + globalURL + '</a>';
 }
@@ -244,7 +295,6 @@ function convertWaypointstoLatLng(waypoints) {
      for (let pt of waypoints) {
         let waypoint = new google.maps.LatLng(pt.y, pt.x);
         // If the given label doesn't exist in the map, add it.
-        console.log(pt.label);
         if (!latlngWaypoints.has(pt.label)) {
             latlngWaypoints.set(pt.label, [waypoint]);
         } else {
