@@ -24,8 +24,7 @@ const CHOICE_AT_ONCE = 3;
 const SC_REQUEST_ENTITY_TOO_LARGE = 413;
 const SC_BAD_REQUEST = 400;
 
-window.onload = async function setup(event) {
-    event.preventDefault();
+window.onload = async function setup() {
     let startAddr = await getStartAddr();
     let endAddr = await getEndAddr();
     let startCoord = await getStartCoord;
