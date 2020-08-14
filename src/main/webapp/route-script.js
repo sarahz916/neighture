@@ -116,7 +116,9 @@ async function getChosenPoints() {
  */
 async function setupUserChoices() {
     let res = await getWaypoints();
+    console.log(res);
     let waypoints = convertWaypointClusterstoLatLng(res);
+    console.log(waypoints);
     let startCoord = await getStartCoord();
     let endCoord = await getEndCoord();
     let startName = await getStartAddr();
@@ -141,11 +143,12 @@ function createPointInfoMap(start, end, startName, endName, waypoints) {
     }
 
     // Make one marker for each waypoint, in a different color.
-    for (let i = 0; i < Object.entries(waypoints).length; i++) {
-        let [label, cluster] = Object.entries(waypoints)[i];
+    for (let i = 0; i < waypoints.length; i++) {
+        let cluster = waypoints[i];
         let letter = 'A';
         for (let pt of cluster) {
-            createCheckableMarker(map, pt, label, letter, google.maps.SymbolPath.BACKWARD_CLOSED_ARROW, FILL_COLORS[i % MAX_WAYPOINTS]);
+            console.log(pt.latlng);
+            createCheckableMarker(map, pt.latlng, pt.label, pt.species, letter, google.maps.SymbolPath.BACKWARD_CLOSED_ARROW, FILL_COLORS[i % MAX_WAYPOINTS]);
             letter = String.fromCharCode(letter.charCodeAt(0) + 1); // update the marker letter label to the next letter
         }
     }
@@ -154,9 +157,9 @@ function createPointInfoMap(start, end, startName, endName, waypoints) {
 /**
  * Create a dynamic marker with an InfoWindow that appears with the label upon clicking.
  */
-function createCheckableMarker(map, pt, label, letter, icon, color) {
+function createCheckableMarker(map, pt, label, species, letter, icon, color) {
     let marker = createMarker(map, pt, letter, icon, color);
-    let infowindow = createInfoWindow(`${letter}: ${label}`, pt, marker);
+    let infowindow = createInfoWindow(`${letter}: ${label} (${species})`, pt, marker);
     marker.addListener('click', function() {
         infowindow.open(map, marker);
     });
@@ -225,10 +228,9 @@ function createBounds(start, end, waypoints) {
     let bounds = new google.maps.LatLngBounds();
     bounds.extend(start);
     bounds.extend(end);
-    for (let i = 0; i < Object.entries(waypoints).length; i++) {
-        let [label, cluster] = Object.entries(waypoints)[i];
+    for (let cluster of waypoints) {
         for (let pt of cluster) {
-            bounds.extend(pt);
+            bounds.extend(pt.latlng);
         }
     }
     return bounds;
@@ -501,14 +503,17 @@ function getLabelFromLatLng(pt, waypointsWithLabels) {
  * Convert waypoint clusters in JSON form returned by servlet to Google Maps LatLng objects.
  */
 function convertWaypointClusterstoLatLng(waypoints) {
-     let latlngWaypoints = {};
+     let latlngWaypoints = [];
+     // let latlngWaypoints = {};
      for (let cluster of waypoints) {
          pts = [];
          for (let pt of cluster) {
             let waypoint = new google.maps.LatLng(pt.y, pt.x);
-            pts.push(waypoint);
+            //pts.push(waypoint);
+            pts.push({ latlng : waypoint, label : pt.label, species : pt.species });
          }
-         latlngWaypoints[cluster[0].label] = pts; // cluster[0] is undefined here when entering a sentence
+         //latlngWaypoints[cluster[0].label] = pts; // cluster[0] is undefined here when entering a sentence
+         latlngWaypoints.push(pts);
     }
     return latlngWaypoints;
 }
