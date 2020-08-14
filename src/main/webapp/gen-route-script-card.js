@@ -19,40 +19,32 @@ window.onload = async function setup() {
     let startCoord = await getStartCoord;
     setupGenRouteCards();
 }
-
+/** Feteches routes from routestore and creates cards to displayed on the page. */
 async function setupGenRouteCards() {
     let routes = await getRouteStore();
     createCards(routes);
 }
 
 /** Given stored text create cards with maps
-    Create card with maps in rows of two. */
+    Create card with maps in card decks of two. */
 function createCards(routes) {
   const cardDivEl = document.getElementById('cards');
   cardDivEl.innerHTML = "";
-  var RowDiv = newRowDiv();
+  var CardDeck = newCardDeck();
   routes.forEach((route, index) => {
-    RowDiv.appendChild(createCardEl(route));
+    CardDeck.appendChild(createCardEl(route));
     if ((index % 2) === 1){
-        cardDivEl.appendChild(RowDiv);
-        RowDiv = newRowDiv();
+        cardDivEl.appendChild(CardDeck);
+        CardDeck = newCardDeck();
     }
   });
 }
 
-/**Create new row div */
-function newRowDiv(){
-    const RowDiv = document.createElement('div');
-    RowDiv.setAttribute('class', 'card-deck');
-    return RowDiv;
-}
-
-/**Create col-sm-6 class div that contains card of map */
-function creatColElofCard(route){
-    const colEl = document.createElement('div');
-    //colEl.setAttribute('class', 'col-sm-6');
-    colEl.appendChild(createCardEl(route));
-    return colEl;
+/**Create new card deck */
+function newCardDeck(){
+    const CardDeck = document.createElement('div');
+    CardDeck.setAttribute('class', 'card-deck');
+    return CardDeck;
 }
 
 /** Creates an card map element */
@@ -86,6 +78,7 @@ function createTitleEl(text){
     return cardTitle;
 }
 
+/** Creates an map element with id route.text + 'map' */
 function createMapEl(route){
     const mapEl = document.createElement('div');
     const mapID = route.text + 'map';
@@ -93,7 +86,7 @@ function createMapEl(route){
     mapEl.setAttribute('class', 'small-map');
     return mapEl;
 }
-
+/** Creates an url element as card-footer with id route.text + 'url' */
 function createURLEl(route){
     const URLEl = document.createElement('div');
     const urlID = route.text + 'url';
@@ -101,7 +94,7 @@ function createURLEl(route){
     URLEl.setAttribute('class', 'card-footer');
     return URLEl;
 }
-
+/** Creates an legend element with id route.text + 'legend' */
 function createLegendEl(route){
     const legendEl = document.createElement('div');
     const legendID = route.text + 'legend';
