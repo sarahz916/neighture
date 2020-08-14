@@ -86,9 +86,9 @@ public class WaypointQueryServlet extends HttpServlet {
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     String input = request.getParameter("text-input");
     SessionDataStore sessionDataStore = new SessionDataStore(request);
-    Coordinate midpoint = getMidpoint(sessionDataStore);
-    Coordinate start = getStart(sessionDataStore);
-    Coordinate end = getEnd(sessionDataStore);
+    Coordinate midpoint = getPoint(sessionDataStore, "midpoint");
+    Coordinate start = getPoint(sessionDataStore, "start");
+    Coordinate end = getPoint(sessionDataStore, "end");
     ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();
     try {
       waypoints = getLocations(input, start, end);
@@ -157,11 +157,6 @@ public class WaypointQueryServlet extends HttpServlet {
     WaypointDescription waypoint = new WaypointDescription();
     for (int i = 0; i < featureQueries.length; i++) {
       String feature = featureQueries[i]; 
-      System.out.print(feature + "  " + primaryTags[i]);
-      if (bigTags.length == 2) {
-        System.out.println("   " + bigTags[1][i]);
-      }
-
       if (feature.isEmpty()) {
         continue;
       }
@@ -335,40 +330,21 @@ public class WaypointQueryServlet extends HttpServlet {
       x = Math.round(x * 25000.0)/25000.0;
       Double y = observation.getDouble("latitude");
       y = Math.round(y * 25000.0)/25000.0;
-      Coordinate featureCoordinate = new Coordinate(x, y, label);
+      String species = observation.getString("species_guess");
+      Coordinate featureCoordinate = new Coordinate(x, y, label, species);
       coordinates.add(featureCoordinate);
       index += 1;
     }
     return coordinates;
   }
 
-  /** Fetches midpoint from sessionDataStore. 
+  /** Fetches point (start, midpoint, end) from sessionDataStore. 
     */
- private Coordinate getMidpoint(SessionDataStore sessionDataStore){
-    JSONObject jsonObject = new JSONObject(sessionDataStore.fetchSessionEntity("StartEnd", "midpoint"));
+ private Coordinate getPoint(SessionDataStore sessionDataStore, String pointDescription){
+    JSONObject jsonObject = new JSONObject(sessionDataStore.fetchSessionEntity("StartEnd", pointDescription));
     Double x = jsonObject.getDouble("x");
     Double y = jsonObject.getDouble("y");
-    Coordinate midpoint = new Coordinate(x, y, "midpoint");
-    return midpoint;
- }
-
-   /** Fetches start from sessionDataStore. 
-    */
- private Coordinate getStart(SessionDataStore sessionDataStore){
-    JSONObject jsonObject = new JSONObject(sessionDataStore.fetchSessionEntity("StartEnd", "start"));
-    Double x = jsonObject.getDouble("x");
-    Double y = jsonObject.getDouble("y");
-    Coordinate start = new Coordinate(x, y, "start");
-    return start;
- }
-
-   /** Fetches end from sessionDataStore. 
-    */
- private Coordinate getEnd(SessionDataStore sessionDataStore){
-    JSONObject jsonObject = new JSONObject(sessionDataStore.fetchSessionEntity("StartEnd", "end"));
-    Double x = jsonObject.getDouble("x");
-    Double y = jsonObject.getDouble("y");
-    Coordinate end = new Coordinate(x, y, "end");
-    return end;
+    Coordinate point = new Coordinate(x, y, pointDescription, "");
+    return point;
  }
 }
