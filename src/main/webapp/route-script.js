@@ -143,12 +143,12 @@ function createPointInfoMap(start, end, startName, endName, waypoints) {
     }
 
     // Make one marker for each waypoint, in a different color.
-    // for (let i = 0; i < Object.entries(waypoints).length; i++) {
     for (let i = 0; i < waypoints.length; i++) {
-        // let [label, cluster] = Object.entries(waypoints)[i];
         let cluster = waypoints[i];
+        let letter = 'A';
         for (let pt of cluster) {
-            createCheckableMarker(map, pt.latlng, pt.label, letter, google.maps.SymbolPath.BACKWARD_CLOSED_ARROW, FILL_COLORS[i % MAX_WAYPOINTS]);
+            console.log(pt.latlng);
+            createCheckableMarker(map, pt.latlng, pt.label, pt.species, letter, google.maps.SymbolPath.BACKWARD_CLOSED_ARROW, FILL_COLORS[i % MAX_WAYPOINTS]);
             letter = String.fromCharCode(letter.charCodeAt(0) + 1); // update the marker letter label to the next letter
         }
     }
@@ -157,9 +157,9 @@ function createPointInfoMap(start, end, startName, endName, waypoints) {
 /**
  * Create a dynamic marker with an InfoWindow that appears with the label upon clicking.
  */
-function createCheckableMarker(map, pt, label, letter, icon, color) {
+function createCheckableMarker(map, pt, label, species, letter, icon, color) {
     let marker = createMarker(map, pt, letter, icon, color);
-    let infowindow = createInfoWindow(`${letter}: ${label}`, pt, marker);
+    let infowindow = createInfoWindow(`${letter}: ${label} (${species})`, pt, marker);
     marker.addListener('click', function() {
         infowindow.open(map, marker);
     });
@@ -228,10 +228,9 @@ function createBounds(start, end, waypoints) {
     let bounds = new google.maps.LatLngBounds();
     bounds.extend(start);
     bounds.extend(end);
-    for (let i = 0; i < Object.entries(waypoints).length; i++) {
-        let [label, cluster] = Object.entries(waypoints)[i];
+    for (let cluster of waypoints) {
         for (let pt of cluster) {
-            bounds.extend(pt);
+            bounds.extend(pt.latlng);
         }
     }
     return bounds;
