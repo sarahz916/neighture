@@ -482,6 +482,7 @@ function convertHoursToMinutes(time) {
  * return the label matching the given LatLng object.
  */
 function getLabelFromLatLng(pt, waypointsWithLabels) {
+    console.log(waypointsWithLabels);
     for (let [label, waypoints] of waypointsWithLabels.entries()) {
         // Calculate the difference between the lat/long of the points and 
         // check if its within a certain range.
