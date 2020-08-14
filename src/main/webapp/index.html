@@ -44,7 +44,7 @@
         </div>
         <br>
         <div class="index-text">
-          <h3> Create your next favorite leisure walking/jogging route to check out nature in your area! </h3>
+          <h2> Create your next favorite leisure walking/jogging route to check out nature in your area! </h2>
             <p> 
             After you select your start/end point(s), click "Submit and Generate Route"!
             On the next page, type in whatever plants or animals you want to see! 
@@ -67,9 +67,9 @@
             <button id="one-way" class="specify-route-type button">One-Way Route</button>
             <button id="loop" class="specify-route-type button" style="margin-left:20px;">Loop Route</button>
         </div>
-
+        <br>
         <div id="one-way-tab" class="center"> 
-            <h1>Specify Start and End Points: </h1>
+            <h3>Specify Start and End Points: </h3>
             <form action="/start-end" method="POST" id="one-way-form">
                 <p>Enter a start location:</p>
 
@@ -83,14 +83,17 @@
             </form>
             <a href='index.html'> Clear Entries </a>
         </div>
-
+  
         <div id="loop-tab" class="center"> 
-            <h1>Specify Start/End Point: </h1>
+            <h3>Specify Start/End Point: </h3>
             <form action="/start-end" method="POST" id="loop-form">
                 <p>Enter a start/end location:</p>
 
                 <input type="text" name="startloc-input" class="startloc-input" size="50"></input>
-
+                <br>
+                <p>Optional: set a radius (in miles) around your start/end point! 
+                  If you leave it empty, the default radius is 5 miles:</p>
+                <input type="number" name="radius" class="radius" size="50" step="any"></input>
                 <input type="submit" value="Submit and Generate Route" id="start-end-submit" class="button"/>  
             </form>
             <a href='index.html'> Clear Entries </a>
