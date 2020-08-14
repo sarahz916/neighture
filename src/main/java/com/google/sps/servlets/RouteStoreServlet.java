@@ -48,6 +48,7 @@ public class RouteStoreServlet extends HttpServlet {
     ArrayList<StoredRoute> routes;
     try{    
         //If there is zipcode attributes, return StoredRoutes with closest Routes to zipcode first.
+        //Maybe don't use zip code but use start and end locations
         Double zip_lng = (Double) session.getAttribute("zip_x");
         Double zip_lat = (Double) session.getAttribute("zip_y");
         GeoPt zip = new GeoPt(zip_lat.floatValue(), zip_lng.floatValue());
@@ -88,7 +89,6 @@ public class RouteStoreServlet extends HttpServlet {
       else{
           break;
       }
-    }
     return routes;
   }
 

@@ -29,7 +29,6 @@ import java.lang.InterruptedException;
   */ 
 @WebServlet("/zip-code")
 public class ZipCodeServlet extends HttpServlet{
-    private static final Double BOUNDING_BOX_WIDTH = 0.07246376811; // 5 miles
     private final String API_KEY = "AIzaSyBaBCxBuGqZx0IGQ4lb9eKrICwU8Rduz3c";
 
     /** Returns input zipcode */ 

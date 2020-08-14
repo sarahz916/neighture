@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//TODOs: Want page to work without start and end added 
+// Use start and end locations instead to sort routes
+//BUG: what to do if route text is the same?
+//Have it work without start and end location?
+
 window.onload = async function setup() {
     event.preventDefault();
     let startAddr = await getStartAddr();

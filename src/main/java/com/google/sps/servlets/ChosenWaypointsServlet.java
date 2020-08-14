@@ -30,9 +30,6 @@ import java.util.*;
 public class ChosenWaypointsServlet extends HttpServlet {
     private final ArrayList<String> FIELDS_MODIFIED = new ArrayList<String>( 
             Arrays.asList("chosenFetched", "textFetched"));
-    private final String FETCH_FIELD = "chosenFetched";
-    private final String FETCH_PROPERTY = "actual-route";
-    private final String ENTITY_TYPE = "Route";
     
 
     /** Goes through datastore to find most recent Direction Entity associated with SessionID.
@@ -41,7 +38,7 @@ public class ChosenWaypointsServlet extends HttpServlet {
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
       SessionDataStore sessionDataStore = new SessionDataStore(request);
-      String waypointsJSONstring = sessionDataStore.queryOnlyifFirstFetch(FETCH_FIELD, ENTITY_TYPE, FETCH_PROPERTY);
+      String waypointsJSONstring = sessionDataStore.queryOnlyifFirstFetch("chosenFetched", "Route",  "actual-route");
       response.setContentType("application/json");
       response.getWriter().println(waypointsJSONstring);
     }
