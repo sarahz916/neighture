@@ -48,8 +48,8 @@ html,body { height:100%; }
 }
 
 #point-map {
-    height: 300px;
-    width: 300px;
+    height: 500px;
+    width: 500px;
 }
 
 #route-list {
@@ -129,11 +129,6 @@ html,body { height:100%; }
   text-align: center;
 }
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 5be4c58de9cd08742eb89a27e9717598e5ccfd00
 .button {
   background-color: rgb(10, 71, 10);
   color: white;
