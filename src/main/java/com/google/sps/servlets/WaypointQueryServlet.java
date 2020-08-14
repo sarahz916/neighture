@@ -37,6 +37,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.HashSet;
 import java.util.Calendar;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -49,6 +50,7 @@ import java.io.InputStream;
 import opennlp.tools.postag.POSModel; 
 import opennlp.tools.postag.POSSample; 
 import opennlp.tools.postag.POSTaggerME; 
+//import edu.drexel.cs.jah473.autocorrect.Autocorrect;
 
 /** Servlet that handles the user's query by parsing out
   * the waypoint queries and their matching coordinates in 
@@ -69,7 +71,14 @@ public class WaypointQueryServlet extends HttpServlet {
   private static final String NOUN_SINGULAR_OR_MASS = "NN";
   private static final String NOUN_PLURAL = "NNS";
   private static final String PRONOUN = "PRP";
+  //public static Autocorrect corrector;
 
+  // @Override
+  // public void onCreate() {
+  //   super.onCreate();
+  //   HashSet<String> corpus = createCorpus();
+  //   corrector = new Autocorrect(corpus, false);
+  // }
     
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -114,7 +123,6 @@ public class WaypointQueryServlet extends HttpServlet {
     // Redirect back to the create-route page.
     response.sendRedirect("/create-route.html");
   }
-
 
   /** Using the input text, fetches waypoints from the database to be 
     * used by the frontend. Returns possible waypoints. 
@@ -337,7 +345,9 @@ public class WaypointQueryServlet extends HttpServlet {
       x = Math.round(x * 25000.0)/25000.0;
       Double y = observation.getDouble("latitude");
       y = Math.round(y * 25000.0)/25000.0;
-      String species = observation.getString("species_guess");
+      JSONObject taxon = observation.getJSONObject("taxon");
+      String species = taxon.getString("name");
+      System.out.println(species);
       Coordinate featureCoordinate = new Coordinate(x, y, label, species);
       coordinates.add(featureCoordinate);
       index += 1;
