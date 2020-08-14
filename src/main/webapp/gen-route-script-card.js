@@ -31,11 +31,12 @@ function createCards(routes) {
   const cardDivEl = document.getElementById('cards');
   cardDivEl.innerHTML = "";
   var CardDeck = newCardDeck();
+  cardDivEl.append(CardDeck);
   routes.forEach((route, index) => {
     CardDeck.appendChild(createCardEl(route));
     if ((index % 2) === 1){
-        cardDivEl.appendChild(CardDeck);
         CardDeck = newCardDeck();
+        cardDivEl.append(CardDeck);
     }
   });
 }
@@ -83,7 +84,7 @@ function createMapEl(route){
     const mapEl = document.createElement('div');
     const mapID = route.text + 'map';
     mapEl.setAttribute('id', mapID);
-    mapEl.setAttribute('class', 'small-map');
+    mapEl.setAttribute('class', 'map small-map');
     return mapEl;
 }
 /** Creates an url element as card-footer with id route.text + 'url' */
