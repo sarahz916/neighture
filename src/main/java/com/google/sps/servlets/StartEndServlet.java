@@ -39,7 +39,6 @@ import org.json.JSONException;
     urlPatterns = "/start-end"
 )
 public class StartEndServlet extends HttpServlet {
-    private final String ENTITY_TYPE =  "StartEnd";
     private final String API_KEY = "AIzaSyBaBCxBuGqZx0IGQ4lb9eKrICwU8Rduz3c";
 
   /** Fetches start and end data associated with Session ID */
@@ -47,9 +46,9 @@ public class StartEndServlet extends HttpServlet {
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
       SessionDataStore sessionDataStore = new SessionDataStore(request);
       try{
-          JSONObject start = new JSONObject(sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "start"));
-          JSONObject end = new JSONObject(sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "end"));
-          JSONObject midpoint = new JSONObject(sessionDataStore.fetchSessionEntity(ENTITY_TYPE, "midpoint"));
+          JSONObject start = new JSONObject(sessionDataStore.fetchSessionEntity("StartEnd", "start"));
+          JSONObject end = new JSONObject(sessionDataStore.fetchSessionEntity("StartEnd", "end"));
+          JSONObject midpoint = new JSONObject(sessionDataStore.fetchSessionEntity("StartEnd", "midpoint"));
           JSONObject startendmid = new JSONObject();
           startendmid.put("start", start);
           startendmid.put("end", end);
@@ -81,9 +80,9 @@ public class StartEndServlet extends HttpServlet {
             Coordinate midCoord = getMidpoint(startCoord, endCoord);
             // Store start and end in datastore with ID.
             SessionDataStore sessionDataStore = new SessionDataStore(request);
-            sessionDataStore.storeProperty(ENTITY_TYPE, "start", new Gson().toJson(startCoord));
-            sessionDataStore.storeProperty(ENTITY_TYPE, "end", new Gson().toJson(endCoord));
-            sessionDataStore.storeProperty(ENTITY_TYPE, "midpoint", new Gson().toJson(midCoord));
+            sessionDataStore.storeProperty("StartEnd", "start", new Gson().toJson(startCoord));
+            sessionDataStore.storeProperty("StartEnd", "end", new Gson().toJson(endCoord));
+            sessionDataStore.storeProperty("StartEnd", "midpoint", new Gson().toJson(midCoord));
             // Redirect back to the create-route page.
             response.sendRedirect("/create-route.html");
         } catch(Exception e){

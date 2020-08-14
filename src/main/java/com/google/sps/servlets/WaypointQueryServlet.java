@@ -74,7 +74,11 @@ public class WaypointQueryServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     SessionDataStore sessionDataStore = new SessionDataStore(request);
-    int statusCode = Integer.parseInt(sessionDataStore.fetchSessionEntity("Route", "statusCode"));
+    int statusCode = Integer.parseInt(sessionDataStore.fetchSessionEntity(
+        
+        
+        
+        "Route", "statusCode"));
     if (statusCode == HttpServletResponse.SC_OK) {
       String valueJSONString = sessionDataStore.queryOnlyifFirstFetch("queryFetched", "Route", "waypoints");
       response.setContentType("application/json");

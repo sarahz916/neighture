@@ -28,9 +28,6 @@ import com.google.gson.Gson;
     urlPatterns = "/text-store"
 )
 public class TextStoreServlet extends HttpServlet {
-    private final String FETCH_FIELD = "textFetched";
-    private final String FETCH_PROPERTY ="text";
-    private final String ENTITY_TYPE =  "Route";
 
   /** Looks up text input from Route Entites by Session ID in datastore.
   *   Returns text of most recent input-text from session ID. 
@@ -38,7 +35,7 @@ public class TextStoreServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
       SessionDataStore sessionDataStore = new SessionDataStore(request);
-      String valueJSONString = sessionDataStore.queryOnlyifFirstFetch(FETCH_FIELD, ENTITY_TYPE, FETCH_PROPERTY);
+      String valueJSONString = sessionDataStore.queryOnlyifFirstFetch("textFetched", "Route", "text");
       response.setContentType("application/json");
       response.getWriter().println(valueJSONString);
   }
