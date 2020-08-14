@@ -66,6 +66,7 @@ public class WaypointQueryServlet extends HttpServlet {
        Arrays.asList("queryFetched", "textFetched"));
   private final String FETCH_FIELD = "queryFetched";
   private final String FETCH_PROPERTY = "waypoints";
+  private final String ERROR_PROPERTY = "statusCode";
   private final String ENTITY_TYPE = "Route";
   private static final Double LOOP_BOUNDING_BOX_WIDTH = 0.07246376811; // 5 miles
   private static final Double ONE_WAY_BOUNDING_BOX_WIDTH = 0.0036231884; // 0.25 miles
@@ -77,9 +78,14 @@ public class WaypointQueryServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     SessionDataStore sessionDataStore = new SessionDataStore(request);
-    String valueJSONString = sessionDataStore.queryOnlyifFirstFetch(FETCH_FIELD, ENTITY_TYPE, FETCH_PROPERTY);
-    response.setContentType("application/json");
-    response.getWriter().println(valueJSONString);    
+    int statusCode = Integer.parseInt(sessionDataStore.queryOnlyifFirstFetch(FETCH_FIELD, ENTITY_TYPE, ERROR_PROPERTY));
+    if (statusCode == HttpServletResponse.SC_OK) {
+      String valueJSONString = sessionDataStore.queryOnlyifFirstFetch(FETCH_FIELD, ENTITY_TYPE, FETCH_PROPERTY);
+      response.setContentType("application/json");
+      response.getWriter().println(valueJSONString);   
+    } else {
+      response.sendError(statusCode);
+    }
   }
 
   @Override
@@ -90,13 +96,14 @@ public class WaypointQueryServlet extends HttpServlet {
     Coordinate start = getPoint(sessionDataStore, "start");
     Coordinate end = getPoint(sessionDataStore, "end");
     ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();
+    int statusCode = HttpServletResponse.SC_OK;
     try {
       waypoints = getLocations(input, start, end);
     } catch (IllegalArgumentException e) { // User puts down a number that's out of range
       System.out.println("ILLEGAL ARGUMENT");
-      response.setStatus(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE);
+      statusCode = HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE;
     } catch (DataFormatException e ) { // User enters malformed input
-      response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+      statusCode = HttpServletResponse.SC_BAD_REQUEST;
     } catch (Exception e) {
       throw new ServletException(e);
     }
@@ -104,6 +111,7 @@ public class WaypointQueryServlet extends HttpServlet {
     // Store input text and waypoint in datastore.
     sessionDataStore.storeProperty(ENTITY_TYPE, "waypoints", waypointsJSONstring);
     sessionDataStore.storeProperty(ENTITY_TYPE, "text", input);
+    sessionDataStore.storeProperty(ENTITY_TYPE, "statusCode", String.valueOf(statusCode));
     sessionDataStore.setSessionAttributes(FIELDS_MODIFIED);
     // Redirect back to the create-route page.
     response.sendRedirect("/create-route.html");
