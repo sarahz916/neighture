@@ -114,8 +114,6 @@ function createLegendEl(route){
  * Create a route and map from a waypoint entered by the user.
  */
 async function createMapWithWaypoints(route,  mapID, legendID, urlID) {
-    //setupGenRouteDropDown();
-    console.log(route.waypoints);
     let waypointjson = JSON.parse(route.waypoints);
     let waypoints = convertWaypointstoLatLng(waypointjson);
     let start = await getStartCoord();
@@ -234,7 +232,6 @@ function convertHoursToMinutes(time) {
  * return the label matching the given LatLng object.
  */
 function getLabelFromLatLng(pt, waypointsWithLabels) {
-    console.log(waypointsWithLabels);
     for (let [label, waypoints] of waypointsWithLabels.entries()) {
         // Calculate the difference between the lat/long of the points and 
         // check if its within a certain range.
@@ -305,7 +302,6 @@ function convertWaypointstoLatLng(waypoints) {
      for (let pt of waypoints) {
         let waypoint = new google.maps.LatLng(pt.y, pt.x);
         // If the given label doesn't exist in the map, add it.
-        console.log(pt.label);
         if (!latlngWaypoints.has(pt.label)) {
             latlngWaypoints.set(pt.label, [waypoint]);
         } else {
