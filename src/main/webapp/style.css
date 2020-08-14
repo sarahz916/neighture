@@ -8,6 +8,10 @@ html,body { height:100%; }
   height: 100%;
 }
 
+#body {
+    font-family: 'Montserrat';
+}
+
 #content {
   margin-left: auto;
   margin-right: auto;
@@ -25,6 +29,11 @@ html,body { height:100%; }
 
 .map {
   border: thin solid black;
+}
+
+#navbar-logo {
+    width: 100px;
+    height: 100px;
 }
 
 #route-map {
