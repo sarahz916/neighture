@@ -63,11 +63,7 @@ public class WaypointQueryServlet extends HttpServlet {
     .put("eight", 8).put("nine", 9).put("ten", 10).build(); 
   private static final int MAX_AMOUNT_ALLOWED = 10;
   private final ArrayList<String> FIELDS_MODIFIED = new ArrayList<String>( 
-       Arrays.asList("queryFetched", "textFetched"));
-  private final String FETCH_FIELD = "queryFetched";
-  private final String FETCH_PROPERTY = "waypoints";
-  private final String ERROR_PROPERTY = "statusCode";
-  private final String ENTITY_TYPE = "Route";
+       Arrays.asList("queryFetched", "textFetched", "statusfetch"));
   private static final Double LOOP_BOUNDING_BOX_WIDTH = 0.07246376811; // 5 miles
   private static final Double ONE_WAY_BOUNDING_BOX_WIDTH = 0.0036231884; // 0.25 miles
   private static final String NOUN_SINGULAR_OR_MASS = "NN";
@@ -78,9 +74,9 @@ public class WaypointQueryServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     SessionDataStore sessionDataStore = new SessionDataStore(request);
-    int statusCode = Integer.parseInt(sessionDataStore.queryOnlyifFirstFetch(FETCH_FIELD, ENTITY_TYPE, ERROR_PROPERTY));
+    int statusCode = Integer.parseInt(sessionDataStore.queryOnlyifFirstFetch("statusfetch", "Route", "statusCode"));
     if (statusCode == HttpServletResponse.SC_OK) {
-      String valueJSONString = sessionDataStore.queryOnlyifFirstFetch(FETCH_FIELD, ENTITY_TYPE, FETCH_PROPERTY);
+      String valueJSONString = sessionDataStore.queryOnlyifFirstFetch("queryFetched", "Route", "waypoints");
       response.setContentType("application/json");
       System.out.println(valueJSONString);
       response.getWriter().println(valueJSONString);   
@@ -111,9 +107,9 @@ public class WaypointQueryServlet extends HttpServlet {
     String waypointsJSONstring = new Gson().toJson(waypoints);
     System.out.println(waypointsJSONstring);
     // Store input text and waypoint in datastore.
-    sessionDataStore.storeProperty(ENTITY_TYPE, "waypoints", waypointsJSONstring);
-    sessionDataStore.storeProperty(ENTITY_TYPE, "text", input);
-    sessionDataStore.storeProperty(ENTITY_TYPE, "statusCode", String.valueOf(statusCode));
+    sessionDataStore.storeProperty("Route", "waypoints", waypointsJSONstring);
+    sessionDataStore.storeProperty("Route", "text", input);
+    sessionDataStore.storeProperty("Route", "statusCode", String.valueOf(statusCode));
     sessionDataStore.setSessionAttributes(FIELDS_MODIFIED);
     // Redirect back to the create-route page.
     response.sendRedirect("/create-route.html");
