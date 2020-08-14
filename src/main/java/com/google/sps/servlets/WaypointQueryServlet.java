@@ -82,6 +82,7 @@ public class WaypointQueryServlet extends HttpServlet {
     if (statusCode == HttpServletResponse.SC_OK) {
       String valueJSONString = sessionDataStore.queryOnlyifFirstFetch(FETCH_FIELD, ENTITY_TYPE, FETCH_PROPERTY);
       response.setContentType("application/json");
+      System.out.println(valueJSONString);
       response.getWriter().println(valueJSONString);   
     } else {
       response.sendError(statusCode);
@@ -108,6 +109,7 @@ public class WaypointQueryServlet extends HttpServlet {
       throw new ServletException(e);
     }
     String waypointsJSONstring = new Gson().toJson(waypoints);
+    System.out.println(waypointsJSONstring);
     // Store input text and waypoint in datastore.
     sessionDataStore.storeProperty(ENTITY_TYPE, "waypoints", waypointsJSONstring);
     sessionDataStore.storeProperty(ENTITY_TYPE, "text", input);
@@ -135,6 +137,7 @@ public class WaypointQueryServlet extends HttpServlet {
       if (locations.isEmpty()) { // Not in the database
         continue;
       } else {
+        System.out.println(feature);
         List<Coordinate> locationsList = locations.subList(0, Math.min(maxNumberCoordinates, locations.size()));
         waypoints.add(locationsList);
       }
