@@ -106,9 +106,7 @@ html,body { height:100%; }
   text-align: center;
 }
 
-span ~ span {
-padding-left: 100px;
-}
+
 
 .button {
   background-color: rgb(10, 71, 10);
