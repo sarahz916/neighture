@@ -32,8 +32,16 @@ html,body { height:100%; }
 }
 
 #navbar-logo {
-    width: 100px;
-    height: 100px;
+    width: 60px;
+    height: 60px;
+}
+
+.navbar {
+  font-family: 'Thasadith', Srisakdi;
+}
+
+.active {
+    font-weight: bold;
 }
 
 #route-map {
