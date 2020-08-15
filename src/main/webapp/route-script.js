@@ -20,9 +20,11 @@ const FILL_COLORS = ['#F1C40F', '#3498DB', '#154360', '#D1F2EB', '#D7BDE2', '#DC
                     ];
 const CHECKED_COLOR = "#FF0000";
 const MAX_WAYPOINTS = 23;
+const DIFF = 0.002;
 const CHOICE_AT_ONCE = 3; 
 const SC_REQUEST_ENTITY_TOO_LARGE = 413;
 const SC_BAD_REQUEST = 400;
+const SC_INTERNAL_SERVER_ERROR= 500;
 
 window.onload = async function setup() {
     let startAddr = await getStartAddr();
@@ -89,6 +91,7 @@ async function getStartEnd() {
 async function createMapWithWaypoints() {
     var res = await getChosenPoints();
     let waypoints = convertWaypointstoLatLng(res);
+    console.log(waypoints);
     let start = await getStartCoord();
     let end = await getEndCoord();
 
@@ -116,9 +119,7 @@ async function getChosenPoints() {
  */
 async function setupUserChoices() {
     let res = await getWaypoints();
-    console.log(res);
     let waypoints = convertWaypointClusterstoLatLng(res);
-    console.log(waypoints);
     let startCoord = await getStartCoord();
     let endCoord = await getEndCoord();
     let startName = await getStartAddr();
@@ -147,7 +148,6 @@ function createPointInfoMap(start, end, startName, endName, waypoints) {
         let cluster = waypoints[i];
         let letter = 'A';
         for (let pt of cluster) {
-            console.log(pt.latlng);
             createCheckableMarker(map, pt.latlng, pt.label, pt.species, letter, google.maps.SymbolPath.BACKWARD_CLOSED_ARROW, FILL_COLORS[i % MAX_WAYPOINTS]);
             letter = String.fromCharCode(letter.charCodeAt(0) + 1); // update the marker letter label to the next letter
         }
@@ -385,7 +385,9 @@ function getNumChecked() {
 function calcRoute(directionsService, directionsRenderer, start, end, waypoints) {
     var waypointsWithLabels = waypoints;
     let waypointsData = [];
-    waypoints.forEach((pts, label) => pts.forEach(pt => waypointsData.push({ location: pt })));
+    waypoints.forEach(pt => waypointsData.push({ location: pt.latlng }));
+    console.log(waypointsData);
+    console.log(waypoints);
     let request = {
         origin: start,
         destination: end,
@@ -426,9 +428,10 @@ async function createWaypointLegend(route, waypointsWithLabels) {
         let pt = route.legs[i].end_location;
         totalDistance += route.legs[i].distance.value;
         totalDuration += route.legs[i].duration.value;
-        let label = getLabelFromLatLng(pt, waypointsWithLabels);
+        let label = getInfoFromLatLng(pt, waypointsWithLabels, 'label');
+        let species = getInfoFromLatLng(pt, waypointsWithLabels, 'species');
         marker = String.fromCharCode(marker.charCodeAt(0) + 1);
-        addNewLegendElem(legend, `${marker}: ${label}`);
+        addNewLegendElem(legend, `${marker}: ${label} (${species})`);
     }
     let end = route.legs[route.legs.length - 1].end_location;
     totalDistance += route.legs[route.legs.length - 1].distance.value;
@@ -483,36 +486,35 @@ function convertHoursToMinutes(time) {
  * Given a Google Maps LatLng object and JSON containing waypoint coords with labels, 
  * return the label matching the given LatLng object.
  */
-function getLabelFromLatLng(pt, waypointsWithLabels) {
-    for (let [label, waypoints] of waypointsWithLabels.entries()) {
+function getInfoFromLatLng(pt, waypointsWithLabels, infoRequested) {
+    //for (let [label, waypoints] of waypointsWithLabels.entries()) {
+    for (let waypoint of waypointsWithLabels) {
         // Calculate the difference between the lat/long of the points and 
         // check if its within a certain range.
-        for (let waypoint of waypoints) {
-            let latDiff = Math.abs(waypoint.lat() - pt.lat());
-            let lngDiff = Math.abs(waypoint.lng() - pt.lng());
-            const range = 0.001;
-            if (latDiff < range && lngDiff < range) {
-                return label;
-            }
+        //for (let waypoint of waypoints) {
+        let latDiff = Math.abs(waypoint.latlng.lat() - pt.lat());
+        let lngDiff = Math.abs(waypoint.latlng.lng() - pt.lng());
+        const range = 0.001;
+        if (latDiff < DIFF && lngDiff < DIFF) {
+            return waypoint[`${infoRequested}`];
         }
+        //}
     }
     return '';
 }
 
 /**
- * Convert waypoint clusters in JSON form returned by servlet to Google Maps LatLng objects.
+ * Convert waypoint clusters in JSON form returned by servlet to a list of objects containing Google Maps LatLng objects
+ * in place of coordinates.
  */
 function convertWaypointClusterstoLatLng(waypoints) {
      let latlngWaypoints = [];
-     // let latlngWaypoints = {};
      for (let cluster of waypoints) {
          pts = [];
          for (let pt of cluster) {
             let waypoint = new google.maps.LatLng(pt.y, pt.x);
-            //pts.push(waypoint);
             pts.push({ latlng : waypoint, label : pt.label, species : pt.species });
          }
-         //latlngWaypoints[cluster[0].label] = pts; // cluster[0] is undefined here when entering a sentence
          latlngWaypoints.push(pts);
     }
     return latlngWaypoints;
@@ -522,17 +524,12 @@ function convertWaypointClusterstoLatLng(waypoints) {
  * Convert waypoints in JSON form returned by servlet to Google Maps LatLng objects.
  */
 function convertWaypointstoLatLng(waypoints) {
-     let latlngWaypoints = new Map();
+    let latLngWaypoints = [];
      for (let pt of waypoints) {
         let waypoint = new google.maps.LatLng(pt.y, pt.x);
-        // If the given label doesn't exist in the map, add it.
-        if (!latlngWaypoints.has(pt.label)) {
-            latlngWaypoints.set(pt.label, [waypoint]);
-        } else {
-            latlngWaypoints.get(pt.label).push(waypoint);
-        }
+        latLngWaypoints.push({ latlng: waypoint, label: pt.label, species: pt.species });
     }
-    return latlngWaypoints;
+    return latLngWaypoints;
 }
 
 /**
@@ -570,7 +567,8 @@ function generateURL(start, end, waypoints){
     let globalURL = 'https://www.google.com/maps/dir/?api=1';
     globalURL = globalURL + '&origin=' + start + '&destination=' + end;
     globalURL += '&waypoints='
-    waypoints.forEach((pts, label) => pts.forEach(pt => globalURL += pt + '|'));
+    //waypoints.forEach((pts, label) => pts.forEach(pt => globalURL += pt + '|'));
+    //waypoints.forEach(pt => globalURL += pt.latlng + '|')
     globalURL = globalURL + '&travelmode=walking';
     const URLcontainer = document.getElementById('globalURL');
     globalURL = globalURL.split(" ").join("") //need to get rid of white space for link to work
