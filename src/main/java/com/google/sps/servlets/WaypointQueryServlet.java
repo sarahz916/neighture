@@ -118,7 +118,6 @@ public class WaypointQueryServlet extends HttpServlet {
       throw new ServletException(e);
     }
     String waypointsJSONstring = new Gson().toJson(waypoints);
-    System.out.println(waypointsJSONstring);
     // Store input text and waypoint in datastore.
     sessionDataStore.storeProperty("Route", "waypoints", waypointsJSONstring);
     sessionDataStore.storeProperty("Route", "text", input);
@@ -145,7 +144,6 @@ public class WaypointQueryServlet extends HttpServlet {
       if (locations.isEmpty()) { // Not in the database
         continue;
       } else {
-        System.out.println(feature);
         List<Coordinate> locationsList = locations.subList(0, Math.min(maxNumberCoordinates, locations.size()));
         waypoints.add(locationsList);
       }
@@ -351,7 +349,6 @@ public class WaypointQueryServlet extends HttpServlet {
       y = Math.round(y * 25000.0)/25000.0;
       JSONObject taxon = observation.getJSONObject("taxon");
       String species = taxon.getString("name");
-      System.out.println(species);
       Coordinate featureCoordinate = new Coordinate(x, y, label, species);
       coordinates.add(featureCoordinate);
       index += 1;
