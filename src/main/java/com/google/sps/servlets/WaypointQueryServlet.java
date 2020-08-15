@@ -50,7 +50,7 @@ import java.io.InputStream;
 import opennlp.tools.postag.POSModel; 
 import opennlp.tools.postag.POSSample; 
 import opennlp.tools.postag.POSTaggerME; 
-//import edu.drexel.cs.jah473.autocorrect.Autocorrect;
+import edu.drexel.cs.jah473.autocorrect.Autocorrect;
 
 /** Servlet that handles the user's query by parsing out
   * the waypoint queries and their matching coordinates in 
@@ -71,7 +71,7 @@ public class WaypointQueryServlet extends HttpServlet {
   private static final String NOUN_SINGULAR_OR_MASS = "NN";
   private static final String NOUN_PLURAL = "NNS";
   private static final String PRONOUN = "PRP";
-  //public static Autocorrect corrector;
+  public static Autocorrect corrector;
 
   // @Override
   // public void onCreate() {
