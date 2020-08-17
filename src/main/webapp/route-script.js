@@ -31,8 +31,17 @@ window.onload = async function setup() {
     let endAddr = await getEndAddr();
     let startCoord = await getStartCoord;
     await initStartEndDisplay(startAddr, endAddr);
-    await setupUserChoices();
-    await createMapWithWaypoints();
+    // await setupUserChoices();
+    // await createMapWithWaypoints();
+    let enteredText = await getWaypoints();
+    if (JSON.stringify(enteredText) == '[]') {
+        console.log('empty text input, creating directions');
+        let chosenPoints = await getChosenPoints();
+        await createMapWithWaypoints(chosenPoints);
+    } else {
+        console.log('received text input, setting up checkboxes');
+        await setupUserChoices(enteredText);
+    }
 }
 
 /**
@@ -87,13 +96,13 @@ async function getStartEnd() {
 /**
  * Create a route and map from a waypoint entered by the user.
  */
-async function createMapWithWaypoints() {
-    var res = await getChosenPoints();
+async function createMapWithWaypoints(res) {
+    //var res = await getChosenPoints();
     let waypoints = convertWaypointstoLatLng(res);
     let start = await getStartCoord();
     let end = await getEndCoord();
 
-    let map = initMap(start, 'route-map');
+    let map = initMap(start, 'point-map');
     let directionsService = new google.maps.DirectionsService();
     let directionsRenderer = new google.maps.DirectionsRenderer({
         map: map
@@ -109,14 +118,15 @@ async function createMapWithWaypoints() {
 async function getChosenPoints() {
     let res = await fetch('/chosen-waypoints');
     let waypoints = await res.json();
+    console.log(waypoints);
     return waypoints;
 }
 
 /**
  * Set up the two left-hand panels of the page that allow the user to choose what they want in their route.
  */
-async function setupUserChoices() {
-    let res = await getWaypoints();
+async function setupUserChoices(res) {
+    //let res = await getWaypoints();
     let waypoints = convertWaypointClusterstoLatLng(res);
     let startCoord = await getStartCoord();
     let endCoord = await getEndCoord();
@@ -499,6 +509,7 @@ async function getWaypoints() {
     }
 
     let waypoints = await res.json();
+    console.log(waypoints);
     return waypoints;
 }
 
