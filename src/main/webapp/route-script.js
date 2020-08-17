@@ -91,10 +91,8 @@ async function getStartEnd() {
 async function createMapWithWaypoints() {
     var res = await getChosenPoints();
     let waypoints = convertWaypointstoLatLng(res);
-    console.log(waypoints);
     let start = await getStartCoord();
     let end = await getEndCoord();
-
     let map = initMap(start, 'route-map');
     let directionsService = new google.maps.DirectionsService();
     let directionsRenderer = new google.maps.DirectionsRenderer({
@@ -386,8 +384,6 @@ function calcRoute(directionsService, directionsRenderer, start, end, waypoints)
     var waypointsWithLabels = waypoints;
     let waypointsData = [];
     waypoints.forEach(pt => waypointsData.push({ location: pt.latlng }));
-    console.log(waypointsData);
-    console.log(waypoints);
     let request = {
         origin: start,
         destination: end,
@@ -566,9 +562,8 @@ function initMap(center, id) {
 function generateURL(start, end, waypoints){
     let globalURL = 'https://www.google.com/maps/dir/?api=1';
     globalURL = globalURL + '&origin=' + start + '&destination=' + end;
-    globalURL += '&waypoints='
-    //waypoints.forEach((pts, label) => pts.forEach(pt => globalURL += pt + '|'));
-    //waypoints.forEach(pt => globalURL += pt.latlng + '|')
+    globalURL += '&waypoints=';
+    waypoints.forEach(pt => globalURL += pt.latlng + '|');
     globalURL = globalURL + '&travelmode=walking';
     const URLcontainer = document.getElementById('globalURL');
     globalURL = globalURL.split(" ").join("") //need to get rid of white space for link to work
