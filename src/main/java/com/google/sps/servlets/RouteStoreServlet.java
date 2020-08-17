@@ -75,8 +75,10 @@ public class RouteStoreServlet extends HttpServlet {
     ArrayList<StoredRoute> routes = new ArrayList<>();
     for (Entity entity : results.asIterable()) {
       long id = entity.getKey().getId();
-      String text = (String) entity.getProperty("text");
-      String waypointsJson = (String) entity.getProperty("actual-route");
+      Text textText = (Text) entity.getProperty("text");
+      Text waypointsJsonText = (Text) entity.getProperty("actual-route");
+      String text = textText.getValue();
+      String waypointsJson = waypointsJsonText.getValue();
       if(routes.size() <= NUM_RESULTS){ //only want to return NUM_RESULTS routes
         if (waypointsJson != null){
             StoredRoute route = new StoredRoute(id, text, waypointsJson);
@@ -99,8 +101,10 @@ public class RouteStoreServlet extends HttpServlet {
     ArrayList<StoredRoute> routes = new ArrayList<>();
     for (Entity entity : results.asIterable()) {
       long id = entity.getKey().getId();
-      String text = (String) entity.getProperty("text");
-      String waypointsJson = (String) entity.getProperty("actual-route");
+      Text textText = (Text) entity.getProperty("text");
+      Text waypointsJsonText = (Text) entity.getProperty("actual-route");
+      String text = textText.getValue();
+      String waypointsJson = waypointsJsonText.getValue();
       GeoPt center;
       try{
         center = (GeoPt) entity.getProperty("center-of-mass");
