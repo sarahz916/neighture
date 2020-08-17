@@ -91,7 +91,6 @@ async function getStartEnd() {
 async function createMapWithWaypoints() {
     var res = await getChosenPoints();
     let waypoints = convertWaypointstoLatLng(res);
-    console.log(waypoints);
     let start = await getStartCoord();
     let end = await getEndCoord();
 
@@ -345,8 +344,6 @@ function calcRoute(directionsService, directionsRenderer, start, end, waypoints)
     var waypointsWithLabels = waypoints;
     let waypointsData = [];
     waypoints.forEach(pt => waypointsData.push({ location: pt.latlng }));
-    console.log(waypointsData);
-    console.log(waypoints);
     let request = {
         origin: start,
         destination: end,
