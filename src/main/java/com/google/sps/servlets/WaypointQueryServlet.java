@@ -70,6 +70,9 @@ public class WaypointQueryServlet extends HttpServlet {
   private static final String NOUN_SINGULAR_OR_MASS = "NN";
   private static final String NOUN_PLURAL = "NNS";
   private static final String PRONOUN = "PRP";
+  private static final String START = "start";
+  private static final String END = "end";
+  private static final String MIDPOINT = "midpoint";
   public static Autocorrect corrector;
 
   // @Override

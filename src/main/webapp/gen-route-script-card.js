@@ -17,6 +17,8 @@
 //BUG: what to do if route text is the same?
 //Have it work without start and end location?
 
+const DIFF = 0.002;
+
 window.onload = async function setup() {
     event.preventDefault();
     let startAddr = await getStartAddr();
@@ -133,7 +135,7 @@ async function createMapWithWaypoints(route,  mapID, legendID, urlID) {
 function calcRoute(directionsService, directionsRenderer, start, end, waypoints, legendID) {
     var waypointsWithLabels = waypoints;
     let waypointsData = [];
-    waypoints.forEach((pts, label) => pts.forEach(pt => waypointsData.push({ location: pt })));
+    waypoints.forEach(pt => waypointsData.push({ location: pt.latlng }));
     let request = {
         origin: start,
         destination: end,
@@ -174,9 +176,10 @@ async function createWaypointLegend(route, waypointsWithLabels, legendID) {
         let pt = route.legs[i].end_location;
         totalDistance += route.legs[i].distance.value;
         totalDuration += route.legs[i].duration.value;
-        let label = getLabelFromLatLng(pt, waypointsWithLabels);
+        let label = getInfoFromLatLng(pt, waypointsWithLabels, 'label');
+        let species = getInfoFromLatLng(pt, waypointsWithLabels, 'species');
         marker = String.fromCharCode(marker.charCodeAt(0) + 1);
-        addNewLegendElem(legend, `${marker}: ${label}`);
+        addNewLegendElem(legend, `${marker}: ${label} (${species})`);
     }
     let end = route.legs[route.legs.length - 1].end_location;
     totalDistance += route.legs[route.legs.length - 1].distance.value;
@@ -230,18 +233,19 @@ function convertHoursToMinutes(time) {
  * Given a Google Maps LatLng object and JSON containing waypoint coords with labels, 
  * return the label matching the given LatLng object.
  */
-function getLabelFromLatLng(pt, waypointsWithLabels) {
-    for (let [label, waypoints] of waypointsWithLabels.entries()) {
+function getInfoFromLatLng(pt, waypointsWithLabels, infoRequested) {
+    //for (let [label, waypoints] of waypointsWithLabels.entries()) {
+    for (let waypoint of waypointsWithLabels) {
         // Calculate the difference between the lat/long of the points and 
         // check if its within a certain range.
-        for (let waypoint of waypoints) {
-            let latDiff = Math.abs(waypoint.lat() - pt.lat());
-            let lngDiff = Math.abs(waypoint.lng() - pt.lng());
-            const range = 0.001;
-            if (latDiff < range && lngDiff < range) {
-                return label;
-            }
+        //for (let waypoint of waypoints) {
+        let latDiff = Math.abs(waypoint.latlng.lat() - pt.lat());
+        let lngDiff = Math.abs(waypoint.latlng.lng() - pt.lng());
+        const range = 0.001;
+        if (latDiff < DIFF && lngDiff < DIFF) {
+            return waypoint[`${infoRequested}`];
         }
+        //}
     }
     return '';
 }
@@ -273,8 +277,8 @@ function initMap(center, id) {
 function generateURL(start, end, waypoints, urlID){
     let globalURL = 'https://www.google.com/maps/dir/?api=1';
     globalURL = globalURL + '&origin=' + start + '&destination=' + end;
-    globalURL += '&waypoints='
-    waypoints.forEach((pts, label) => pts.forEach(pt => globalURL += pt + '|'));
+    globalURL += '&waypoints=';
+    waypoints.forEach(pt => globalURL += pt.latlng + '|');
     globalURL = globalURL + '&travelmode=walking';
     const URLcontainer = document.getElementById(urlID);
     globalURL = globalURL.split(" ").join("") //need to get rid of white space for link to work
@@ -297,17 +301,12 @@ async function writeToAssociatedText(){
  * Convert waypoints in JSON form returned by servlet to Google Maps LatLng objects.
  */
 function convertWaypointstoLatLng(waypoints) {
-     let latlngWaypoints = new Map();
+    let latLngWaypoints = [];
      for (let pt of waypoints) {
         let waypoint = new google.maps.LatLng(pt.y, pt.x);
-        // If the given label doesn't exist in the map, add it.
-        if (!latlngWaypoints.has(pt.label)) {
-            latlngWaypoints.set(pt.label, [waypoint]);
-        } else {
-            latlngWaypoints.get(pt.label).push(waypoint);
-        }
+        latLngWaypoints.push({ latlng: waypoint, label: pt.label, species: pt.species });
     }
-    return latlngWaypoints;
+    return latLngWaypoints;
 }
 
 /**
