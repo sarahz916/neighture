@@ -71,6 +71,9 @@ public class WaypointQueryServlet extends HttpServlet {
   private static final String NOUN_SINGULAR_OR_MASS = "NN";
   private static final String NOUN_PLURAL = "NNS";
   private static final String PRONOUN = "PRP";
+  private static final String START = "start";
+  private static final String END = "end";
+  private static final String MIDPOINT = "midpoint";
   public static Autocorrect corrector;
 
   // @Override
@@ -101,10 +104,10 @@ public class WaypointQueryServlet extends HttpServlet {
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     String input = request.getParameter("text-input");
     SessionDataStore sessionDataStore = new SessionDataStore(request);
-    Coordinate midpoint = getPoint(sessionDataStore, "midpoint");
-    Coordinate start = getPoint(sessionDataStore, "start");
-    Coordinate end = getPoint(sessionDataStore, "end");
-    Double loopRadius = getLoopRadius(sessionDataStore);
+    Coordinate midpoint = sessionDataStore.getPoint(MIDPOINT);
+    Coordinate start = sessionDataStore.getPoint(START);
+    Coordinate end = sessionDataStore.getPoint(END);
+    Double loopRadius = sessionDataStore.getLoopRadius();
     ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();
     int statusCode = HttpServletResponse.SC_OK;
     try {
@@ -356,21 +359,4 @@ public class WaypointQueryServlet extends HttpServlet {
     return coordinates;
   }
 
-  /** Fetches point (start, midpoint, end) from sessionDataStore. 
-    */
-  private Coordinate getPoint(SessionDataStore sessionDataStore, String pointDescription){
-    JSONObject jsonObject = new JSONObject(sessionDataStore.fetchSessionEntity("StartEnd", pointDescription));
-    Double x = jsonObject.getDouble("x");
-    Double y = jsonObject.getDouble("y");
-    Coordinate point = new Coordinate(x, y, pointDescription, "");
-    return point;
-  }
-
-  /** Fetches radius for loop from sessionDataStore. 
-    */
-  private Double getLoopRadius(SessionDataStore sessionDataStore){
-    String radiusString = sessionDataStore.fetchSessionEntity("StartEnd", "radius");
-    Double radius = Double.parseDouble(radiusString);
-    return radius;
-  }
 }

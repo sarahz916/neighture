@@ -99,7 +99,7 @@ async function createMapWithWaypoints(res) {
     let waypoints = convertWaypointstoLatLng(res);
     let start = await getStartCoord();
     let end = await getEndCoord();
-
+    
     let map = initMap(start, 'point-map');
     let directionsService = new google.maps.DirectionsService();
     let directionsRenderer = new google.maps.DirectionsRenderer({
@@ -527,7 +527,7 @@ function generateURL(start, end, waypoints){
     let globalURL = 'https://www.google.com/maps/dir/?api=1';
     globalURL = globalURL + '&origin=' + start + '&destination=' + end;
     globalURL += '&waypoints=';
-    waypoints.forEach(pt => globalURL += pt.latlng + '|')
+    waypoints.forEach(pt => globalURL += pt.latlng + '|');
     globalURL = globalURL + '&travelmode=walking';
     const URLcontainer = document.getElementById('globalURL');
     globalURL = globalURL.split(" ").join("") //need to get rid of white space for link to work

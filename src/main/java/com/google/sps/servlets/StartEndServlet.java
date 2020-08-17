@@ -74,6 +74,7 @@ public class StartEndServlet extends HttpServlet {
             // Check if this is a loop or one-way route and get the end accordingly.
             if (request.getParameterMap().containsKey("endloc-input")) {
                 end = request.getParameter("endloc-input");
+                sessionDataStore.storeProperty("StartEnd", "radius", DEFAULT_COORDINATE_STRING);
             } else {
                 end = start;
                 Double radiusInMiles = getRadius(request);
