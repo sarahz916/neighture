@@ -31,15 +31,13 @@ window.onload = async function setup() {
     let endAddr = await getEndAddr();
     let startCoord = await getStartCoord;
     await initStartEndDisplay(startAddr, endAddr);
-    // await setupUserChoices();
-    // await createMapWithWaypoints();
+
+    // Either load the checkbox map or the directions map.
     let enteredText = await getWaypoints();
     if (JSON.stringify(enteredText) == '[]') {
-        console.log('empty text input, creating directions');
         let chosenPoints = await getChosenPoints();
         await createMapWithWaypoints(chosenPoints);
     } else {
-        console.log('received text input, setting up checkboxes');
         await setupUserChoices(enteredText);
     }
 }
@@ -118,7 +116,6 @@ async function createMapWithWaypoints(res) {
 async function getChosenPoints() {
     let res = await fetch('/chosen-waypoints');
     let waypoints = await res.json();
-    console.log(waypoints);
     return waypoints;
 }
 
@@ -509,7 +506,6 @@ async function getWaypoints() {
     }
 
     let waypoints = await res.json();
-    console.log(waypoints);
     return waypoints;
 }
 
