@@ -89,6 +89,7 @@ public class RouteStoreServlet extends HttpServlet {
       else{
           break;
       }
+    }
     return routes;
   }
 

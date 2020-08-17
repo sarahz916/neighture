@@ -81,12 +81,12 @@ public class StartEndServlet extends HttpServlet {
                   response.setContentType("text/html");
                   response.getWriter().println("Invalid number; please enter a nonnegative number. "
                    + "Your radius will be set to " + String.valueOf(DEFAULT_RADIUS) + " miles.");
-                  sessionDataStore.storeProperty(ENTITY_TYPE, "radius", DEFAULT_COORDINATE_STRING);
+                  sessionDataStore.storeProperty("StartEnd", "radius", DEFAULT_COORDINATE_STRING);
                 } else if (radiusInMiles == 0.0) {
-                  sessionDataStore.storeProperty(ENTITY_TYPE, "radius", DEFAULT_COORDINATE_STRING);
+                  sessionDataStore.storeProperty("StartEnd", "radius", DEFAULT_COORDINATE_STRING);
                 } else {
                   Double radiusInCoordinates = radiusInMiles / MILES_TO_COORDINATES;
-                  sessionDataStore.storeProperty(ENTITY_TYPE, "radius", String.valueOf(radiusInCoordinates));
+                  sessionDataStore.storeProperty("StartEnd", "radius", String.valueOf(radiusInCoordinates));
                 }
             }
             //Request GeoCoding API for coordinates
@@ -95,7 +95,6 @@ public class StartEndServlet extends HttpServlet {
             //Get midpoint Coordinate
             Coordinate midCoord = getMidpoint(startCoord, endCoord);
             // Store start and end in datastore with ID.
-            SessionDataStore sessionDataStore = new SessionDataStore(request);
             sessionDataStore.storeProperty("StartEnd", "start", new Gson().toJson(startCoord));
             sessionDataStore.storeProperty("StartEnd", "end", new Gson().toJson(endCoord));
             sessionDataStore.storeProperty("StartEnd", "midpoint", new Gson().toJson(midCoord));

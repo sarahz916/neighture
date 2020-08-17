@@ -49,11 +49,11 @@ public class WaypointQueryServletTest {
   public static final ArrayList<Coordinate> RASPBERRY = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62212, 41.89796, "raspberry", "big raspberry"), new Coordinate(-87.62456, 41.89696, "raspberry", "big raspberry"), new Coordinate(-87.62392, 41.88844, "raspberry", "big raspberry")));
   public static final ArrayList<Coordinate> TREE = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62224, 41.8972, "tree", "pine tree")));
   public static final ArrayList<Coordinate> NOTHING = new ArrayList<Coordinate>();
-  public static final String MUSHROOM_BACKEND = "[{\"latitude\": 41.848653, \"longitude\": -87.629454, \"species_guess\": \"red mushroom\", \"common_name\": {\"name\": \"mushroom\"}}]";
-  public static final String RASPBERRY_BACKEND = "[{\"latitude\": 41.897946, \"longitude\": -87.622112, \"species_guess\": \"big raspberry\", \"common_name\": {\"name\": \"raspberry\"}}, "
-    + "{\"latitude\": 41.896968, \"longitude\": -87.624580, \"species_guess\": \"big raspberry\", \"common_name\": {\"name\": \"raspberry\"}}, "
-    + "{\"latitude\": 41.888454, \"longitude\": -87.623920, \"species_guess\": \"big raspberry\", \"common_name\": {\"name\": \"raspberry\"}}]";
-  public static final String TREE_BACKEND = "[{\"latitude\": 41.897219, \"longitude\": -87.622235, \"species_guess\": \"pine tree\", \"common_name\": {\"name\": \"tree\"}}]";
+  public static final String MUSHROOM_BACKEND = "[{\"latitude\": 41.848653, \"longitude\": -87.629454, \"taxon\": {\"name\": \"red mushroom\"}, \"common_name\": {\"name\": \"mushroom\"}}]";
+  public static final String RASPBERRY_BACKEND = "[{\"latitude\": 41.897946, \"longitude\": -87.622112, \"taxon\": {\"name\": \"big raspberry\"}, \"common_name\": {\"name\": \"raspberry\"}}, "
+    + "{\"latitude\": 41.896968, \"longitude\": -87.624580, \"taxon\": {\"name\": \"big raspberry\"}, \"common_name\": {\"name\": \"raspberry\"}}, "
+    + "{\"latitude\": 41.888454, \"longitude\": -87.623920, \"taxon\": {\"name\": \"big raspberry\"}, \"common_name\": {\"name\": \"raspberry\"}}]";
+  public static final String TREE_BACKEND = "[{\"latitude\": 41.897219, \"longitude\": -87.622235, \"taxon\": {\"name\": \"pine tree\"}, \"common_name\": {\"name\": \"tree\"}}]";
   public static final String NOTHING_BACKEND = "[]";
   public static final String COMPARISON_DATE = "2019-08-01";
   public static final String MULT_FEATURES_ONE_WAYPOINT_QUERY = "mushroom,cLover     raSpbeRRy   ";
