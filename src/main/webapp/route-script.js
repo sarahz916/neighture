@@ -376,43 +376,63 @@ async function createWaypointLegend(route, waypointsWithLabels) {
     let legend = document.getElementById('legend');
     let marker = 'A';
     addNewLegendElem(legend, `${marker}: start`);
-    let i;
-    let totalDistance = 0;
-    let totalDuration = 0;
-    // For each leg of the route, find the label of the end point
-    // and add it to the page.
-    for (i = 0; i < route.legs.length - 1; i++) {
-        let pt = route.legs[i].end_location;
-        totalDistance += route.legs[i].distance.value;
-        totalDuration += route.legs[i].duration.value;
-        let label = getInfoFromLatLng(pt, waypointsWithLabels, 'label');
-        let species = getInfoFromLatLng(pt, waypointsWithLabels, 'species');
+
+    const waypointOrder = route.waypoint_order;
+
+    // For each waypoint, in the order given by the route, add a new legend elem with label/species
+    for (let idx of waypointOrder) {
+        let waypoint = waypointsWithLabels[idx];
         marker = String.fromCharCode(marker.charCodeAt(0) + 1);
-        addNewLegendElem(legend, `${marker}: ${label} (${species})`);
+        addNewLegendElem(legend, `${marker}: ${waypoint.label} (${waypoint.species})`);
     }
-    let end = route.legs[route.legs.length - 1].end_location;
-    totalDistance += route.legs[route.legs.length - 1].distance.value;
-    totalDuration += route.legs[route.legs.length - 1].duration.value;
+
     marker = String.fromCharCode(marker.charCodeAt(0) + 1);
     addNewLegendElem(legend, `${marker}: end`);
-    addDistanceTimeToLegend(legend, totalDistance, totalDuration);
-}
 
-/**
- * Given the total distance and time of a route, convert the numbers to more useful metrics
- * and add them to the legend to display to the user.
- */
-function addDistanceTimeToLegend(legend, totalDistance, totalDuration) {
-    // Convert totalDistance and totalDuration to more helpful metrics.
-    totalDistance = Math.round(convertMetersToMiles(totalDistance) * 10) / 10;
-    totalDuration = Math.round(convertSecondsToHours(totalDuration) * 10) / 10;
+    // Add route distance to legend
+    let totalDistance = getRouteDistance(route);
+    addNewLegendElem(legend, `Total Route Distance: ${totalDistance} miles`);
+
+    // Add route duration to legend
+    let totalDuration = getRouteDuration(route);
     let durationMetric = 'hours';
     if (totalDuration < 1) {
         totalDuration = Math.round(convertHoursToMinutes(totalDuration) * 10) / 10;
         durationMetric = 'minutes'
     }
-    addNewLegendElem(legend, `Total Route Distance: ${totalDistance} miles`);
     addNewLegendElem(legend, `Total Route Duration: ${totalDuration} ${durationMetric}`);
+}
+
+/**
+ * Calculate and return the total distance of a route in miles.
+ */
+function getRouteDistance(route) {
+    let totalDistance = 0;
+     for (i = 0; i < route.legs.length - 1; i++) {
+        let pt = route.legs[i].end_location;
+        totalDistance += route.legs[i].distance.value;
+    }
+    let end = route.legs[route.legs.length - 1].end_location;
+    totalDistance += route.legs[route.legs.length - 1].distance.value
+    /* Convert distance to a more helpful metric. */
+    return Math.round(convertMetersToMiles(totalDistance) * 10) / 10;
+}
+
+/**
+ * Calculate and return the total duration of a route in hours.
+ */
+function getRouteDuration(route) {
+    let totalDuration = 0;
+    // For each leg of the route, find the label of the end point
+    // and add it to the page.
+    for (i = 0; i < route.legs.length - 1; i++) {
+        let pt = route.legs[i].end_location;
+        totalDuration += route.legs[i].duration.value;
+    }
+    let end = route.legs[route.legs.length - 1].end_location;
+    totalDuration += route.legs[route.legs.length - 1].duration.value;
+    /* Convert time to a more helpful metric. */
+    return Math.round(convertSecondsToHours(totalDuration) * 10) / 10;
 }
 
 /**
@@ -436,25 +456,6 @@ function convertSecondsToHours(time) {
 function convertHoursToMinutes(time) {
     const CONVERSION = 60;
     return time / CONVERSION;
-}
-
-
-/**
- * Given a Google Maps LatLng object and JSON containing waypoint coords with labels, 
- * return the label matching the given LatLng object.
- */
-function getInfoFromLatLng(pt, waypointsWithLabels, infoRequested) {
-    for (let waypoint of waypointsWithLabels) {
-        // Calculate the difference between the lat/long of the points and 
-        // check if its within a certain range.
-        let latDiff = Math.abs(waypoint.latlng.lat() - pt.lat());
-        let lngDiff = Math.abs(waypoint.latlng.lng() - pt.lng());
-        const range = 0.001;
-        if (latDiff < DIFF && lngDiff < DIFF) {
-            return waypoint[`${infoRequested}`];
-        }
-    }
-    return '';
 }
 
 /**
