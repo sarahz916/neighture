@@ -26,12 +26,26 @@ public final class CoordinateTest {
     public static final Double X = 3.0;
     public static final Double Y = 4.0;
     public static final String SPECIES = "bird";
+    public static final String URL = "iNaturalist.com/bird";
+    public static final String NOTHING = "";
+
     @Test
-    public void canConstructSimpleCoordinateObject() {
-        Coordinate point = new Coordinate(X, Y, LABEL, SPECIES);
+    public void canConstructCoordinateOnlyLabel() {
+        Coordinate point = new Coordinate(X, Y, LABEL);
+        Assert.assertEquals(X, point.getX());
+        Assert.assertEquals(Y, point.getY());
+        Assert.assertEquals(LABEL, point.getLabel());
+        Assert.assertEquals(NOTHING, point.getSpecies());
+        Assert.assertEquals(NOTHING, point.getUrl());
+    }
+
+    @Test
+    public void canConstructCoordinateSpeciesAndUrl() {
+        Coordinate point = new Coordinate(X, Y, LABEL, SPECIES, URL);
         Assert.assertEquals(X, point.getX());
         Assert.assertEquals(Y, point.getY());
         Assert.assertEquals(LABEL, point.getLabel());
         Assert.assertEquals(SPECIES, point.getSpecies());
+        Assert.assertEquals(URL, point.getUrl());
     }
 }

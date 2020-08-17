@@ -209,7 +209,7 @@ public final class SessionDataStore {
         JSONObject jsonObject = new JSONObject(this.fetchSessionEntity("StartEnd", pointDescription));
         Double x = jsonObject.getDouble("x");
         Double y = jsonObject.getDouble("y");
-        Coordinate point = new Coordinate(x, y, pointDescription, "");
+        Coordinate point = new Coordinate(x, y, pointDescription);
         return point;
     }
 
