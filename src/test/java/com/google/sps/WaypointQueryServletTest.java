@@ -41,7 +41,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 /** Tests each public function of WaypointQueryServlet aside from those relating to the datastore
   */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(WaypointQueryServlet.class)
+@PrepareForTest({WaypointQueryServlet.class, SessionDataStore.class})
 public class WaypointQueryServletTest {
   public static final ArrayList<Coordinate> MUSHROOM = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62944, 41.84864, "mushroom", "red mushroom")));
   public static final ArrayList<Coordinate> CLOVER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.63566666666667, 41.856, "clover", "four-leaf clover")));
@@ -77,14 +77,21 @@ public class WaypointQueryServletTest {
   public static final ArrayList<String> RASPBERRY_WORD = new ArrayList<String>(Arrays.asList("raspberry"));
   private static final Coordinate START = new Coordinate(-87.62940, 41.84865, "start", "");
   private static final Coordinate END = new Coordinate(-87.62942, 41.84861, "end", "");
-  private static final String[] LOOP_CUSTOM_COMPARISON = {"-87.67287826086", "-87.58592173914", "41.80517173914", "41.89212826086"};
-  private static final String[] LOOP_DEFAULT_COMPARISON = {"-87.70186376811", "-87.55693623189", "41.77618623189", "41.92111376811"};
+  private static Double LOOP_RADIUS = 0.07246376811;
+  private static final String[] LOOP_COMPARISON = {"-87.70186376811", "-87.55693623189", "41.77618623189", "41.92111376811"};
   private static final String[] ONE_WAY_COMPARISON = {"-87.6330431884", "-87.6257768116", "41.8449868116", "41.8522731884"};
   private WaypointQueryServlet servlet;
+  private SessionDataStore sds;
 
   @Before
   public void before() throws Exception { 
     servlet = PowerMockito.spy(new WaypointQueryServlet());
+
+    sds = PowerMockito.mock(SessionDataStore.class);
+    PowerMockito.whenNew(SessionDataStore.class).withAnyArguments().thenReturn(sds);
+    PowerMockito.when(sds.getPoint("start")).thenReturn(START);
+    PowerMockito.when(sds.getPoint("end")).thenReturn(END);
+    PowerMockito.when(sds.getLoopRadius()).thenReturn(LOOP_RADIUS);
   }
 
   /* Testing getStartDate */
@@ -97,24 +104,18 @@ public class WaypointQueryServletTest {
     assertEquals(date, COMPARISON_DATE);
   }
 
-  /* Testing getBoundingBox loop with default radius */
+  /* Testing getBoundingBox loop */
   @Test 
-  public void testGetBoundingBoxLoopDefault() throws Exception {
-    String[] bounds = servlet.getBoundingBox(START, START, DEFAULT_RADIUS);
-    assertEquals(bounds, LOOP_DEFAULT_COMPARISON);
-  }
-
-  /* Testing getBoundingBox loop with custom radius */
-  @Test 
-  public void testGetBoundingBoxLoopCustom() throws Exception {
-    String[] bounds = servlet.getBoundingBox(START, START, CUSTOM_RADIUS);
-    assertEquals(bounds, LOOP_CUSTOM_COMPARISON);
+  public void testGetBoundingBoxLoop() throws Exception {
+    PowerMockito.when(sds.getPoint("end")).thenReturn(START);
+    String[] bounds = servlet.getBoundingBox(sds);
+    assertEquals(bounds, LOOP_COMPARISON);
   }
 
   /* Testing getBoundingBox one-way */
   @Test 
   public void testGetBoundingBoxOneWay() throws Exception {
-    String[] bounds = servlet.getBoundingBox(START, END, 0.0); // radius doesn't matter here
+    String[] bounds = servlet.getBoundingBox(sds); // radius doesn't matter here
     assertEquals(bounds, ONE_WAY_COMPARISON);
   }
 
@@ -129,7 +130,7 @@ public class WaypointQueryServletTest {
   @Test 
   public void testFetchFromDatabaseResult() throws Exception {
     PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(TREE_BACKEND);
-    ArrayList<Coordinate> coordinateResult = servlet.fetchFromDatabase("tree", "tree,lichen", START, START, DEFAULT_RADIUS);
+    ArrayList<Coordinate> coordinateResult = servlet.fetchFromDatabase("tree", "tree,lichen", sds);
     assertEquals(coordinateResult, TREE);
   }
 
@@ -137,7 +138,7 @@ public class WaypointQueryServletTest {
   @Test 
   public void testFetchFromDatabaseNoResult() throws Exception {
     PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(NOTHING_BACKEND);
-    ArrayList<Coordinate> coordinateResult = servlet.fetchFromDatabase("trash", "trash", START, START, DEFAULT_RADIUS);
+    ArrayList<Coordinate> coordinateResult = servlet.fetchFromDatabase("trash", "trash", sds);
     assertEquals(coordinateResult, NOTHING);
   }
 
@@ -275,7 +276,7 @@ public class WaypointQueryServletTest {
   @Test
   public void testGetLocationsEmpty() throws Exception {
     PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(NOTHING_BACKEND);
-    ArrayList<List<Coordinate>> locations = servlet.getLocations("", START, START, DEFAULT_RADIUS);
+    ArrayList<List<Coordinate>> locations = servlet.getLocations("", sds);
     ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
     assertEquals(locations, comparison);
   }
@@ -284,7 +285,7 @@ public class WaypointQueryServletTest {
   @Test
   public void testGetLocationsOne() throws Exception {
     PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(RASPBERRY_BACKEND);
-    ArrayList<List<Coordinate>> locations = servlet.getLocations("raspberry", START, START, DEFAULT_RADIUS);
+    ArrayList<List<Coordinate>> locations = servlet.getLocations("raspberry", sds);
     ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
     comparison.add(RASPBERRY);
     assertEquals(locations, comparison);
@@ -294,7 +295,7 @@ public class WaypointQueryServletTest {
   @Test
   public void testGetLocationsNumber() throws Exception {
     PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(RASPBERRY_BACKEND);
-    ArrayList<List<Coordinate>> locations = servlet.getLocations("1 raspberry", START, START, DEFAULT_RADIUS);
+    ArrayList<List<Coordinate>> locations = servlet.getLocations("1 raspberry", sds);
     ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
     comparison.add(Arrays.asList(RASPBERRY.get(0)));
     assertEquals(locations, comparison);
