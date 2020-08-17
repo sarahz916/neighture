@@ -34,7 +34,7 @@ window.onload = async function setup() {
 
     // Either load the checkbox map or the directions map.
     let enteredText = await getWaypoints();
-    if (JSON.stringify(enteredText) == '[]') {
+    if (JSON.stringify(enteredText) === '[]') {
         let chosenPoints = await getChosenPoints();
         await createMapWithWaypoints(chosenPoints);
     } else {
@@ -95,11 +95,10 @@ async function getStartEnd() {
  * Create a route and map from a waypoint entered by the user.
  */
 async function createMapWithWaypoints(res) {
-    //var res = await getChosenPoints();
     let waypoints = convertWaypointstoLatLng(res);
     let start = await getStartCoord();
     let end = await getEndCoord();
-    
+
     let map = initMap(start, 'point-map');
     let directionsService = new google.maps.DirectionsService();
     let directionsRenderer = new google.maps.DirectionsRenderer({
@@ -123,7 +122,6 @@ async function getChosenPoints() {
  * Set up the two left-hand panels of the page that allow the user to choose what they want in their route.
  */
 async function setupUserChoices(res) {
-    //let res = await getWaypoints();
     let waypoints = convertWaypointClusterstoLatLng(res);
     let startCoord = await getStartCoord();
     let endCoord = await getEndCoord();
