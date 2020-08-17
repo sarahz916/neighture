@@ -71,6 +71,9 @@ public class WaypointQueryServlet extends HttpServlet {
   private static final String NOUN_SINGULAR_OR_MASS = "NN";
   private static final String NOUN_PLURAL = "NNS";
   private static final String PRONOUN = "PRP";
+  private static final String START = "start";
+  private static final String END = "end";
+  private static final String MIDPOINT = "midpoint";
   public static Autocorrect corrector;
 
   // @Override
@@ -101,9 +104,9 @@ public class WaypointQueryServlet extends HttpServlet {
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     String input = request.getParameter("text-input");
     SessionDataStore sessionDataStore = new SessionDataStore(request);
-    Coordinate midpoint = sessionDataStore.getPoint("midpoint");
-    Coordinate start = sessionDataStore.getPoint("start");
-    Coordinate end = sessionDataStore.getPoint("end");
+    Coordinate midpoint = sessionDataStore.getPoint(MIDPOINT);
+    Coordinate start = sessionDataStore.getPoint(START);
+    Coordinate end = sessionDataStore.getPoint(END);
     Double loopRadius = sessionDataStore.getLoopRadius();
     ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();
     int statusCode = HttpServletResponse.SC_OK;

@@ -75,10 +75,19 @@ public class RouteStoreServlet extends HttpServlet {
     ArrayList<StoredRoute> routes = new ArrayList<>();
     for (Entity entity : results.asIterable()) {
       long id = entity.getKey().getId();
-      Text textText = (Text) entity.getProperty("text");
-      Text waypointsJsonText = (Text) entity.getProperty("actual-route");
-      String text = textText.getValue();
-      String waypointsJson = waypointsJsonText.getValue();
+      Object textObject = entity.getProperty("text");
+      Object waypointsJsonObject = entity.getProperty("actual-route");
+      String text;
+      String waypointsJson;
+      try{
+        Text textText = (Text) textObject;
+        Text waypointsJsonText = (Text) waypointsJsonObject;
+        text = textText.getValue();
+        waypointsJson = waypointsJsonText.getValue();
+      } catch(ClassCastException e){ //some old routes in datastore are stored as strings
+        text = (String) textObject;
+        waypointsJson = (String) waypointsJsonObject;
+      }
       if(routes.size() <= NUM_RESULTS){ //only want to return NUM_RESULTS routes
         if (waypointsJson != null){
             StoredRoute route = new StoredRoute(id, text, waypointsJson);
@@ -101,10 +110,19 @@ public class RouteStoreServlet extends HttpServlet {
     ArrayList<StoredRoute> routes = new ArrayList<>();
     for (Entity entity : results.asIterable()) {
       long id = entity.getKey().getId();
-      Text textText = (Text) entity.getProperty("text");
-      Text waypointsJsonText = (Text) entity.getProperty("actual-route");
-      String text = textText.getValue();
-      String waypointsJson = waypointsJsonText.getValue();
+      Object textObject = entity.getProperty("text");
+      Object waypointsJsonObject = entity.getProperty("actual-route");
+      String text;
+      String waypointsJson;
+      try{
+        Text textText = (Text) textObject;
+        Text waypointsJsonText = (Text) waypointsJsonObject;
+        text = textText.getValue();
+        waypointsJson = waypointsJsonText.getValue();
+      } catch(ClassCastException e){ //some old routes in datastore are stored as strings
+        text = (String) textObject;
+        waypointsJson = (String) waypointsJsonObject;
+      }
       GeoPt center;
       try{
         center = (GeoPt) entity.getProperty("center-of-mass");
