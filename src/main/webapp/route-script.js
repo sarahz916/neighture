@@ -444,18 +444,15 @@ function convertHoursToMinutes(time) {
  * return the label matching the given LatLng object.
  */
 function getInfoFromLatLng(pt, waypointsWithLabels, infoRequested) {
-    //for (let [label, waypoints] of waypointsWithLabels.entries()) {
     for (let waypoint of waypointsWithLabels) {
         // Calculate the difference between the lat/long of the points and 
         // check if its within a certain range.
-        //for (let waypoint of waypoints) {
         let latDiff = Math.abs(waypoint.latlng.lat() - pt.lat());
         let lngDiff = Math.abs(waypoint.latlng.lng() - pt.lng());
         const range = 0.001;
         if (latDiff < DIFF && lngDiff < DIFF) {
             return waypoint[`${infoRequested}`];
         }
-        //}
     }
     return '';
 }
@@ -494,7 +491,6 @@ function convertWaypointstoLatLng(waypoints) {
  */
 async function getWaypoints() {
     let res = await fetch('/query');
-
     // Catch HTTP status error codes
     if (res.status === SC_REQUEST_ENTITY_TOO_LARGE) {
         alert('Too many waypoints in text input. Please try again.');
@@ -523,9 +519,8 @@ function initMap(center, id) {
 function generateURL(start, end, waypoints){
     let globalURL = 'https://www.google.com/maps/dir/?api=1';
     globalURL = globalURL + '&origin=' + start + '&destination=' + end;
-    globalURL += '&waypoints='
-    //waypoints.forEach((pts, label) => pts.forEach(pt => globalURL += pt + '|'));
-    //waypoints.forEach(pt => globalURL += pt.latlng + '|')
+    globalURL += '&waypoints=';
+    waypoints.forEach(pt => globalURL += pt.latlng + '|')
     globalURL = globalURL + '&travelmode=walking';
     const URLcontainer = document.getElementById('globalURL');
     globalURL = globalURL.split(" ").join("") //need to get rid of white space for link to work
