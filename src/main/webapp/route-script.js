@@ -282,46 +282,22 @@ function createCheckBoxes(waypointChoices) {
 
   const waypointChoiceEl = document.getElementById('select-points');
   for (let i = 0; i < waypointChoices.length; i++) {
-      waypointChoiceEl.appendChild(createCheckBoxSet(waypointChoices[i], FILL_COLORS[i % MAX_WAYPOINTS]));
+      for (let observation of waypointChoices[i]) {
+          waypointChoiceEl.appendChild(createCheckBoxEl(observation));
+      }
   }
   waypointChoiceEl.appendChild(submitEl);
 }
 
-/** Creates an element that has Name of set and checkpoints of coordinates */
-function createCheckBoxSet(set, color) {
-  const setName = set[0].label;
-  const returnDiv = document.createElement('div');
-  returnDiv.setAttribute('class', 'checkbox-set');
-  const CheckBoxTitle = document.createElement('h4');
-  CheckBoxTitle.innerText = setName;
-  const colorbox = createColorBoxElem(color);
-  returnDiv.appendChild(CheckBoxTitle);
-  returnDiv.appendChild(colorbox);
-  // create collapse element
-  const collapseDiv = document.createElement('div');
-  collapseDiv.setAttribute('class', 'collapse');
-  collapseDiv.setAttribute('id', setName + "more");
-  //intialize letter 
-  let letter = 'A';
-  set.forEach((choice,index)=>{
-      if (index === CHOICE_AT_ONCE){ //create a new div that appears with "seemore button"
-        //append a See More button
-        seeMoreButton = createSeeMore(setName);
-        //add see more button to document
-        returnDiv.appendChild(seeMoreButton);
-        collapseDiv.appendChild(createCheckBoxEl(choice, letter));
-        //only add collapse div if needed
-        returnDiv.appendChild(collapseDiv);
-
-      } else if (index > CHOICE_AT_ONCE){//option will be seen in see more 
-        collapseDiv.appendChild(createCheckBoxEl(choice, letter));
-      } else { //visible choices.
-        returnDiv.appendChild(createCheckBoxEl(choice, letter));
-        //letter = String.fromCharCode(letter.charCodeAt(0) + 1); update the marker letter label to the next letter
-      }
-      letter = String.fromCharCode(letter.charCodeAt(0) + 1);
-  });
-  return returnDiv;
+/** Creates an checkbox element with label */
+function createCheckBoxEl(choice){
+    const checkBoxEl = document.createElement('input');
+    checkBoxEl.setAttribute("type", "checkbox");
+    const checkBoxValue = JSON.stringify(choice);
+    checkBoxEl.setAttribute("value", checkBoxValue);
+    checkBoxEl.setAttribute("name", checkBoxValue);
+    checkBoxEl.setAttribute("class", "checkbox");
+    return checkBoxEl;
 }
 
 /**
@@ -333,23 +309,6 @@ function createColorBoxElem(color) {
   colorbox.style.width = '20px';
   colorbox.style.backgroundColor = color;
   return colorbox;
-}
-
-/** Creates an checkbox element with label */
-function createCheckBoxEl(choice, label){
-    const checkBoxEl = document.createElement('input');
-    checkBoxEl.setAttribute("type", "checkbox");
-    const checkBoxValue = JSON.stringify(choice);
-    checkBoxEl.setAttribute("value", checkBoxValue);
-    checkBoxEl.setAttribute("name", checkBoxValue);
-    checkBoxEl.setAttribute("class", "checkbox");
-    const checkBoxLabel = document.createElement('label');
-    checkBoxLabel.innerText = label;
-    const labelAndBox = document.createElement('div');
-    labelAndBox.addEventListener('click', catchCheckboxErrors);
-    labelAndBox.appendChild(checkBoxEl);
-    labelAndBox.appendChild(checkBoxLabel);
-    return labelAndBox;
 }
 
 /**
@@ -405,6 +364,7 @@ function calcRoute(directionsService, directionsRenderer, start, end, waypoints)
     });
 }
 
+/** Create a new p element with the given text and append it to the given parent. */
 function addNewLegendElem(parent, text) {
     let newElem = document.createElement('p');
     newElem.textContent = text;
@@ -588,6 +548,7 @@ async function writeToAssociatedText(){
     associatedTextEl.innerText = "You entered: " + storedtext;
 }
 
+/* Check to see if we're running on Node.js or in a browser for tests */
 try {
     module.exports.addNewLegendElem = addNewLegendElem;
     module.exports.createColorBoxElem = createColorBoxElem;
@@ -596,16 +557,4 @@ try {
     module.exports.createCheckBoxes = createCheckBoxes;
 } catch(error) {
     console.log("Not exporting code from this script")
-}
-
-/**
- * Creates see more/see less button linked to id = setName + 'more'
- */
-function createSeeMore(setName){
-    seeMoreButton = document.createElement('button');
-    seeMoreButton.setAttribute('class', 'btn btn-link');
-    seeMoreButton.setAttribute('type', 'button');
-    seeMoreButton.setAttribute('data-toggle', 'collapse');
-    seeMoreButton.setAttribute('data-target', "#" + setName + "more");
-    return seeMoreButton;
 }
