@@ -18,7 +18,7 @@ import com.google.sps.Coordinate;
 
 import com.google.appengine.api.datastore.*;
 import com.google.appengine.api.datastore.Query.*;
-
+import org.json.JSONObject;  
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -194,5 +194,25 @@ public final class SessionDataStore {
         }catch (EntityNotFoundException e){}
         txn.commit();
     }
+
+
+    /** Fetches point (start, midpoint, end) from sessionDataStore. 
+    */
+    public Coordinate getPoint(String pointDescription){
+        JSONObject jsonObject = new JSONObject(this.fetchSessionEntity("StartEnd", pointDescription));
+        Double x = jsonObject.getDouble("x");
+        Double y = jsonObject.getDouble("y");
+        Coordinate point = new Coordinate(x, y, pointDescription, "");
+        return point;
+    }
+
+    /** Fetches radius for loop from sessionDataStore. 
+    */
+    public Double getLoopRadius(){
+        String radiusString = this.fetchSessionEntity("StartEnd", "radius");
+        Double radius = Double.parseDouble(radiusString);
+        return radius;
+    }
+
 
 }

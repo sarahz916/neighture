@@ -14,6 +14,7 @@
 
 package com.google.sps.servlets;
 import com.google.sps.Coordinate;
+import com.google.sps.SessionDataStore;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import com.google.appengine.api.datastore.FetchOptions;
@@ -33,7 +34,7 @@ import java.lang.reflect.Type;
 
 
 
-/** Servlet returns stored route data based off of user input zipcode */
+/** Servlet returns stored route data based off of user input start/end locations if possible*/
 @WebServlet(
     name = "RouteStore",
     description = "RouteStore: stores text input and associated waypoints",
@@ -44,17 +45,13 @@ public class RouteStoreServlet extends HttpServlet {
      
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    HttpSession session = request.getSession();
     ArrayList<StoredRoute> routes;
     try{    
-        //If there is zipcode attributes, return StoredRoutes with closest Routes to zipcode first.
-        //Maybe don't use zip code but use start and end locations
-        Double zip_lng = (Double) session.getAttribute("zip_x");
-        Double zip_lat = (Double) session.getAttribute("zip_y");
-        GeoPt zip = new GeoPt(zip_lat.floatValue(), zip_lng.floatValue());
-        routes = getOrderedStoredRoutes(zip);
+        SessionDataStore sessionDataStore = new SessionDataStore(request);
+        Coordinate midpoint = sessionDataStore.getPoint("midpoint");
+        routes = getOrderedStoredRoutes(midpoint.toGeoPt());
     }catch(Exception e){  
-        //If there is no zipcode or someother error just return StoredRoutes in no particular order.
+        //If there is no midpoint or someother error just return StoredRoutes in no particular order.
         routes = getUnorderedStoredRoutes();
     }
     Gson gson = new Gson();
@@ -89,11 +86,12 @@ public class RouteStoreServlet extends HttpServlet {
       else{
           break;
       }
+    }
     return routes;
   }
 
-/** Returns ArrayList of StoredRoutes with closest routes to zipcode first. */
-  private ArrayList<StoredRoute> getOrderedStoredRoutes(GeoPt zip){
+/** Returns ArrayList of StoredRoutes with closest routes to midpoint first. */
+  private ArrayList<StoredRoute> getOrderedStoredRoutes(GeoPt midpoint){
     PriorityQueue<SortedStoredRoute> priorityQueue = new PriorityQueue<>();
     Query query = new Query("StoredRoute");
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
@@ -109,11 +107,11 @@ public class RouteStoreServlet extends HttpServlet {
       }catch(Exception e){ //Some datastore center-of-mass if not as GeoPt, don't include those
           continue;
       }
-      //have function to calculate distance from zip code center
-      float distancefromZip = getDistance(center, zip);
+      //have function to calculate distance from midpoint
+      float distance = getDistance(center, midpoint);
       if (waypointsJson != null){
         StoredRoute route = new StoredRoute(id, text, waypointsJson);
-        SortedStoredRoute sortRoute = new SortedStoredRoute(distancefromZip, route);
+        SortedStoredRoute sortRoute = new SortedStoredRoute(distance, route);
         priorityQueue.add(sortRoute);
       }
     }

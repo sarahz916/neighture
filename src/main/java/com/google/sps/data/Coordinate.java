@@ -14,6 +14,8 @@
 
 package com.google.sps;
 
+import com.google.appengine.api.datastore.GeoPt;
+
 /** A coordinate. */
 public final class Coordinate {
 
@@ -73,5 +75,11 @@ public final class Coordinate {
       
     // Compare the data members and return accordingly 
     return (x.equals(otherCoordinate.getX()) && y.equals(otherCoordinate.getY()));
+  }
+
+  /** Returns the Coordinate as a GeoPt.
+    */
+  public GeoPt toGeoPt(){
+      return new GeoPt(y.floatValue(), x.floatValue());
   }
 }
