@@ -167,26 +167,31 @@ async function createWaypointLegend(route, waypointsWithLabels, legendID) {
     let legend = document.getElementById(legendID);
     let marker = 'A';
     addNewLegendElem(legend, `${marker}: start`);
-    let i;
-    let totalDistance = 0;
-    let totalDuration = 0;
-    // For each leg of the route, find the label of the end point
-    // and add it to the page.
-    for (i = 0; i < route.legs.length - 1; i++) {
-        let pt = route.legs[i].end_location;
-        totalDistance += route.legs[i].distance.value;
-        totalDuration += route.legs[i].duration.value;
-        let label = getInfoFromLatLng(pt, waypointsWithLabels, 'label');
-        let species = getInfoFromLatLng(pt, waypointsWithLabels, 'species');
+
+    const waypointOrder = route.waypoint_order;
+
+    // For each waypoint, in the order given by the route, add a new legend elem with label/species
+    for (let idx of waypointOrder) {
+        let waypoint = waypointsWithLabels[idx];
         marker = String.fromCharCode(marker.charCodeAt(0) + 1);
-        addNewLegendElem(legend, `${marker}: ${label} (${species})`);
+        addNewLegendElem(legend, `${marker}: ${waypoint.label} (${waypoint.species})`);
     }
-    let end = route.legs[route.legs.length - 1].end_location;
-    totalDistance += route.legs[route.legs.length - 1].distance.value;
-    totalDuration += route.legs[route.legs.length - 1].duration.value;
+
     marker = String.fromCharCode(marker.charCodeAt(0) + 1);
     addNewLegendElem(legend, `${marker}: end`);
-    addDistanceTimeToLegend(legend, totalDistance, totalDuration);
+
+    // Add route distance to legend
+    let totalDistance = getRouteDistance(route);
+    addNewLegendElem(legend, `Total Route Distance: ${totalDistance} miles`);
+
+    // Add route duration to legend
+    let totalDuration = getRouteDuration(route);
+    let durationMetric = 'hours';
+    if (totalDuration < 1) {
+        totalDuration = Math.round(convertHoursToMinutes(totalDuration) * 10) / 10;
+        durationMetric = 'minutes'
+    }
+    addNewLegendElem(legend, `Total Route Duration: ${totalDuration} ${durationMetric}`);
 }
 
 /**
