@@ -66,7 +66,6 @@ public class WaypointQueryServlet extends HttpServlet {
   private static final int MAX_AMOUNT_ALLOWED = 10;
   private final ArrayList<String> FIELDS_MODIFIED = new ArrayList<String>( 
        Arrays.asList("queryFetched", "textFetched", "statusfetch"));
-  private static final Double LOOP_BOUNDING_BOX_WIDTH = 0.07246376811; // 5 miles
   private static final Double ONE_WAY_BOUNDING_BOX_WIDTH = 0.0036231884; // 0.25 miles
   private static final String NOUN_SINGULAR_OR_MASS = "NN";
   private static final String NOUN_PLURAL = "NNS";
@@ -86,11 +85,7 @@ public class WaypointQueryServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     SessionDataStore sessionDataStore = new SessionDataStore(request);
-    int statusCode = Integer.parseInt(sessionDataStore.fetchSessionEntity(
-        
-        
-        
-        "Route", "statusCode"));
+    int statusCode = Integer.parseInt(sessionDataStore.fetchSessionEntity("Route", "statusCode"));
     if (statusCode == HttpServletResponse.SC_OK) {
       String valueJSONString = sessionDataStore.queryOnlyifFirstFetch("queryFetched", "Route", "waypoints");
       response.setContentType("application/json");
@@ -104,14 +99,10 @@ public class WaypointQueryServlet extends HttpServlet {
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     String input = request.getParameter("text-input");
     SessionDataStore sessionDataStore = new SessionDataStore(request);
-    Coordinate midpoint = sessionDataStore.getPoint(MIDPOINT);
-    Coordinate start = sessionDataStore.getPoint(START);
-    Coordinate end = sessionDataStore.getPoint(END);
-    Double loopRadius = sessionDataStore.getLoopRadius();
     ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();
     int statusCode = HttpServletResponse.SC_OK;
     try {
-      waypoints = getLocations(input, start, end, loopRadius);
+      waypoints = getLocations(input, sessionDataStore);
     } catch (IllegalArgumentException e) { // User puts down a number that's out of range
       System.out.println("ILLEGAL ARGUMENT");
       statusCode = HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE;
@@ -133,7 +124,7 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Using the input text, fetches waypoints from the database to be 
     * used by the frontend. Returns possible waypoints. 
     */
-  public ArrayList<List<Coordinate>> getLocations(String input, Coordinate start, Coordinate end, Double loopRadius) throws IllegalArgumentException, Exception {
+  public ArrayList<List<Coordinate>> getLocations(String input, SessionDataStore sessionDataStore) throws IllegalArgumentException, Exception {
     // Parse out feature requests from input
     ArrayList<WaypointDescription> waypointRequests = parseInput(input);
     ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();    
@@ -143,7 +134,7 @@ public class WaypointQueryServlet extends HttpServlet {
       String query = waypointDescription.getQuery();
       String feature = waypointDescription.getFeature();
       // Make call to database
-      ArrayList<Coordinate> locations = fetchFromDatabase(query, feature, start, end, loopRadius);
+      ArrayList<Coordinate> locations = fetchFromDatabase(query, feature, sessionDataStore);
       if (locations.isEmpty()) { // Not in the database
         continue;
       } else {
@@ -253,9 +244,9 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Sends a request for the input feature to the database
     * Returns the Coordinate matching the input feature 
     */ 
-  public ArrayList<Coordinate> fetchFromDatabase(String query, String label, Coordinate start, Coordinate end, Double loopRadius) throws IOException {
+  public ArrayList<Coordinate> fetchFromDatabase(String query, String label, SessionDataStore sessionDataStore) throws IOException {
     String startDate = getStartDate();
-    String[] boundaries = getBoundingBox(start, end, loopRadius);
+    String[] boundaries = getBoundingBox(sessionDataStore);
     String json = sendGET(query, startDate, boundaries);
     if (json != null) {
       return jsonToCoordinates(json, label);
@@ -276,13 +267,15 @@ public class WaypointQueryServlet extends HttpServlet {
     return dateString;
   }
 
-  /** Uses the midpoint coordinate to find the coordinates for the bounding box surrounding 
-    * the midpoint by BOUNDING_BOX_WIDTH on each side
+  /** Uses the start/end coordinate(s) to find the coordinates for the bounding box 
     * Returns list in order of bound: west, east, south, north
     */
-  public static String[] getBoundingBox(Coordinate start, Coordinate end, Double loopRadius) {
+  public static String[] getBoundingBox(SessionDataStore sessionDataStore) {
     String[] boundaries = new String[4];
+    Coordinate start = sessionDataStore.getPoint("start");
+    Coordinate end = sessionDataStore.getPoint("end");
     if (start.equals(end)) { // loop
+      Double loopRadius = sessionDataStore.getLoopRadius();
       boundaries[0] = String.valueOf(start.getX() - loopRadius);
       boundaries[1] = String.valueOf(start.getX() + loopRadius);
       boundaries[2] = String.valueOf(start.getY() - loopRadius);
