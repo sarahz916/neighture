@@ -18,7 +18,7 @@ import com.google.sps.Coordinate;
 
 import com.google.appengine.api.datastore.*;
 import com.google.appengine.api.datastore.Query.*;
-
+import org.json.JSONObject;  
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -79,7 +79,7 @@ public final class SessionDataStore {
         } catch (EntityNotFoundException e) {
             Entity = new Entity(EntityType, this.sessionID);
         }
-        Entity.setUnindexedProperty(PropertyName, value);
+        Entity.setUnindexedProperty(PropertyName, new Text(value));
         datastore.put(txn, Entity);
         txn.commit();
     }
@@ -169,12 +169,19 @@ public final class SessionDataStore {
     */ 
     public String fetchSessionEntity(String EntityType, String propertyToGet){
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        Object propertyValue;
         try {
             Key ID = KeyFactory.createKey(EntityType, this.sessionID);
             Entity Entity = datastore.get(ID);
-            return (String) Entity.getProperty(propertyToGet);
+            propertyValue = Entity.getProperty(propertyToGet);
         } catch (EntityNotFoundException e) {
             return EMPTY_LIST;
+        }
+        try {
+            return (String) propertyValue;
+        } catch(ClassCastException e){
+            Text value = (Text) propertyValue;
+            return value.getValue();
         }
     }
     /** Creates an StoredRoute Entity that goes into GenRoute page.  
@@ -194,5 +201,25 @@ public final class SessionDataStore {
         }catch (EntityNotFoundException e){}
         txn.commit();
     }
+
+
+    /** Fetches point (start, midpoint, end) from sessionDataStore. 
+    */
+    public Coordinate getPoint(String pointDescription){
+        JSONObject jsonObject = new JSONObject(this.fetchSessionEntity("StartEnd", pointDescription));
+        Double x = jsonObject.getDouble("x");
+        Double y = jsonObject.getDouble("y");
+        Coordinate point = new Coordinate(x, y, pointDescription, "");
+        return point;
+    }
+
+    /** Fetches radius for loop from sessionDataStore. 
+    */
+    public Double getLoopRadius(){
+        String radiusString = this.fetchSessionEntity("StartEnd", "radius");
+        Double radius = Double.parseDouble(radiusString);
+        return radius;
+    }
+
 
 }

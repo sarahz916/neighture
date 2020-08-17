@@ -49,8 +49,8 @@ html,body { height:100%; }
 }
 
 #point-map {
-    height: 500px;
-    width: 500px;
+    height: 700px;
+    width: 700px;
 }
 
 #route-list {
@@ -86,16 +86,6 @@ html,body { height:100%; }
 
 #location {
     margin: 7px;
-}
-
-/* Icon when the collapsible content is shown */
-.btn:after {
-    content: "see less";
-}
-
-/* Icon when the collapsible content is hidden */
-    .btn.collapsed:after {
-    content: "see more";
 }
 
 #one-way-tab, #loop-tab {
