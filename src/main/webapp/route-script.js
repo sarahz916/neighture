@@ -31,10 +31,9 @@ window.onload = async function setup() {
     let endAddr = await getEndAddr();
     let startCoord = await getStartCoord;
     await initStartEndDisplay(startAddr, endAddr);
+    await setupUserChoices();
+    await createMapWithWaypoints();
 }
-
-document.getElementById('text-git statform').addEventListener('submit', setupUserChoices());
-document.getElementById('select-points').addEventListener('submit', createMapWithWaypoints());
 
 /**
  * Get and displays the inputted start and end location addresses to the user.
