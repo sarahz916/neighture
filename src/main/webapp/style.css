@@ -43,11 +43,6 @@ html,body { height:100%; }
     font-weight: bold;
 }
 
-#route-map {
-  height: 500px;
-  width: 500px;
-}
-
 #point-map {
     height: 700px;
     width: 700px;
