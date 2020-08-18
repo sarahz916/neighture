@@ -61,9 +61,9 @@ function createCardEl(route){
     cardEl.setAttribute('class', 'card');
     cardEl.appendChild(createCardBody(route));
     cardEl.appendChild(createURLEl(route));
-    const mapID = route.text + 'map';
-    const legendID = route.text + 'legend';
-    const urlID = route.text + 'url';
+    const mapID = route.id.toString(16) + 'map';
+    const legendID = route.id.toString(16) + 'legend';
+    const urlID = route.id.toString(16) + 'url';
     createMapWithWaypoints(route, mapID, legendID, urlID);
     return cardEl;
 }
@@ -86,26 +86,26 @@ function createTitleEl(text){
     return cardTitle;
 }
 
-/** Creates an map element with id route.text + 'map' */
+/** Creates an map element with id route.id.toString(16) + 'map' */
 function createMapEl(route){
     const mapEl = document.createElement('div');
-    const mapID = route.text + 'map';
+    const mapID = route.id.toString(16) + 'map';
     mapEl.setAttribute('id', mapID);
     mapEl.setAttribute('class', 'map small-map');
     return mapEl;
 }
-/** Creates an url element as card-footer with id route.text + 'url' */
+/** Creates an url element as card-footer with id route.id.toString(16) + 'url' */
 function createURLEl(route){
     const URLEl = document.createElement('div');
-    const urlID = route.text + 'url';
+    const urlID = route.id.toString(16) + 'url';
     URLEl.setAttribute('id', urlID);
     URLEl.setAttribute('class', 'card-footer');
     return URLEl;
 }
-/** Creates an legend element with id route.text + 'legend' */
+/** Creates an legend element with id route.id.toString(16) + 'legend' */
 function createLegendEl(route){
     const legendEl = document.createElement('div');
-    const legendID = route.text + 'legend';
+    const legendID = route.id.toString(16) + 'legend';
     legendEl.setAttribute('id', legendID);
     legendEl.setAttribute('class', 'legend');
     return legendEl;

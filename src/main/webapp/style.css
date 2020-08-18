@@ -7,6 +7,13 @@
   overflow: auto;
 }
 
+#feedback {
+  background-color:rgb(236, 247, 238);
+  font-family: 'Thasadith', Srisakdi;
+  text-align: center;
+  overflow: auto;
+}
+
 #content {
   margin-left: auto;
   margin-right: auto;
