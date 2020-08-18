@@ -220,7 +220,7 @@ function createInfoWindowHTML(waypoint) {
     addNewTypeElem(html, `species: ${waypoint.species}`, 'p');
     let link = addNewTypeElem(html, 'More Info', 'a');
     link.setAttribute('href', waypoint.url);
-    
+    link.setAttribute('target', '_blank');
 
     const markerCheckbox = document.createElement('input');
     markerCheckbox.setAttribute('type', 'checkbox');
