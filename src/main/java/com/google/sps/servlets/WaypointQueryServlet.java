@@ -103,7 +103,7 @@ public class WaypointQueryServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     SessionDataStore sessionDataStore = new SessionDataStore(request);
-    int statusCode = Integer.parseInt(sessionDataStore.fetchSessionEntity("Route", "statusCode"));
+    int statusCode = Integer.parseInt("0" + sessionDataStore.fetchSessionEntity("Route", "statusCode"));
     if (statusCode == HttpServletResponse.SC_OK) {
       String valueJSONString = sessionDataStore.queryOnlyifFirstFetch("queryFetched", "Route", "waypoints");
       response.setContentType("application/json");
@@ -263,7 +263,7 @@ public class WaypointQueryServlet extends HttpServlet {
     */
   public int wordToInt(String word) throws Exception {
     if (INT_PATTERN.matcher(word).matches()) {
-      return Integer.parseInt(word);
+      return Integer.parseInt("0" + word);
     } else if (NUMBER_MAP.containsKey(word)) {
       return NUMBER_MAP.get(word);
     } else if (word.equals("all") || word.equals("every")) {
