@@ -115,6 +115,9 @@ public class WaypointQueryServlet extends HttpServlet {
 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    //check if it has suprise me.
+    String surpiseMeValue = request.getParameter("suprise-me");
+    boolean supriseMe = Boolean.parseBoolean(surpiseMeValue);
     String input = request.getParameter("text-input");
     SessionDataStore sessionDataStore = new SessionDataStore(request);
     ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();

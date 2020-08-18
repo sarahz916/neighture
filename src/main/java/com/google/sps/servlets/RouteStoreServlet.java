@@ -41,7 +41,7 @@ import java.lang.reflect.Type;
     urlPatterns = "/route-store"
 )
 public class RouteStoreServlet extends HttpServlet {
-  private final Integer NUM_RESULTS = 10;
+  private final Integer NUM_RESULTS = 6;
      
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
