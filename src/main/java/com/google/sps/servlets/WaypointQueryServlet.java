@@ -51,6 +51,10 @@ import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSSample; 
 import opennlp.tools.postag.POSTaggerME; 
 import edu.drexel.cs.jah473.autocorrect.Autocorrect;
+import com.opencsv.CSVReader;
+import java.io.FileReader;
+import java.util.Collections;
+import java.io.File;
 
 /** Servlet that handles the user's query by parsing out
   * the waypoint queries and their matching coordinates in 
@@ -73,19 +77,33 @@ public class WaypointQueryServlet extends HttpServlet {
   private static final String START = "start";
   private static final String END = "end";
   private static final String MIDPOINT = "midpoint";
-  public static Autocorrect corrector;
+  public static Autocorrect autocorrect = null;
+  
+  static {
+    HashSet<String> corpus = createCorpus();
+    autocorrect = new Autocorrect(corpus, false);
+  };
 
-  // @Override
-  // public void onCreate() {
-  //   super.onCreate();
-  //   HashSet<String> corpus = createCorpus();
-  //   corrector = new Autocorrect(corpus, false);
-  // }
+  private static HashSet<String> createCorpus() {
+    HashSet<String> corpus = new HashSet<String>();
+    String [] nextLine;
+    try {
+      File f = new File("../classes/plants.csv");
+      System.out.println(f.getAbsolutePath());
+      CSVReader reader = new CSVReader(new FileReader("../classes/plants.csv"));
+      while ((nextLine = reader.readNext()) != null) {
+        Collections.addAll(corpus, nextLine); 
+      }
+    } catch (Exception e) {
+      System.out.println("Unable to load corpus");
+    }
+    return corpus;
+  }
     
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     SessionDataStore sessionDataStore = new SessionDataStore(request);
-    int statusCode = Integer.parseInt(sessionDataStore.fetchSessionEntity("Route", "statusCode"));
+    int statusCode = Integer.parseInt("0" + sessionDataStore.fetchSessionEntity("Route", "statusCode"));
     if (statusCode == HttpServletResponse.SC_OK) {
       String valueJSONString = sessionDataStore.queryOnlyifFirstFetch("queryFetched", "Route", "waypoints");
       response.setContentType("application/json");
@@ -136,11 +154,24 @@ public class WaypointQueryServlet extends HttpServlet {
       // Make call to database
       ArrayList<Coordinate> locations = fetchFromDatabase(query, feature, sessionDataStore);
       if (locations.isEmpty()) { // Not in the database
-        continue;
-      } else {
-        List<Coordinate> locationsList = locations.subList(0, Math.min(maxNumberCoordinates, locations.size()));
-        waypoints.add(locationsList);
+        System.out.println(feature);
+        if (autocorrect != null) {
+          List<String> suggestions = autocorrect.suggest(feature);
+          if (suggestions.isEmpty()) {
+            continue;
+          }
+          System.out.println(suggestions.get(0));
+          locations = fetchFromDatabase(suggestions.get(0), suggestions.get(0), sessionDataStore);
+          if (locations.isEmpty()) {
+            System.out.println("Both times were empty");
+            continue;
+          }
+        } else {
+          continue;
+        }
       }
+      List<Coordinate> locationsList = locations.subList(0, Math.min(maxNumberCoordinates, locations.size()));
+      waypoints.add(locationsList);
     }   
     return waypoints;
   }
@@ -232,7 +263,7 @@ public class WaypointQueryServlet extends HttpServlet {
     */
   public int wordToInt(String word) throws Exception {
     if (INT_PATTERN.matcher(word).matches()) {
-      return Integer.parseInt(word);
+      return Integer.parseInt("0" + word);
     } else if (NUMBER_MAP.containsKey(word)) {
       return NUMBER_MAP.get(word);
     } else if (word.equals("all") || word.equals("every")) {
