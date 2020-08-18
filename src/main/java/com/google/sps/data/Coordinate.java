@@ -23,14 +23,26 @@ public final class Coordinate {
   private final Double y;
   private final String label;
   private final String species;
+  private final String url;
 
-  /** Creates a new coordinate with a label
+  /** Creates a new coordinate with a label, species, and url
     */
-  public Coordinate(Double x, Double y, String label, String species) {
+  public Coordinate(Double x, Double y, String label, String species, String url) {
     this.x = x;
     this.y = y;
     this.label = label;
     this.species = species;
+    this.url = url;
+  }
+
+  /** Creates a new coordinate with a label, species, and url
+    */
+  public Coordinate(Double x, Double y, String label) {
+    this.x = x;
+    this.y = y;
+    this.label = label;
+    this.species = "";
+    this.url = "";
   }
 
   /** Returns the x coordinate of this point.
@@ -51,10 +63,16 @@ public final class Coordinate {
     return label;
   }
 
-  /** Returns the label of this point.
+  /** Returns the species of this point.
     */
   public String getSpecies() {
     return species;
+  }
+
+  /** Returns the url of this point.
+    */
+  public String getUrl() {
+    return url;
   }
 
   @Override
