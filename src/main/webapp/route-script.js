@@ -151,18 +151,19 @@ function createPointInfoMap(start, end, startName, endName, waypoints) {
         let cluster = waypoints[i];
         let letter = 'A';
         for (let pt of cluster) {
-            createCheckableMarker(map, pt.latlng, pt.label, pt.species, letter, google.maps.SymbolPath.BACKWARD_CLOSED_ARROW, FILL_COLORS[i % MAX_WAYPOINTS]);
+            createCheckableMarker(map, pt, letter, google.maps.SymbolPath.BACKWARD_CLOSED_ARROW, FILL_COLORS[i % MAX_WAYPOINTS]);
             letter = String.fromCharCode(letter.charCodeAt(0) + 1); // update the marker letter label to the next letter
         }
     }
 }
 
+
 /**
  * Create a dynamic marker with an InfoWindow that appears with the label upon clicking.
  */
-function createCheckableMarker(map, pt, label, species, letter, icon, color) {
-    let marker = createMarker(map, pt, letter, icon, color);
-    let infowindow = createInfoWindow(`${letter}: ${label} (${species})`, pt, marker);
+function createCheckableMarker(map, waypoint, letter, icon, color) {
+    let marker = createMarker(map, waypoint.latlng, letter, icon, color);
+    let infowindow = createInfoWindow(waypoint, marker);
     marker.addListener('click', function() {
         infowindow.open(map, marker);
     });
@@ -182,7 +183,7 @@ function toggleCheckbox(box) {
 /**
  * Creates a Google Maps InfoWindow object with the given text.
  */
-function createInfoWindow(text, pt, marker) {
+function createInfoWindow(waypoint, marker) {
     const uncheckedIcon = marker.getIcon();
     const CHECKED_ICON = {
                         path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
@@ -192,11 +193,11 @@ function createInfoWindow(text, pt, marker) {
                         strokeWeight: 4,
                         labelOrigin: { x: 0, y: 2}
                     };
-    const html = createInfoWindowHTML(text);
+    const html = createInfoWindowHTML(waypoint);
     const infowindow = new google.maps.InfoWindow({
         content: html
     });
-    let realCheckbox = getCheckboxFromMarker(pt);
+    let realCheckbox = getCheckboxFromMarker(waypoint.latlng);
     let markerCheckbox = html.getElementsByTagName('input')[0];
     markerCheckbox.addEventListener('click', function() {
         if (markerCheckbox.checked) {
@@ -212,13 +213,17 @@ function createInfoWindow(text, pt, marker) {
 /**
  * Create the HTML that goes inside an InfoWindow with the given text.
  */
-function createInfoWindowHTML(text) {
+function createInfoWindowHTML(waypoint) {
+    console.log(waypoint);
     let html = document.createElement('div');
-    const textContent = document.createElement('p');
-    textContent.textContent = text;
+    addNewTypeElem(html, waypoint.label, 'b');
+    addNewTypeElem(html, `species: ${waypoint.species}`, 'p');
+    let link = addNewTypeElem(html, 'More Info', 'a');
+    link.setAttribute('href', waypoint.url);
+    
+
     const markerCheckbox = document.createElement('input');
     markerCheckbox.setAttribute('type', 'checkbox');
-    html.appendChild(textContent);
     html.appendChild(markerCheckbox);
     return html;
 }
@@ -365,11 +370,12 @@ function calcRoute(directionsService, directionsRenderer, start, end, waypoints)
     });
 }
 
-/** Create a new p element with the given text and append it to the given parent. */
-function addNewLegendElem(parent, text) {
-    let newElem = document.createElement('p');
+/** Create a new element iwth the given tag name with the given text and append it to the given parent. */
+function addNewTypeElem(parent, text, tag) {
+    let newElem = document.createElement(tag);
     newElem.textContent = text;
     parent.appendChild(newElem);
+    return newElem;
 }
 
 /**
@@ -379,7 +385,7 @@ function addNewLegendElem(parent, text) {
 async function createWaypointLegend(route, waypointsWithLabels) {
     let legend = document.getElementById('legend');
     let marker = 'A';
-    addNewLegendElem(legend, `${marker}: start`);
+    addNewTypeElem(legend, `${marker}: start`, 'p');
 
     const waypointOrder = route.waypoint_order;
 
@@ -387,15 +393,15 @@ async function createWaypointLegend(route, waypointsWithLabels) {
     for (let idx of waypointOrder) {
         let waypoint = waypointsWithLabels[idx];
         marker = String.fromCharCode(marker.charCodeAt(0) + 1);
-        addNewLegendElem(legend, `${marker}: ${waypoint.label} (${waypoint.species})`);
+        addNewTypeElem(legend, `${marker}: ${waypoint.label} (${waypoint.species})`, 'p');
     }
 
     marker = String.fromCharCode(marker.charCodeAt(0) + 1);
-    addNewLegendElem(legend, `${marker}: end`);
+    addNewTypeElem(legend, `${marker}: end`, 'p');
 
     // Add route distance to legend
     let totalDistance = getRouteDistance(route);
-    addNewLegendElem(legend, `Total Route Distance: ${totalDistance} miles`);
+    addNewTypeElem(legend, `Total Route Distance: ${totalDistance} miles`, 'p');
 
     // Add route duration to legend
     let totalDuration = getRouteDuration(route);
@@ -404,7 +410,7 @@ async function createWaypointLegend(route, waypointsWithLabels) {
         totalDuration = Math.round(convertHoursToMinutes(totalDuration) * 10) / 10;
         durationMetric = 'minutes'
     }
-    addNewLegendElem(legend, `Total Route Duration: ${totalDuration} ${durationMetric}`);
+    addNewTypeElem(legend, `Total Route Duration: ${totalDuration} ${durationMetric}`, 'p');
 }
 
 /**
@@ -472,7 +478,7 @@ function convertWaypointClusterstoLatLng(waypoints) {
          pts = [];
          for (let pt of cluster) {
             let waypoint = new google.maps.LatLng(pt.y, pt.x);
-            pts.push({ latlng : waypoint, label : pt.label, species : pt.species });
+            pts.push({ latlng : waypoint, label : pt.label, species : pt.species, url : pt.url });
          }
          latlngWaypoints.push(pts);
     }
@@ -486,7 +492,7 @@ function convertWaypointstoLatLng(waypoints) {
     let latLngWaypoints = [];
      for (let pt of waypoints) {
         let waypoint = new google.maps.LatLng(pt.y, pt.x);
-        latLngWaypoints.push({ latlng: waypoint, label: pt.label, species: pt.species });
+        latLngWaypoints.push({ latlng: waypoint, label: pt.label, species: pt.species, url : pt.url });
     }
     return latLngWaypoints;
 }
@@ -547,7 +553,7 @@ async function writeToAssociatedText(){
 
 /* Check to see if we're running on Node.js or in a browser for tests */
 try {
-    module.exports.addNewLegendElem = addNewLegendElem;
+    module.exports.addNewLegendElem = addNewTypeElem;
     module.exports.createColorBoxElem = createColorBoxElem;
     module.exports.createCheckBoxEl = createCheckBoxEl;
     module.exports.createCheckBoxSet = createCheckBoxSet;
