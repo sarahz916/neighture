@@ -345,7 +345,11 @@ public class WaypointQueryServlet extends HttpServlet {
       y = Math.round(y * 25000.0)/25000.0;
       JSONObject taxon = observation.getJSONObject("taxon");
       String species = taxon.getString("name");
-      Coordinate featureCoordinate = new Coordinate(x, y, label, species);
+      int idInt = observation.getInt("id");
+      String id = String.valueOf(idInt);
+      String url = "https://www.inaturalist.org/observations/" + id;
+      System.out.println(url);
+      Coordinate featureCoordinate = new Coordinate(x, y, label, species, url);
       coordinates.add(featureCoordinate);
       index += 1;
     }

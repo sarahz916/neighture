@@ -43,17 +43,17 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({WaypointQueryServlet.class, SessionDataStore.class})
 public class WaypointQueryServletTest {
-  public static final ArrayList<Coordinate> MUSHROOM = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62944, 41.84864, "mushroom", "red mushroom")));
-  public static final ArrayList<Coordinate> CLOVER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.63566666666667, 41.856, "clover", "four-leaf clover")));
-  public static final ArrayList<Coordinate> BELLFLOWER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.6475, 41.8435, "bellflower", "yellow bellflower")));
-  public static final ArrayList<Coordinate> RASPBERRY = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62212, 41.89796, "raspberry", "big raspberry"), new Coordinate(-87.62456, 41.89696, "raspberry", "big raspberry"), new Coordinate(-87.62392, 41.88844, "raspberry", "big raspberry")));
-  public static final ArrayList<Coordinate> TREE = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62224, 41.8972, "tree", "pine tree")));
+  public static final ArrayList<Coordinate> MUSHROOM = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62944, 41.84864, "mushroom", "red mushroom", "iNaturalist.com/1")));
+  public static final ArrayList<Coordinate> CLOVER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.63566666666667, 41.856, "clover", "four-leaf clover", "iNaturalist.com/2")));
+  public static final ArrayList<Coordinate> BELLFLOWER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.6475, 41.8435, "bellflower", "yellow bellflower", "iNaturalist.com/3")));
+  public static final ArrayList<Coordinate> RASPBERRY = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62212, 41.89796, "raspberry", "big raspberry", "iNaturalist.com/4"), new Coordinate(-87.62456, 41.89696, "raspberry", "big raspberry", "iNaturalist.com/6"), new Coordinate(-87.62392, 41.88844, "raspberry", "big raspberry", "iNaturalist.com/7")));
+  public static final ArrayList<Coordinate> TREE = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62224, 41.8972, "tree", "pine tree", "iNaturalist.com/5")));
   public static final ArrayList<Coordinate> NOTHING = new ArrayList<Coordinate>();
-  public static final String MUSHROOM_BACKEND = "[{\"latitude\": 41.848653, \"longitude\": -87.629454, \"taxon\": {\"name\": \"red mushroom\"}, \"common_name\": {\"name\": \"mushroom\"}}]";
-  public static final String RASPBERRY_BACKEND = "[{\"latitude\": 41.897946, \"longitude\": -87.622112, \"taxon\": {\"name\": \"big raspberry\"}, \"common_name\": {\"name\": \"raspberry\"}}, "
-    + "{\"latitude\": 41.896968, \"longitude\": -87.624580, \"taxon\": {\"name\": \"big raspberry\"}, \"common_name\": {\"name\": \"raspberry\"}}, "
-    + "{\"latitude\": 41.888454, \"longitude\": -87.623920, \"taxon\": {\"name\": \"big raspberry\"}, \"common_name\": {\"name\": \"raspberry\"}}]";
-  public static final String TREE_BACKEND = "[{\"latitude\": 41.897219, \"longitude\": -87.622235, \"taxon\": {\"name\": \"pine tree\"}, \"common_name\": {\"name\": \"tree\"}}]";
+  public static final String MUSHROOM_BACKEND = "[{\"latitude\": 41.848653, \"longitude\": -87.629454, \"taxon\": {\"name\": \"red mushroom\"}, \"id\": 1}]";
+  public static final String RASPBERRY_BACKEND = "[{\"latitude\": 41.897946, \"longitude\": -87.622112, \"taxon\": {\"name\": \"big raspberry\"}, \"id\": 4}, "
+    + "{\"latitude\": 41.896968, \"longitude\": -87.624580, \"taxon\": {\"name\": \"big raspberry\"}, \"id\": 6}, "
+    + "{\"latitude\": 41.888454, \"longitude\": -87.623920, \"taxon\": {\"name\": \"big raspberry\"}, \"id\": 7}]";
+  public static final String TREE_BACKEND = "[{\"latitude\": 41.897219, \"longitude\": -87.622235, \"taxon\": {\"name\": \"pine tree\"}, \"id\": 5}]";
   public static final String NOTHING_BACKEND = "[]";
   public static final String COMPARISON_DATE = "2019-08-01";
   public static final String MULT_FEATURES_ONE_WAYPOINT_QUERY = "mushroom,cLover     raSpbeRRy   ";
@@ -75,8 +75,8 @@ public class WaypointQueryServletTest {
   public static final ArrayList<String> MUSHROOM_WORD = new ArrayList<String>(Arrays.asList("mushroom"));
   public static final ArrayList<String> CLOVER_WORD = new ArrayList<String>(Arrays.asList("clover"));
   public static final ArrayList<String> RASPBERRY_WORD = new ArrayList<String>(Arrays.asList("raspberry"));
-  private static final Coordinate START = new Coordinate(-87.62940, 41.84865, "start", "");
-  private static final Coordinate END = new Coordinate(-87.62942, 41.84861, "end", "");
+  private static final Coordinate START = new Coordinate(-87.62940, 41.84865, "start");
+  private static final Coordinate END = new Coordinate(-87.62942, 41.84861, "end");
   private static Double LOOP_RADIUS = 0.07246376811;
   private static final String[] LOOP_COMPARISON = {"-87.70186376811", "-87.55693623189", "41.77618623189", "41.92111376811"};
   private static final String[] ONE_WAY_COMPARISON = {"-87.6330431884", "-87.6257768116", "41.8449868116", "41.8522731884"};

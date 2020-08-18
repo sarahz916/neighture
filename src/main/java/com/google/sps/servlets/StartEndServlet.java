@@ -120,7 +120,7 @@ public class StartEndServlet extends HttpServlet {
         }
         Double y = results[0].geometry.location.lat;
         Double x = results[0].geometry.location.lng;
-        Coordinate startEndCoordinate  = new Coordinate(x, y, placeQuery, "");
+        Coordinate startEndCoordinate  = new Coordinate(x, y, placeQuery);
         return startEndCoordinate;
     }
 
@@ -128,7 +128,7 @@ public class StartEndServlet extends HttpServlet {
     private Coordinate getMidpoint(Coordinate start, Coordinate end){
         Double y = (start.getY() + end.getY())/2;
         Double x = (start.getX() + end.getX())/2;
-        return new Coordinate(x, y, "midpoint", "");
+        return new Coordinate(x, y, "midpoint");
     }
 
   /** Returns the radius of the loop entered by the user, -1 if the input was invalid, 0 for no input. */
