@@ -387,7 +387,11 @@ function addNewTypeElem(parent, text, tag) {
  */
 async function createWaypointLegend(route, waypointsWithLabels) {
     let legend = document.getElementById('legend');
-    addNewTypeElem(legend, 'Route Information', 'h2');
+    legend.style.padding = '3px';
+    legend.style.border = 'thin solid black';
+    
+    let title = addNewTypeElem(legend, 'Route Information', 'h2');
+    title.style.textAlign = 'center';
 
     // Add start information
     let marker = 'A';
@@ -401,7 +405,7 @@ async function createWaypointLegend(route, waypointsWithLabels) {
     for (let idx of waypointOrder) {
         let waypoint = waypointsWithLabels[idx];
         marker = String.fromCharCode(marker.charCodeAt(0) + 1);
-        let infoDiv = addNewTypeElem(legend, '', 'div');
+        infoDiv = addNewTypeElem(legend, '', 'div');
 
         addNewTypeElem(infoDiv, `${marker}: ${waypoint.label}`, 'b');
         addNewTypeElem(infoDiv, `${waypoint.species}`, 'p');
@@ -410,9 +414,11 @@ async function createWaypointLegend(route, waypointsWithLabels) {
     }
 
     marker = String.fromCharCode(marker.charCodeAt(0) + 1);
-    let infoDiv = addNewTypeElem(legend, '', 'div');
+    infoDiv = addNewTypeElem(legend, '', 'div');
     addNewTypeElem(infoDiv, `${marker}`, 'b');
     addNewTypeElem(infoDiv, 'end', 'p');
+
+    addNewTypeElem(legend, '', 'br');
 
     // Add route distance to legend
     let totalDistance = getRouteDistance(route);
