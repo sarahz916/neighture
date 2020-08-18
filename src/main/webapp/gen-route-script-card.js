@@ -61,9 +61,9 @@ function createCardEl(route){
     cardEl.setAttribute('class', 'card');
     cardEl.appendChild(createCardBody(route));
     cardEl.appendChild(createURLEl(route));
-    const mapID = route.text + 'map';
-    const legendID = route.text + 'legend';
-    const urlID = route.text + 'url';
+    const mapID = route.id.toString(16) + 'map';
+    const legendID = route.id.toString(16) + 'legend';
+    const urlID = route.id.toString(16) + 'url';
     createMapWithWaypoints(route, mapID, legendID, urlID);
     return cardEl;
 }
@@ -86,26 +86,26 @@ function createTitleEl(text){
     return cardTitle;
 }
 
-/** Creates an map element with id route.text + 'map' */
+/** Creates an map element with id route.id.toString(16) + 'map' */
 function createMapEl(route){
     const mapEl = document.createElement('div');
-    const mapID = route.text + 'map';
+    const mapID = route.id.toString(16) + 'map';
     mapEl.setAttribute('id', mapID);
     mapEl.setAttribute('class', 'map small-map');
     return mapEl;
 }
-/** Creates an url element as card-footer with id route.text + 'url' */
+/** Creates an url element as card-footer with id route.id.toString(16) + 'url' */
 function createURLEl(route){
     const URLEl = document.createElement('div');
-    const urlID = route.text + 'url';
+    const urlID = route.id.toString(16) + 'url';
     URLEl.setAttribute('id', urlID);
     URLEl.setAttribute('class', 'card-footer');
     return URLEl;
 }
-/** Creates an legend element with id route.text + 'legend' */
+/** Creates an legend element with id route.id.toString(16) + 'legend' */
 function createLegendEl(route){
     const legendEl = document.createElement('div');
-    const legendID = route.text + 'legend';
+    const legendID = route.id.toString(16) + 'legend';
     legendEl.setAttribute('id', legendID);
     legendEl.setAttribute('class', 'legend');
     return legendEl;
@@ -167,26 +167,31 @@ async function createWaypointLegend(route, waypointsWithLabels, legendID) {
     let legend = document.getElementById(legendID);
     let marker = 'A';
     addNewLegendElem(legend, `${marker}: start`);
-    let i;
-    let totalDistance = 0;
-    let totalDuration = 0;
-    // For each leg of the route, find the label of the end point
-    // and add it to the page.
-    for (i = 0; i < route.legs.length - 1; i++) {
-        let pt = route.legs[i].end_location;
-        totalDistance += route.legs[i].distance.value;
-        totalDuration += route.legs[i].duration.value;
-        let label = getInfoFromLatLng(pt, waypointsWithLabels, 'label');
-        let species = getInfoFromLatLng(pt, waypointsWithLabels, 'species');
+
+    const waypointOrder = route.waypoint_order;
+
+    // For each waypoint, in the order given by the route, add a new legend elem with label/species
+    for (let idx of waypointOrder) {
+        let waypoint = waypointsWithLabels[idx];
         marker = String.fromCharCode(marker.charCodeAt(0) + 1);
-        addNewLegendElem(legend, `${marker}: ${label} (${species})`);
+        addNewLegendElem(legend, `${marker}: ${waypoint.label} (${waypoint.species})`);
     }
-    let end = route.legs[route.legs.length - 1].end_location;
-    totalDistance += route.legs[route.legs.length - 1].distance.value;
-    totalDuration += route.legs[route.legs.length - 1].duration.value;
+
     marker = String.fromCharCode(marker.charCodeAt(0) + 1);
     addNewLegendElem(legend, `${marker}: end`);
-    addDistanceTimeToLegend(legend, totalDistance, totalDuration);
+
+    // Add route distance to legend
+    let totalDistance = getRouteDistance(route);
+    addNewLegendElem(legend, `Total Route Distance: ${totalDistance} miles`);
+
+    // Add route duration to legend
+    let totalDuration = getRouteDuration(route);
+    let durationMetric = 'hours';
+    if (totalDuration < 1) {
+        totalDuration = Math.round(convertHoursToMinutes(totalDuration) * 10) / 10;
+        durationMetric = 'minutes'
+    }
+    addNewLegendElem(legend, `Total Route Duration: ${totalDuration} ${durationMetric}`);
 }
 
 /**
