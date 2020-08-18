@@ -49,17 +49,12 @@
 }
 
 textarea {
-  width: 16vw;
-}
-
-#route-map {
-  width: 30vw;
-  padding-top: 100%;
+  width: 20vw;
 }
 
 #point-map {
   padding-top: 100%;
-  width: 45vw;
+  width: 55vw;
 }
 
 #route-list {
@@ -84,13 +79,13 @@ textarea {
 
 #legend {
     padding: 3px;
-    width: 45vw;
+    width: 55vw;
     border: thin solid black;
 }
 
 #globalURL{
     padding: 3px;
-    width: 30vw;
+    width: 55vw;
 }
 
 #location {
@@ -129,3 +124,7 @@ textarea {
   color: white;
 }
 
+.index-text {
+  width: 60%;
+  display: inline-block;
+}
