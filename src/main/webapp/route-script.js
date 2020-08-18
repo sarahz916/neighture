@@ -222,6 +222,8 @@ function createInfoWindowHTML(waypoint) {
     link.setAttribute('href', waypoint.url);
     link.setAttribute('target', '_blank');
 
+    html.appendChild(document.createElement('br'));
+
     const markerCheckbox = document.createElement('input');
     markerCheckbox.setAttribute('type', 'checkbox');
     html.appendChild(markerCheckbox);
