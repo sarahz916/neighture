@@ -78,9 +78,9 @@ textarea {
 }
 
 #legend {
-    padding: 3px;
-    width: 55vw;
-    border: thin solid black;
+    width: 60%;
+    margin-top: 1em;
+    background-color: white;
 }
 
 #globalURL{
