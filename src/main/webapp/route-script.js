@@ -376,6 +376,7 @@ function calcRoute(directionsService, directionsRenderer, start, end, waypoints)
 function addNewTypeElem(parent, text, tag) {
     let newElem = document.createElement(tag);
     newElem.textContent = text;
+    newElem.style.marginBottom = 0;
     parent.appendChild(newElem);
     return newElem;
 }
@@ -387,7 +388,7 @@ function addNewTypeElem(parent, text, tag) {
 async function createWaypointLegend(route, waypointsWithLabels) {
     let legend = document.getElementById('legend');
     let marker = 'A';
-    addNewTypeElem(legend, `${marker}: start`, 'p');
+    addNewTypeElem(legend, `${marker}: start`, 'b');
 
     const waypointOrder = route.waypoint_order;
 
@@ -395,14 +396,16 @@ async function createWaypointLegend(route, waypointsWithLabels) {
     for (let idx of waypointOrder) {
         let waypoint = waypointsWithLabels[idx];
         marker = String.fromCharCode(marker.charCodeAt(0) + 1);
-        addNewTypeElem(legend, `${marker}: ${waypoint.label}`, 'b');
-        addNewTypeElem(legend, `${waypoint.species}`, 'p');
-        let link = addNewTypeElem(legend, 'More Information', 'a');
+        let infoDiv = addNewTypeElem(legend, '', 'div');
+
+        addNewTypeElem(infoDiv, `${marker}: ${waypoint.label}`, 'b');
+        addNewTypeElem(infoDiv, `${waypoint.species}`, 'p');
+        let link = addNewTypeElem(infoDiv, 'More Information', 'a');
         link.setAttribute('href', waypoint.url);
     }
 
     marker = String.fromCharCode(marker.charCodeAt(0) + 1);
-    addNewTypeElem(legend, `${marker}: end`, 'p');
+    addNewTypeElem(legend, `${marker}: end`, 'b');
 
     // Add route distance to legend
     let totalDistance = getRouteDistance(route);
