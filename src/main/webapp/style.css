@@ -5,6 +5,7 @@
   background-color:rgb(236, 247, 238);
   font-family: 'Thasadith', Srisakdi;
   overflow: auto;
+  font-size: 120%;
 }
 
 #feedback {
@@ -18,7 +19,6 @@
   margin-left: auto;
   margin-right: auto;
   width: 100%;
-  font-size: 120%;
 }
 
 #header {
