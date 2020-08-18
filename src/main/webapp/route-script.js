@@ -218,7 +218,7 @@ function createInfoWindowHTML(waypoint) {
     let html = document.createElement('div');
     addNewTypeElem(html, waypoint.label, 'b');
     addNewTypeElem(html, `species: ${waypoint.species}`, 'p');
-    let link = addNewTypeElem(html, 'More Info', 'a');
+    let link = addNewTypeElem(html, 'More Information', 'a');
     link.setAttribute('href', waypoint.url);
     link.setAttribute('target', '_blank');
 
@@ -395,7 +395,10 @@ async function createWaypointLegend(route, waypointsWithLabels) {
     for (let idx of waypointOrder) {
         let waypoint = waypointsWithLabels[idx];
         marker = String.fromCharCode(marker.charCodeAt(0) + 1);
-        addNewTypeElem(legend, `${marker}: ${waypoint.label} (${waypoint.species})`, 'p');
+        addNewTypeElem(legend, `${marker}: ${waypoint.label}`, 'b');
+        addNewTypeElem(legend, `${waypoint.species}`, 'p');
+        let link = addNewTypeElem(legend, 'More Information', 'a');
+        link.setAttribute('href', waypoint.url);
     }
 
     marker = String.fromCharCode(marker.charCodeAt(0) + 1);
