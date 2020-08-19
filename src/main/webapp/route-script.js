@@ -386,7 +386,7 @@ function addNewTypeElem(parent, text, tag) {
  * by the user, create a legend that maps a marker on the map to corresponding user input.
  */
 async function createWaypointLegend(route, waypointsWithLabels) {
-    let legend = document.getElementById('legend');
+    let legend = document.getElementById('route-legend');
     legend.style.padding = '3px';
     legend.style.border = 'thin solid black';
     

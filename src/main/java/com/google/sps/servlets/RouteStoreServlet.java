@@ -41,7 +41,10 @@ import java.lang.reflect.Type;
     urlPatterns = "/route-store"
 )
 public class RouteStoreServlet extends HttpServlet {
-  private final Integer NUM_RESULTS = 10;
+  private final Integer NUM_RESULTS = 6;
+  private final Double CUTOFF_IN_MILES = 15.0;
+  private static final Double MILES_TO_COORDINATES = 69.0;
+  private final Double DISTANCE_CUTOFF_COORD = CUTOFF_IN_MILES / MILES_TO_COORDINATES; 
      
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -64,7 +67,7 @@ public class RouteStoreServlet extends HttpServlet {
   private float getDistance(GeoPt one, GeoPt two){
       float lat_dif = one.getLatitude() - two.getLatitude();
       float lng_dif = one.getLongitude() - two.getLongitude();
-      return (lat_dif*lat_dif + lng_dif*lng_dif);
+      return (float) Math.sqrt(lat_dif*lat_dif + lng_dif*lng_dif);
   }
 
 /** Returns ArrayList of StoredRoutes in no particular order. */
@@ -131,7 +134,7 @@ public class RouteStoreServlet extends HttpServlet {
       }
       //have function to calculate distance from midpoint
       float distance = getDistance(center, midpoint);
-      if (waypointsJson != null){
+      if ((waypointsJson != null) && (distance < DISTANCE_CUTOFF_COORD.floatValue())){
         StoredRoute route = new StoredRoute(id, text, waypointsJson);
         SortedStoredRoute sortRoute = new SortedStoredRoute(distance, route);
         priorityQueue.add(sortRoute);

@@ -13,9 +13,6 @@
 // limitations under the License.
 
 //TODOs: Want page to work without start and end added 
-// Use start and end locations instead to sort routes
-//BUG: what to do if route text is the same?
-//Have it work without start and end location?
 
 const DIFF = 0.002;
 
@@ -210,7 +207,37 @@ function addDistanceTimeToLegend(legend, totalDistance, totalDuration) {
     addNewLegendElem(legend, `Total Route Distance: ${totalDistance} miles`);
     addNewLegendElem(legend, `Total Route Duration: ${totalDuration} ${durationMetric}`);
 }
+/**
+ * Calculate and return the total distance of a route in miles.
+ */
+function getRouteDistance(route) {
+    let totalDistance = 0;
+     for (i = 0; i < route.legs.length - 1; i++) {
+        let pt = route.legs[i].end_location;
+        totalDistance += route.legs[i].distance.value;
+    }
+    let end = route.legs[route.legs.length - 1].end_location;
+    totalDistance += route.legs[route.legs.length - 1].distance.value
+    /* Convert distance to a more helpful metric. */
+    return Math.round(convertMetersToMiles(totalDistance) * 10) / 10;
+}
 
+/**
+ * Calculate and return the total duration of a route in hours.
+ */
+function getRouteDuration(route) {
+    let totalDuration = 0;
+    // For each leg of the route, find the label of the end point
+    // and add it to the page.
+    for (i = 0; i < route.legs.length - 1; i++) {
+        let pt = route.legs[i].end_location;
+        totalDuration += route.legs[i].duration.value;
+    }
+    let end = route.legs[route.legs.length - 1].end_location;
+    totalDuration += route.legs[route.legs.length - 1].duration.value;
+    /* Convert time to a more helpful metric. */
+    return Math.round(convertSecondsToHours(totalDuration) * 10) / 10;
+}
 /**
  * Convert a distance in meters to miles.
  */

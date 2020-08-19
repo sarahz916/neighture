@@ -34,7 +34,7 @@
     </div>
   </nav>
   <body id="body">
-    <div class="container-fluid">
+    <div id="content" class="container-fluid">
         <div class="d-flex flex-row justify-content-center">
             <div class="p-3">
             <h3> Step 1: </h3>
@@ -45,7 +45,12 @@
                 <textarea name="text-input" id="text-input" rows=8" columns="8" maxlength="250"></textarea>
 
                 <br>
-                <input type="submit" id="submit-text" class="button"/>
+                <button type="submit" id="submit-text" name="surprise-me" value="false"> Submit Text! </button>
+                <br><br>
+                <b> OR </b>
+                <br>
+                Create random route:
+                <button type="submit" id="surprise-me" name="surprise-me" value="true"> Surprise me! </button>
             </form>
 
             <b id="start-display"></b>
@@ -64,7 +69,7 @@
 
                 <div id="point-map" class="map"></div>
 
-                <div id="legend" class="center"></div>
+                <div id="route-legend" class="center"></div>
                 
                 <div id="globalURL"></div> 
             </div>

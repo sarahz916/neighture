@@ -115,12 +115,21 @@ public class WaypointQueryServlet extends HttpServlet {
 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-    String input = request.getParameter("text-input");
     SessionDataStore sessionDataStore = new SessionDataStore(request);
     ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();
+    
+    //check if it has surprise me.
+    String surpriseMeValue = request.getParameter("surprise-me");
+    boolean surpriseMe = Boolean.parseBoolean(surpriseMeValue);
+    String input = "Surprise me!";
     int statusCode = HttpServletResponse.SC_OK;
     try {
-      waypoints = getLocations(input, sessionDataStore);
+      if (surpriseMe) {
+        waypoints = surpriseMe(sessionDataStore);
+      } else {
+        input = request.getParameter("text-input");
+        waypoints = getLocations(input, sessionDataStore);
+      }
     } catch (IllegalArgumentException e) { // User puts down a number that's out of range
       System.out.println("ILLEGAL ARGUMENT");
       statusCode = HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE;
@@ -129,6 +138,7 @@ public class WaypointQueryServlet extends HttpServlet {
     } catch (Exception e) {
       throw new ServletException(e);
     }
+    
     String waypointsJSONstring = new Gson().toJson(waypoints);
     // Store input text and waypoint in datastore.
     sessionDataStore.storeProperty("Route", "waypoints", waypointsJSONstring);
@@ -137,6 +147,22 @@ public class WaypointQueryServlet extends HttpServlet {
     sessionDataStore.setSessionAttributes(FIELDS_MODIFIED);
     // Redirect back to the create-route page.
     response.sendRedirect("/create-route.html");
+  }
+
+  /** Return the 10 most recent observations in the area
+    */
+  public ArrayList<List<Coordinate>> surpriseMe(SessionDataStore sessionDataStore) throws Exception {
+    ArrayList<List<Coordinate>> waypoints = new ArrayList<List<Coordinate>>();
+    ArrayList<Coordinate> locations = fetchFromDatabase("", "", sessionDataStore, true);
+    int size = locations.size();
+    for (int i = 0; i < 10; i++) {
+      if (i >= size) {
+        break;
+      }
+      Coordinate point = locations.get(i);
+      waypoints.add(Arrays. asList(point));
+    }
+    return waypoints;
   }
 
   /** Using the input text, fetches waypoints from the database to be 
@@ -152,7 +178,7 @@ public class WaypointQueryServlet extends HttpServlet {
       String query = waypointDescription.getQuery();
       String feature = waypointDescription.getFeature();
       // Make call to database
-      ArrayList<Coordinate> locations = fetchFromDatabase(query, feature, sessionDataStore);
+      ArrayList<Coordinate> locations = fetchFromDatabase(query, feature, sessionDataStore, false);
       if (locations.isEmpty()) { // Not in the database
         System.out.println(feature);
         if (autocorrect != null) {
@@ -161,7 +187,7 @@ public class WaypointQueryServlet extends HttpServlet {
             continue;
           }
           System.out.println(suggestions.get(0));
-          locations = fetchFromDatabase(suggestions.get(0), suggestions.get(0), sessionDataStore);
+          locations = fetchFromDatabase(suggestions.get(0), suggestions.get(0), sessionDataStore, false);
           if (locations.isEmpty()) {
             System.out.println("Both times were empty");
             continue;
@@ -182,9 +208,7 @@ public class WaypointQueryServlet extends HttpServlet {
   public ArrayList<WaypointDescription> parseInput(String input) throws IllegalArgumentException, Exception {
     input = Normalizer.normalize(input, Normalizer.Form.NFKD);
     ArrayList<WaypointDescription> allWaypoints = new ArrayList<WaypointDescription>();
-    String waypointQuery = input.toLowerCase().trim(); // determine -- keep lowercase or allow uppercase?
-    // Separate on commas and spaces
-    //String[] featureQueries = waypointQuery.split("[,\\s]+"); 
+    String waypointQuery = input.toLowerCase().trim(); 
     List<String> list = new ArrayList<String>();
     Matcher m = WAYPOINT_PATTERN.matcher(waypointQuery);
     while (m.find()) {
@@ -275,12 +299,12 @@ public class WaypointQueryServlet extends HttpServlet {
   /** Sends a request for the input feature to the database
     * Returns the Coordinate matching the input feature 
     */ 
-  public ArrayList<Coordinate> fetchFromDatabase(String query, String label, SessionDataStore sessionDataStore) throws IOException {
+  public ArrayList<Coordinate> fetchFromDatabase(String query, String label, SessionDataStore sessionDataStore, boolean noLabel) throws IOException {
     String startDate = getStartDate();
     String[] boundaries = getBoundingBox(sessionDataStore);
     String json = sendGET(query, startDate, boundaries);
     if (json != null) {
-      return jsonToCoordinates(json, label);
+      return jsonToCoordinates(json, label, noLabel);
     }
     return new ArrayList<Coordinate>();
   }
@@ -364,7 +388,7 @@ public class WaypointQueryServlet extends HttpServlet {
 
   /** Turns a JSON string into an arraylist of coordinates
     */
-  public static ArrayList<Coordinate> jsonToCoordinates(String json, String label) {
+  public static ArrayList<Coordinate> jsonToCoordinates(String json, String label, boolean noLabel) {
     ArrayList<Coordinate> coordinates = new ArrayList<Coordinate>();
     JSONArray allWaypoints = new JSONArray(json);
     int index = 0;
@@ -379,7 +403,10 @@ public class WaypointQueryServlet extends HttpServlet {
       int idInt = observation.getInt("id");
       String id = String.valueOf(idInt);
       String url = "https://www.inaturalist.org/observations/" + id;
-      System.out.println(url);
+      if (noLabel) {
+        JSONObject common = taxon.getJSONObject("common_name");
+        label = common.getString("name");
+      }
       Coordinate featureCoordinate = new Coordinate(x, y, label, species, url);
       coordinates.add(featureCoordinate);
       index += 1;

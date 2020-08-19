@@ -50,9 +50,9 @@ public class WaypointQueryServletTest {
   public static final ArrayList<Coordinate> TREE = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62224, 41.8972, "tree", "pine tree", "iNaturalist.com/5")));
   public static final ArrayList<Coordinate> NOTHING = new ArrayList<Coordinate>();
   public static final String MUSHROOM_BACKEND = "[{\"latitude\": 41.848653, \"longitude\": -87.629454, \"taxon\": {\"name\": \"red mushroom\"}, \"id\": 1}]";
-  public static final String RASPBERRY_BACKEND = "[{\"latitude\": 41.897946, \"longitude\": -87.622112, \"taxon\": {\"name\": \"big raspberry\"}, \"id\": 4}, "
-    + "{\"latitude\": 41.896968, \"longitude\": -87.624580, \"taxon\": {\"name\": \"big raspberry\"}, \"id\": 6}, "
-    + "{\"latitude\": 41.888454, \"longitude\": -87.623920, \"taxon\": {\"name\": \"big raspberry\"}, \"id\": 7}]";
+  public static final String RASPBERRY_BACKEND = "[{\"latitude\": 41.897946, \"longitude\": -87.622112, \"taxon\": {\"name\": \"big raspberry\", \"common_name\": {\"name\": \"raspberry\"}}, \"id\": 4}, "
+    + "{\"latitude\": 41.896968, \"longitude\": -87.624580, \"taxon\": {\"name\": \"big raspberry\", \"common_name\": {\"name\": \"raspberry\"}}, \"id\": 6}, "
+    + "{\"latitude\": 41.888454, \"longitude\": -87.623920, \"taxon\": {\"name\": \"big raspberry\", \"common_name\": {\"name\": \"raspberry\"}}, \"id\": 7}]";
   public static final String TREE_BACKEND = "[{\"latitude\": 41.897219, \"longitude\": -87.622235, \"taxon\": {\"name\": \"pine tree\"}, \"id\": 5}]";
   public static final String NOTHING_BACKEND = "[]";
   public static final String COMPARISON_DATE = "2019-08-01";
@@ -119,18 +119,25 @@ public class WaypointQueryServletTest {
     assertEquals(bounds, ONE_WAY_COMPARISON);
   }
 
-  /* Testing jsonToCoordinates */
+  /* Testing jsonToCoordinates with label */
   @Test 
-  public void testJsonToCoordinates() throws Exception {
-    ArrayList<Coordinate> coordinateResult = WaypointQueryServlet.jsonToCoordinates(MUSHROOM_BACKEND, "mushroom");
+  public void testJsonToCoordinatesLabel() throws Exception {
+    ArrayList<Coordinate> coordinateResult = WaypointQueryServlet.jsonToCoordinates(MUSHROOM_BACKEND, "mushroom", false);
     assertEquals(coordinateResult, MUSHROOM);
+  }
+
+  /* Testing jsonToCoordinates without label */
+  @Test 
+  public void testJsonToCoordinatesNoLabel() throws Exception {
+    ArrayList<Coordinate> coordinateResult = WaypointQueryServlet.jsonToCoordinates(RASPBERRY_BACKEND, "", true);
+    assertEquals(coordinateResult, RASPBERRY);
   }
 
   /* Testing fetchFromDatabase when result exists; mock sendGET */
   @Test 
   public void testFetchFromDatabaseResult() throws Exception {
     PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(TREE_BACKEND);
-    ArrayList<Coordinate> coordinateResult = servlet.fetchFromDatabase("tree", "tree,lichen", sds);
+    ArrayList<Coordinate> coordinateResult = servlet.fetchFromDatabase("tree", "tree,lichen", sds, false);
     assertEquals(coordinateResult, TREE);
   }
 
@@ -138,7 +145,7 @@ public class WaypointQueryServletTest {
   @Test 
   public void testFetchFromDatabaseNoResult() throws Exception {
     PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(NOTHING_BACKEND);
-    ArrayList<Coordinate> coordinateResult = servlet.fetchFromDatabase("trash", "trash", sds);
+    ArrayList<Coordinate> coordinateResult = servlet.fetchFromDatabase("trash", "trash", sds, false);
     assertEquals(coordinateResult, NOTHING);
   }
 
@@ -298,6 +305,18 @@ public class WaypointQueryServletTest {
     ArrayList<List<Coordinate>> locations = servlet.getLocations("1 raspberry", sds);
     ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
     comparison.add(Arrays.asList(RASPBERRY.get(0)));
+    assertEquals(locations, comparison);
+  }
+
+  /* Testing surpriseMe */
+  @Test
+  public void testSurpriseMe() throws Exception {
+    PowerMockito.stub(PowerMockito.method(WaypointQueryServlet.class, "sendGET")).toReturn(RASPBERRY_BACKEND);
+    ArrayList<List<Coordinate>> locations = servlet.surpriseMe(sds);
+    ArrayList<List<Coordinate>> comparison = new ArrayList<List<Coordinate>>();
+    for (int i = 0; i < RASPBERRY.size(); i++) {
+      comparison.add(Arrays.asList(RASPBERRY.get(i)));
+    }
     assertEquals(locations, comparison);
   }
 }
