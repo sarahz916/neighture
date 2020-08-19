@@ -28,19 +28,19 @@ document.body.innerHTML =
     '<input type="submit" id="submit-text"/>' +
     '</form>';
 
-describe('addNewLegendElem', function() {
-    const addNewLegendElem = require('./route-script.js').addNewLegendElem;
+describe('addNewTypeElem', function() {
+    const addNewTypeElem = require('./route-script.js').addNewTypeElem;
 
     const mockParent = document.createElement('div');
     mockParent.setAttribute('id', 'mock-parent');
     const mockText = "test";
 
     it('should be a function', function() {
-        expect(addNewLegendElem).toBeInstanceOf(Function);
+        expect(addNewTypeElem).toBeInstanceOf(Function);
     });
 
-    it('should add a single p elem with given text to the DOM', function() {
-        addNewLegendElem(mockParent, mockText);
+    it('should be able to add a single p elem with given text to the DOM', function() {
+        addNewTypeElem(mockParent, mockText, 'p');
         expect(mockParent.childNodes.length).toEqual(1);
         expect(mockParent.childNodes[0].tagName).toBe('P');
         expect(mockParent.childNodes[0].textContent).toBe(mockText);
@@ -73,57 +73,23 @@ describe('createCheckBoxEl', function() {
     const createCheckBoxEl = require('./route-script.js').createCheckBoxEl;
 
     const testCoords = {x : 2, y : 2, label : 'flower'};
+    const expectedCoords = "{\"x\":2,\"y\":2,\"label\":\"flower\"}";
     const testLabel = 'flower';
 
     it('should be a function', function() {
         expect(createCheckBoxEl).toBeInstanceOf(Function);
     });
 
-    it('should return a div element', function() {
+    it('should return an input element with the given value', function() {
         const checkbox = createCheckBoxEl(testCoords, testLabel);
-        expect(checkbox.tagName).toEqual('DIV');
+        expect(checkbox.tagName).toEqual('INPUT');
+        expect(checkbox.value).toBe(expectedCoords);
     });
 
-    it('should return a div element with input and label child nodes', function() {
-        const checkbox = createCheckBoxEl(testCoords, testLabel);
-        expect(checkbox.childNodes.length).toEqual(2);
-        expect(checkbox.childNodes[0].tagName).toEqual('INPUT');
-        expect(checkbox.childNodes[1].tagName).toEqual('LABEL');
-    });
-
-    it('should return a div element with a child label containing the inputted label parameter', function() {
-        const checkbox = createCheckBoxEl(testCoords, testLabel);
-        expect(checkbox.childNodes[1].innerText).toEqual(testLabel);
-    });
-
-});
-
-describe('createCheckBoxSet', function() {
-    let createCheckBoxSet = require('./route-script.js').createCheckBoxSet;
-
-    let testSet = [ { x : 1, y : 1, label : 'flower' }, { x : 2, y : 2, label : 'flower' } ];
-    let testColor = 'red'
-
-    it('should be a function', function() {
-        expect(createCheckBoxSet).toBeInstanceOf(Function);
-    });
-
-    it('should return a div with 2 + set.length child nodes', function() {
-        let checkboxset = createCheckBoxSet(testSet, testColor);
-        expect(checkboxset.tagName).toEqual('DIV');
-        expect(checkboxset.childNodes.length).toEqual(2 + testSet.length);
-    });
-
-    it('should return a div with a child h4 element containing the label', function() {
-        let checkboxset = createCheckBoxSet(testSet, testColor);
-        expect(checkboxset.childNodes[0].tagName).toEqual('H4');
-        expect(checkboxset.childNodes[0].innerText).toEqual(testSet[0].label);
-    });
 });
 
 describe('createCheckBoxes', function() {
     const createCheckBoxes = require('./route-script.js').createCheckBoxes;
-    const createCheckBoxSet = require('./route-script.js').createCheckBoxSet;
 
     let testPts = [ [ { x : 1, y : 1, label : 'flower' } ] ];
     createCheckBoxes(testPts);
