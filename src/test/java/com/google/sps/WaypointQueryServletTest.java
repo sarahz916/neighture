@@ -319,4 +319,15 @@ public class WaypointQueryServletTest {
     }
     assertEquals(locations, comparison);
   }
+
+  /* Testing getLabel */
+  @Test
+  public void testGetLabel() throws Exception {
+    ArrayList<List<Coordinate>> input = new ArrayList<List<Coordinate>>();
+    input.add(Arrays.asList(RASPBERRY.get(0)));
+    input.add(Arrays.asList(TREE.get(0)));
+    String label = servlet.getLabel(input);
+    String comparison = "raspberry, tree";
+    assertEquals(label, comparison);
+  }
 }

@@ -121,11 +121,12 @@ public class WaypointQueryServlet extends HttpServlet {
     //check if it has surprise me.
     String surpriseMeValue = request.getParameter("surprise-me");
     boolean surpriseMe = Boolean.parseBoolean(surpriseMeValue);
-    String input = "Surprise me!";
+    String input = "";
     int statusCode = HttpServletResponse.SC_OK;
     try {
       if (surpriseMe) {
         waypoints = surpriseMe(sessionDataStore);
+        input = getLabel(waypoints);
       } else {
         input = request.getParameter("text-input");
         waypoints = getLocations(input, sessionDataStore);
@@ -160,9 +161,23 @@ public class WaypointQueryServlet extends HttpServlet {
         break;
       }
       Coordinate point = locations.get(i);
-      waypoints.add(Arrays. asList(point));
+      waypoints.add(Arrays.asList(point));
     }
     return waypoints;
+  }
+
+  /** Returns a comma-separated string of all the waypoint labels
+    * Each list element has only one coordinate element
+    */
+  public static String getLabel(ArrayList<List<Coordinate>> waypoints) {
+    if (waypoints.size() == 0) {
+      return "";
+    }
+    String label = waypoints.get(0).get(0).getLabel();
+    for (int i = 1; i < waypoints.size(); i++) {
+      label += ", " + waypoints.get(i).get(0).getLabel();
+    }
+    return label;
   }
 
   /** Using the input text, fetches waypoints from the database to be 
