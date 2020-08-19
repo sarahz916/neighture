@@ -103,3 +103,29 @@ describe('createCheckBoxes', function() {
         expect(document.getElementById('select-points').childNodes.length).toEqual(testPts.length + 1);
     });
 });
+
+describe("getNumChecked", function() {
+    const getNumChecked = require('./route-script.js').getNumChecked;
+    const createCheckBoxEl = require('./route-script.js').createCheckBoxEl;
+
+    // Create test checkboxes that are unchecked
+    const testCoords = {x : 2, y : 2, label : 'flower'};
+    const testLabel = 'flower';
+    const NUM_CHECKBOXES = 5;
+
+    for (let i = 0; i < NUM_CHECKBOXES; i++) {
+        createCheckBoxEl(testCoords, testLabel);
+    }
+
+    it('should count checked boxes correctly when none are checked', function() {
+        let numChecked = getNumChecked();
+        expect(numChecked).toEqual(0);
+    });
+
+    it('should count checked boxes correctly when some are checked', function() {
+        // Check one of the checkboxes
+        document.getElementsByClassName('checkbox')[0].checked = true;
+        let numChecked = getNumChecked();
+        expect(numChecked).toEqual(1);
+    });
+});

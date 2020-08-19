@@ -578,6 +578,7 @@ try {
     module.exports.createColorBoxElem = createColorBoxElem;
     module.exports.createCheckBoxes = createCheckBoxes;
     module.exports.createCheckBoxEl = createCheckBoxEl;
+    module.exports.getNumChecked = getNumChecked;
 } catch(error) {
     console.log("Not exporting code from this script")
 }
