@@ -35,7 +35,7 @@ public final class Coordinate {
     this.url = url;
   }
 
-  /** Creates a new coordinate with a label, species, and url
+  /** Creates a new coordinate with just a label
     */
   public Coordinate(Double x, Double y, String label) {
     this.x = x;
