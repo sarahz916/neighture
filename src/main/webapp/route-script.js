@@ -439,7 +439,7 @@ async function createWaypointLegend(route, waypointsWithLabels) {
  */
 function getRouteDistance(route) {
     let totalDistance = 0;
-     for (i = 0; i < route.legs.length - 1; i++) {
+     for (let i = 0; i < route.legs.length - 1; i++) {
         let pt = route.legs[i].end_location;
         totalDistance += route.legs[i].distance.value;
     }
@@ -456,7 +456,7 @@ function getRouteDuration(route) {
     let totalDuration = 0;
     // For each leg of the route, find the label of the end point
     // and add it to the page.
-    for (i = 0; i < route.legs.length - 1; i++) {
+    for (let i = 0; i < route.legs.length - 1; i++) {
         let pt = route.legs[i].end_location;
         totalDuration += route.legs[i].duration.value;
     }
