@@ -55,6 +55,8 @@ public class ChosenWaypointsServlet extends HttpServlet {
         sessionDataStore.storeProperty("Route", "actual-route", (String) new Gson().toJson(waypoints));
         Coordinate centerOfmass = getCenterofMass(waypoints);
         sessionDataStore.storeIndexedProperty("Route", "center-of-mass", centerOfmass);
+        String labelSentence = getLabelSentence(waypoints);
+        sessionDataStore.storeProperty("Route", "labels", labelSentence);
         sessionDataStore.storeStoredRoute();
         sessionDataStore.setSessionAttributes(FIELDS_MODIFIED);
         // Redirect back to the index page.
@@ -97,5 +99,15 @@ public class ChosenWaypointsServlet extends HttpServlet {
         return center;
     }
 
+    /** Gets Coordinate labels together and returns as comma seperated string.
+    */ 
+    private String getLabelSentence(ArrayList<Coordinate> waypoints){
+        StringBuilder labelSentence = new StringBuilder();
+        for (Coordinate coord: waypoints){
+            labelSentence.append(coord.getLabel());
+            labelSentence.append(", ");
+        }
+        return labelSentence.substring(0, labelSentence.length() - 2);
+    }
     
 }
