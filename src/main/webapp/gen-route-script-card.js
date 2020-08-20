@@ -270,14 +270,12 @@ function getInfoFromLatLng(pt, waypointsWithLabels, infoRequested) {
     for (let waypoint of waypointsWithLabels) {
         // Calculate the difference between the lat/long of the points and 
         // check if its within a certain range.
-        //for (let waypoint of waypoints) {
         let latDiff = Math.abs(waypoint.latlng.lat() - pt.lat());
         let lngDiff = Math.abs(waypoint.latlng.lng() - pt.lng());
         const range = 0.001;
         if (latDiff < DIFF && lngDiff < DIFF) {
             return waypoint[`${infoRequested}`];
         }
-        //}
     }
     return '';
 }

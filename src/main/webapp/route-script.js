@@ -574,11 +574,11 @@ async function writeToAssociatedText(){
 
 /* Check to see if we're running on Node.js or in a browser for tests */
 try {
-    module.exports.addNewLegendElem = addNewTypeElem;
+    module.exports.addNewTypeElem = addNewTypeElem;
     module.exports.createColorBoxElem = createColorBoxElem;
-    module.exports.createCheckBoxEl = createCheckBoxEl;
-    module.exports.createCheckBoxSet = createCheckBoxSet;
     module.exports.createCheckBoxes = createCheckBoxes;
+    module.exports.createCheckBoxEl = createCheckBoxEl;
+    module.exports.getNumChecked = getNumChecked;
 } catch(error) {
     console.log("Not exporting code from this script")
 }
