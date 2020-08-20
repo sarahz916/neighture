@@ -160,7 +160,7 @@ public class WaypointQueryServlet extends HttpServlet {
         break;
       }
       Coordinate point = locations.get(i);
-      waypoints.add(Arrays. asList(point));
+      waypoints.add(Arrays.asList(point));
     }
     return waypoints;
   }
@@ -404,8 +404,12 @@ public class WaypointQueryServlet extends HttpServlet {
       String id = String.valueOf(idInt);
       String url = "https://www.inaturalist.org/observations/" + id;
       if (noLabel) {
-        JSONObject common = taxon.getJSONObject("common_name");
-        label = common.getString("name");
+        if (!taxon.isNull("common_name")) {
+          JSONObject common = taxon.getJSONObject("common_name");
+          label = common.getString("name");
+        } else {
+          label = observation.getString("species_guess");
+        }
       }
       Coordinate featureCoordinate = new Coordinate(x, y, label, species, url);
       coordinates.add(featureCoordinate);

@@ -218,7 +218,7 @@ function getCheckboxFromMarker(location) {
     return boxFound;
 }
 
-/** Takes ArrayList<ArrayList<Coordinates>> and creates checkboxes grouped by labels */
+/** Takes list of coordinates and creates checkboxes grouped by labels */
 function createCheckBoxes(waypointChoices) {
   let submitEl = document.createElement("input");
   submitEl.setAttribute("type", "submit");
