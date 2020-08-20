@@ -14,8 +14,8 @@
 
 package com.google.sps;
 import com.google.sps.Coordinate;
+import com.google.sps.WaypointsObject;
 import com.google.sps.SessionDataStore;
-import com.google.gson.Gson;
 import org.json.JSONObject;
 
 import javax.servlet.annotation.WebServlet;
@@ -49,24 +49,17 @@ public class ChosenWaypointsServlet extends HttpServlet {
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         //TODO (zous): should we throw exceptions/error if there are no checked checkboxes
-        ArrayList<Coordinate> waypoints = getWaypointsfromRequest(request);
+        WaypointsObject waypointObj = getWaypointsfromRequest(request);
         SessionDataStore sessionDataStore = new SessionDataStore(request);
-        // Store input text and waypoint in datastore.
-        sessionDataStore.storeProperty("Route", "actual-route", (String) new Gson().toJson(waypoints));
-        Coordinate centerOfmass = getCenterofMass(waypoints);
-        sessionDataStore.storeIndexedProperty("Route", "center-of-mass", centerOfmass);
-        String labelSentence = getLabelSentence(waypoints);
-        sessionDataStore.storeProperty("Route", "labels", labelSentence);
-        sessionDataStore.storeStoredRoute();
-        sessionDataStore.setSessionAttributes(FIELDS_MODIFIED);
-        // Redirect back to the index page.
+        updateRouteAndStore(sessionDataStore, waypointObj);
+        // Redirect back to the create route page.
         response.sendRedirect("/create-route.html");
     }
 
     /** Scans the checkbox form for checked coordinates and appends that to waypoints. 
     *   Returns waypoints as ArrayList<Coordinates>
     */ 
-    public ArrayList<Coordinate> getWaypointsfromRequest(HttpServletRequest request){
+    public WaypointsObject getWaypointsfromRequest(HttpServletRequest request){
         Enumeration paramNames = request.getParameterNames();
         ArrayList<Coordinate> waypoints = new ArrayList<Coordinate>();
         while(paramNames.hasMoreElements()) {
@@ -81,33 +74,15 @@ public class ChosenWaypointsServlet extends HttpServlet {
             Coordinate featureCoordinate = new Coordinate(x, y, feature, species, url);
             waypoints.add(featureCoordinate);
         }
-        return waypoints;
-    }
-    /** Averages latitude and longititude of all waypoints and returns Coordinate of center. 
-    */ 
-    private Coordinate getCenterofMass(ArrayList<Coordinate> waypoints){
-        int num_pts = waypoints.size(); 
-        Double avg_x = 0.0;
-        Double avg_y = 0.0;
-        for (Coordinate pt: waypoints){
-            avg_x += pt.getX();
-            avg_y += pt.getY();
-        }
-        avg_x = avg_x / num_pts;
-        avg_y = avg_y / num_pts;
-        Coordinate center =  new Coordinate(avg_x, avg_y, "midpoint");
-        return center;
+        return new WaypointsObject(waypoints);
     }
 
-    /** Gets Coordinate labels together and returns as comma seperated string.
-    */ 
-    private String getLabelSentence(ArrayList<Coordinate> waypoints){
-        StringBuilder labelSentence = new StringBuilder();
-        for (Coordinate coord: waypoints){
-            labelSentence.append(coord.getLabel());
-            labelSentence.append(", ");
-        }
-        return labelSentence.substring(0, labelSentence.length() - 2);
+    public void updateRouteAndStore(SessionDataStore sessionDataStore, WaypointsObject waypointObj){
+        // Store input text and waypoint in datastore.
+        sessionDataStore.storeProperty("Route", "actual-route", waypointObj.getJSONofWaypoints());
+        sessionDataStore.storeIndexedProperty("Route", "center-of-mass", waypointObj.getCenter());
+        sessionDataStore.storeProperty("Route", "labels", waypointObj.getLabelSentence());
+        sessionDataStore.storeStoredRoute();
+        sessionDataStore.setSessionAttributes(FIELDS_MODIFIED);
     }
-    
 }
