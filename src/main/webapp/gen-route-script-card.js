@@ -18,9 +18,10 @@ import RoutePage from './RoutePage.js'
 
 window.onload = async function setup() {
     let genRoutePage = new RoutePage();
-    let startAddr = genRoutePage.getStartAddr();
-    let endAddr = genRoutePage.getEndAddr();
-    let startCoord = genRoutePage.getStartCoord();
+    await genRoutePage.init();
+    let startAddr = await genRoutePage.getStartAddr();
+    let endAddr = await genRoutePage.getEndAddr();
+    let startCoord = await genRoutePage.getStartCoord();
     setupGenRouteCards(genRoutePage);
 }
 /** Feteches routes from routestore and creates cards to displayed on the page. */
@@ -61,7 +62,8 @@ function createCardEl(route, genRoutePage){
     const mapID = route.id.toString(16) + 'map';
     const legendID = route.id.toString(16) + 'legend';
     const urlID = route.id.toString(16) + 'url';
-    genRoutePage.createMapWithWaypoints(route, mapID, legendID, urlID);
+    let waypointjson = JSON.parse(route.waypoints);
+    genRoutePage.createMapWithWaypoints(waypointjson, mapID, legendID, urlID, false);
     return cardEl;
 }
 

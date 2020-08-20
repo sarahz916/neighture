@@ -14,13 +14,28 @@
 
 export default class RoutePage {
 
+    /**
+     * Construct a new RoutePage object.
+     */
     constructor() {
         this.startCoord = null;
         this.endCoord = null;
         this.startAddr = null;
         this.endAddr = null;
-        this.waypoints = null; 
-        //this.addNewLegendElem = this.addNewLegendElem.bind(this);
+        this.SC_REQUEST_ENTITY_TOO_LARGE = 413;
+        this.SC_BAD_REQUEST = 400;
+    }
+
+    /**
+     * Initialize the instance variables of this class that require data from the servlet.
+     */
+    async init() {
+        let res = await fetch('/start-end');
+        let startEnd = await res.json();
+        this.startCoord = new google.maps.LatLng(startEnd.start.y, startEnd.start.x);
+        this.endCoord = new google.maps.LatLng(startEnd.end.y, startEnd.end.x);
+        this.startAddr = startEnd.start.label;
+        this.endAddr = startEnd.end.label
     }
 
     /**
@@ -35,13 +50,15 @@ export default class RoutePage {
     }
 
     /**
-    * Create a route and map from a waypoint entered by the user.
+    * Create a route and map from a waypoint entered by the user. Writes to associated text 
+    * if bool writeToText is true.
     */
-    async createMapWithWaypoints(route,  mapID, legendID, urlID) {
-        let waypointjson = JSON.parse(route.waypoints);
+    async createMapWithWaypoints(waypointjson, mapID, legendID, urlID, writeToText) {
         let waypoints = this.convertWaypointstoLatLng(waypointjson);
+
         let start = await this.getStartCoord();
         let end = await this.getEndCoord();
+
         let map = this.initMap(start, mapID);
         let directionsService = new google.maps.DirectionsService();
         let directionsRenderer = new google.maps.DirectionsRenderer({
@@ -49,6 +66,10 @@ export default class RoutePage {
         });
         this.calcRoute(directionsService, directionsRenderer, start, end, waypoints, legendID);
         this.generateURL (start, end, waypoints, urlID);
+        if (writeToText) {
+            this.writeToAssociatedText();
+        }
+
     }
 
     /**
@@ -69,8 +90,17 @@ export default class RoutePage {
     */
     createWaypointLegend(route, waypointsWithLabels, legendID) {
         let legend = document.getElementById(legendID);
+        legend.style.padding = '3px';
+        legend.style.border = 'thin solid black';
+    
+        let title = this.addNewTypeElem(legend, 'Route Information', 'h2');
+        title.style.textAlign = 'center';
+
+       // Add start information
         let marker = 'A';
-        this.addNewLegendElem(legend, `${marker}: start`);
+        let infoDiv = this.addNewTypeElem(legend, '', 'div');
+        this.addNewTypeElem(infoDiv, `${marker}`, 'b');
+        this.addNewTypeElem(infoDiv, 'start', 'p');
 
         const waypointOrder = route.waypoint_order;
 
@@ -78,24 +108,33 @@ export default class RoutePage {
         for (let idx of waypointOrder) {
             let waypoint = waypointsWithLabels[idx];
             marker = String.fromCharCode(marker.charCodeAt(0) + 1);
-            this.addNewLegendElem(legend, `${marker}: ${waypoint.label} (${waypoint.species})`);
+            infoDiv = this.addNewTypeElem(legend, '', 'div');
+
+            this.addNewTypeElem(infoDiv, `${marker}: ${waypoint.label}`, 'b');
+            this.addNewTypeElem(infoDiv, `${waypoint.species}`, 'p');
+            let link = this.addNewTypeElem(infoDiv, 'More Information', 'a');
+            link.setAttribute('href', waypoint.url);
         }
 
         marker = String.fromCharCode(marker.charCodeAt(0) + 1);
-        this.addNewLegendElem(legend, `${marker}: end`);
+        infoDiv = this.addNewTypeElem(legend, '', 'div');
+        this.addNewTypeElem(infoDiv, `${marker}`, 'b');
+        this.addNewTypeElem(infoDiv, 'end', 'p');
+
+        this.addNewTypeElem(legend, '', 'br');
 
         // Add route distance to legend
         let totalDistance = this.getRouteDistance(route);
-        this.addNewLegendElem(legend, `Total Route Distance: ${totalDistance} miles`);
+        this.addNewTypeElem(legend, `Total Route Distance: ${totalDistance} miles`, 'p');
 
         // Add route duration to legend
         let totalDuration = this.getRouteDuration(route);
         let durationMetric = 'hours';
         if (totalDuration < 1) {
-            totalDuration = Math.round(convertHoursToMinutes(totalDuration) * 10) / 10;
+            totalDuration = Math.round(this.convertHoursToMinutes(totalDuration) * 10) / 10;
             durationMetric = 'minutes'
         }
-        this.addNewLegendElem(legend, `Total Route Duration: ${totalDuration} ${durationMetric}`);
+       this.addNewTypeElem(legend, `Total Route Duration: ${totalDuration} ${durationMetric}`, 'p');
     }
 
     /**
@@ -123,13 +162,15 @@ export default class RoutePage {
         }.bind(this));
     }
 
-    /**
-     * Add a new p element to the given parent with the given text.
+    /** Create a new element with the given tag name with the given text and 
+     *  append it to the given parent.
      */
-    addNewLegendElem(parent, text) {
-        let newElem = document.createElement('p');
+    addNewTypeElem(parent, text, tag) {
+        let newElem = document.createElement(tag);
         newElem.textContent = text;
+        newElem.style.marginBottom = 0;
         parent.appendChild(newElem);
+        return newElem;
     }
 
     /**
@@ -188,7 +229,7 @@ export default class RoutePage {
     }
 
     /**
-    * Creates a URL based on Maps URLs that will open the generated route on Google Maps on any device.
+    * Create a URL based on Maps URLs that will open the generated route on Google Maps on any device.
     */
     generateURL(start, end, waypoints, urlID){
         let globalURL = 'https://www.google.com/maps/dir/?api=1';
@@ -202,46 +243,68 @@ export default class RoutePage {
     }
 
     /**
-    * Fetches the start and end location addresses from the StartEndServlet.
+    * Fetch the last text-input from /route-store to display with the map.
     */
-    async getStartEnd() {
-        let res = await fetch('/start-end');
-        let startEnd = await res.json();
-        return startEnd;
+    async writeToAssociatedText(){
+        const response = await fetch("/text-store");
+        const storedtext = await response.text();
+        // /text-store has all the input text sorted by most recent first.
+        const associatedTextEl = document.getElementById('associated-text');
+        // To get the most recent entered term, get first element of array
+        // of all input text. 
+        associatedTextEl.innerText = "You entered: " + storedtext;
     }
+
+    /**
+    * Get a list of waypoints by querying the waypoint servlet.
+    */
+    async getWaypoints() {
+        let res = await fetch('/query');
+        // Catch HTTP status error codes
+        if (res.status === this.SC_REQUEST_ENTITY_TOO_LARGE) {
+            alert('Too many waypoints in text input. Please try again.');
+        } else if (res.status === this.SC_BAD_REQUEST) {
+            alert('Malformed text input. Please try again.');
+        }
+
+        let waypoints = await res.json();
+        return waypoints;
+    }
+
+    /**
+    * Fetch the checked waypoints from the chosen-waypoints servlet.
+    */
+    async getChosenPoints() {
+        let res = await fetch('/chosen-waypoints');
+        let waypoints = await res.json();
+        return waypoints;
+    }
+
 
     /**
     * Get the start location coordinate in LatLng entered by the user.
     */
-    async getStartCoord() {
-        let startEnd = await this.getStartEnd();
-        this.startCoord = new google.maps.LatLng(startEnd.start.y, startEnd.start.x);
+    getStartCoord() {
         return this.startCoord;
     }
 
     /**
     * Gets the end location coordinate in LatLng entered by the user.
     */
-    async getEndCoord() {
-        let startEnd = await this.getStartEnd();
-        this.endCoord = new google.maps.LatLng(startEnd.end.y, startEnd.end.x);
+    getEndCoord() {
         return this.endCoord;
     }
     /**
     * Get the start location address entered by the user.
     */
-    async getStartAddr() {
-        let startEnd = await this.getStartEnd();
-        this.startAddr = startEnd.start.label;
+    getStartAddr() {
         return this.startAddr;
     }
 
     /**
     * Gets the end location address entered by the user.
     */
-    async getEndAddr() {
-        let startEnd = await this.getStartEnd();
-        this.endAddr = startEnd.end.label;
+    getEndAddr() {
         return this.endAddr;
     }
 }
