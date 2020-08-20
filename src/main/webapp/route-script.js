@@ -104,8 +104,7 @@ async function createMapWithWaypoints(res) {
     let directionsRenderer = new google.maps.DirectionsRenderer({
         map: map
     });
-    calcRoute(directionsService, directionsRenderer, start, end, waypoints);
-    generateURL (start, end, waypoints);
+    let route = calcRoute(directionsService, directionsRenderer, start, end, waypoints);
     writeToAssociatedText();
 }
 
@@ -366,10 +365,12 @@ function calcRoute(directionsService, directionsRenderer, start, end, waypoints)
         if (status == 'OK') {
             directionsRenderer.setDirections(result);
             createWaypointLegend(result.routes[0], waypointsWithLabels);
+            generateURL (start, end, waypoints, result.routes[0].waypoint_order);
         } else {
             alert(`Could not display directions: ${status}`);
         }
     });
+    
 }
 
 /** Create a new element iwth the given tag name with the given text and append it to the given parent. */
@@ -548,11 +549,14 @@ function initMap(center, id) {
 /**
  * Creates a URL based on Maps URLs that will open the generated route on Google Maps on any device.
  */
-function generateURL(start, end, waypoints){
+function generateURL(start, end, waypoints, waypointOrder){
     let globalURL = 'https://www.google.com/maps/dir/?api=1';
     globalURL = globalURL + '&origin=' + start + '&destination=' + end;
     globalURL += '&waypoints=';
-    waypoints.forEach(pt => globalURL += pt.latlng + '|');
+    for (let idx of waypointOrder) {
+        let pt = waypoints[idx];
+        globalURL += pt.latlng + '|';
+    }
     globalURL = globalURL + '&travelmode=walking';
     const URLcontainer = document.getElementById('globalURL');
     globalURL = globalURL.split(" ").join("") //need to get rid of white space for link to work

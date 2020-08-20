@@ -194,7 +194,7 @@ public final class SessionDataStore {
             Key ID = KeyFactory.createKey("Route", this.sessionID);
             Entity Entity = datastore.get(ID);
             Entity newEntity = new Entity("StoredRoute");
-            newEntity.setUnindexedProperty("text", Entity.getProperty("text"));
+            newEntity.setUnindexedProperty("text", Entity.getProperty("labels"));
             newEntity.setUnindexedProperty("actual-route", Entity.getProperty("actual-route"));
             newEntity.setProperty("center-of-mass", Entity.getProperty("center-of-mass"));
             datastore.put(txn, newEntity);
