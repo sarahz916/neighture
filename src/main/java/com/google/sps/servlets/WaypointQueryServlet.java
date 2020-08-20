@@ -121,12 +121,12 @@ public class WaypointQueryServlet extends HttpServlet {
     //check if it has surprise me.
     String surpriseMeValue = request.getParameter("surprise-me");
     boolean surpriseMe = Boolean.parseBoolean(surpriseMeValue);
-    String input = "";
+    String input = "Surprise me!";
     int statusCode = HttpServletResponse.SC_OK;
     try {
       if (surpriseMe) {
         waypoints = surpriseMe(sessionDataStore);
-        input = getLabel(waypoints);
+        //input = getLabel(waypoints);
       } else {
         input = request.getParameter("text-input");
         waypoints = getLocations(input, sessionDataStore);
@@ -419,8 +419,12 @@ public class WaypointQueryServlet extends HttpServlet {
       String id = String.valueOf(idInt);
       String url = "https://www.inaturalist.org/observations/" + id;
       if (noLabel) {
-        JSONObject common = taxon.getJSONObject("common_name");
-        label = common.getString("name");
+        if (!taxon.isNull("common_name")) {
+          JSONObject common = taxon.getJSONObject("common_name");
+          label = common.getString("name");
+        } else {
+          label = observation.getString("species_guess");
+        }
       }
       Coordinate featureCoordinate = new Coordinate(x, y, label, species, url);
       coordinates.add(featureCoordinate);
