@@ -43,11 +43,11 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({WaypointQueryServlet.class, SessionDataStore.class})
 public class WaypointQueryServletTest {
-  public static final ArrayList<Coordinate> MUSHROOM = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62944, 41.84864, "mushroom", "red mushroom", "iNaturalist.com/1")));
+  public static final ArrayList<Coordinate> MUSHROOM = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.629454, 41.848653, "mushroom", "red mushroom", "iNaturalist.com/1")));
   public static final ArrayList<Coordinate> CLOVER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.63566666666667, 41.856, "clover", "four-leaf clover", "iNaturalist.com/2")));
   public static final ArrayList<Coordinate> BELLFLOWER = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.6475, 41.8435, "bellflower", "yellow bellflower", "iNaturalist.com/3")));
-  public static final ArrayList<Coordinate> RASPBERRY = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62212, 41.89796, "raspberry", "big raspberry", "iNaturalist.com/4"), new Coordinate(-87.62456, 41.89696, "raspberry", "big raspberry", "iNaturalist.com/6"), new Coordinate(-87.62392, 41.88844, "raspberry", "big raspberry", "iNaturalist.com/7")));
-  public static final ArrayList<Coordinate> TREE = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.62224, 41.8972, "tree", "pine tree", "iNaturalist.com/5")));
+  public static final ArrayList<Coordinate> RASPBERRY = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.622112, 41.897946, "raspberry", "big raspberry", "iNaturalist.com/4"), new Coordinate(-87.624580, 41.896968, "raspberry", "big raspberry", "iNaturalist.com/6"), new Coordinate(-87.623920, 41.888454, "raspberry", "big raspberry", "iNaturalist.com/7")));
+  public static final ArrayList<Coordinate> TREE = new ArrayList<Coordinate>(Arrays.asList(new Coordinate(-87.622235, 41.897219, "tree", "pine tree", "iNaturalist.com/5")));
   public static final ArrayList<Coordinate> NOTHING = new ArrayList<Coordinate>();
   public static final String MUSHROOM_BACKEND = "[{\"latitude\": 41.848653, \"longitude\": -87.629454, \"taxon\": {\"name\": \"red mushroom\"}, \"id\": 1}]";
   public static final String RASPBERRY_BACKEND = "[{\"latitude\": 41.897946, \"longitude\": -87.622112, \"taxon\": {\"name\": \"big raspberry\", \"common_name\": {\"name\": \"raspberry\"}}, \"id\": 4}, "
@@ -318,16 +318,5 @@ public class WaypointQueryServletTest {
       comparison.add(Arrays.asList(RASPBERRY.get(i)));
     }
     assertEquals(locations, comparison);
-  }
-
-  /* Testing getLabel */
-  @Test
-  public void testGetLabel() throws Exception {
-    ArrayList<List<Coordinate>> input = new ArrayList<List<Coordinate>>();
-    input.add(Arrays.asList(RASPBERRY.get(0)));
-    input.add(Arrays.asList(TREE.get(0)));
-    String label = servlet.getLabel(input);
-    String comparison = "raspberry, tree";
-    assertEquals(label, comparison);
   }
 }
