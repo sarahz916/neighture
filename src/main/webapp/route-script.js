@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import RoutePage from './RoutePage.js'
+
 // 25 fill colors for markers (max number of stops on route is 25)
 const FILL_COLORS = ['#F1C40F', '#3498DB', '#154360', '#D1F2EB', '#D7BDE2', '#DC7633', 
                     '#145A32', '#641E16', '#5B2C6F', '#F1948A', '#FF00FF', '#C0C0C0', '#808080',
@@ -20,25 +22,27 @@ const FILL_COLORS = ['#F1C40F', '#3498DB', '#154360', '#D1F2EB', '#D7BDE2', '#DC
                     ];
 const CHECKED_COLOR = "#FF0000";
 const MAX_WAYPOINTS = 23;
-const DIFF = 0.002;
 const CHOICE_AT_ONCE = 3; 
 const SC_REQUEST_ENTITY_TOO_LARGE = 413;
 const SC_BAD_REQUEST = 400;
 const SC_INTERNAL_SERVER_ERROR= 500;
 
 window.onload = async function setup() {
-    let startAddr = await getStartAddr();
-    let endAddr = await getEndAddr();
-    let startCoord = await getStartCoord;
+    let genRoutePage = new RoutePage();
+    await genRoutePage.init();
+    let startAddr = await genRoutePage.getStartAddr();
+    let endAddr = await genRoutePage.getEndAddr();
+    let startCoord = await genRoutePage.getStartCoord();
+
     await initStartEndDisplay(startAddr, endAddr);
 
     // Either load the checkbox map or the directions map.
-    let enteredText = await getWaypoints();
+    let enteredText = await genRoutePage.getWaypoints();
     if (JSON.stringify(enteredText) === '[]') {
-        let chosenPoints = await getChosenPoints();
-        await createMapWithWaypoints(chosenPoints);
+        let chosenPoints = await genRoutePage.getChosenPoints();
+        await genRoutePage.createMapWithWaypoints(chosenPoints, 'point-map', 'route-legend', 'globalURL', true);
     } else {
-        await setupUserChoices(enteredText);
+        await setupUserChoices(enteredText, genRoutePage);
     }
 }
 
@@ -51,90 +55,23 @@ async function initStartEndDisplay(start, end) {
 }
 
 /**
- * Get the start location coordinate in LatLng entered by the user.
- */
-async function getStartCoord() {
-    let startEnd = await getStartEnd();
-    return new google.maps.LatLng(startEnd.start.y, startEnd.start.x);
-}
-
-/**
- * Gets the end location coordinate in LatLng entered by the user.
- */
-async function getEndCoord() {
-    let startEnd = await getStartEnd();
-    return new google.maps.LatLng(startEnd.end.y, startEnd.end.x);
-}
-
-/**
- * Get the start location address entered by the user.
- */
-async function getStartAddr() {
-    let startEnd = await getStartEnd();
-    return startEnd.start.label;
-}
-
-/**
- * Gets the end location address entered by the user.
- */
-async function getEndAddr() {
-    let startEnd = await getStartEnd();
-    return startEnd.end.label;
-}
-
-/**
- * Fetches the start and end location addresses from the StartEndServlet.
- */
-async function getStartEnd() {
-    let res = await fetch('/start-end');
-    let startEnd = await res.json();
-    return startEnd;
-}
-
-/**
- * Create a route and map from a waypoint entered by the user.
- */
-async function createMapWithWaypoints(res) {
-    let waypoints = convertWaypointstoLatLng(res);
-    let start = await getStartCoord();
-    let end = await getEndCoord();
-
-    let map = initMap(start, 'point-map');
-    let directionsService = new google.maps.DirectionsService();
-    let directionsRenderer = new google.maps.DirectionsRenderer({
-        map: map
-    });
-    let route = calcRoute(directionsService, directionsRenderer, start, end, waypoints);
-    writeToAssociatedText();
-}
-
-/**
- * Fetch the checked waypoints from the chosen-waypoints servlet.
- */
-async function getChosenPoints() {
-    let res = await fetch('/chosen-waypoints');
-    let waypoints = await res.json();
-    return waypoints;
-}
-
-/**
  * Set up the two left-hand panels of the page that allow the user to choose what they want in their route.
  */
-async function setupUserChoices(res) {
+async function setupUserChoices(res, genRoutePage) {
     let waypoints = convertWaypointClusterstoLatLng(res);
-    let startCoord = await getStartCoord();
-    let endCoord = await getEndCoord();
-    let startName = await getStartAddr();
-    let endName = await getEndAddr();
+    let startCoord = await genRoutePage.getStartCoord();
+    let endCoord = await genRoutePage.getEndCoord();
+    let startName = await genRoutePage.getStartAddr();
+    let endName = await genRoutePage.getEndAddr();
     createCheckBoxes(res);
-    createPointInfoMap(startCoord, endCoord, startName, endName, waypoints);
+    createPointInfoMap(startCoord, endCoord, startName, endName, waypoints, genRoutePage);
 }
 
 /**
  * Get waypoints from the servlet and map each cluster of waypoints on the map in a different marker color.
  */
-function createPointInfoMap(start, end, startName, endName, waypoints) {
-    let map = initMap(start, 'point-map');
+function createPointInfoMap(start, end, startName, endName, waypoints, genRoutePage) {
+    let map = genRoutePage.initMap(start, 'point-map');
     let bounds = createBounds(start, end, waypoints);
     map.fitBounds(bounds);
 
@@ -150,7 +87,7 @@ function createPointInfoMap(start, end, startName, endName, waypoints) {
         let cluster = waypoints[i];
         let letter = 'A';
         for (let pt of cluster) {
-            createCheckableMarker(map, pt, letter, google.maps.SymbolPath.BACKWARD_CLOSED_ARROW, FILL_COLORS[i % MAX_WAYPOINTS]);
+            createCheckableMarker(map, pt, letter, google.maps.SymbolPath.BACKWARD_CLOSED_ARROW, FILL_COLORS[i % MAX_WAYPOINTS], genRoutePage);
             letter = String.fromCharCode(letter.charCodeAt(0) + 1); // update the marker letter label to the next letter
         }
     }
@@ -160,9 +97,9 @@ function createPointInfoMap(start, end, startName, endName, waypoints) {
 /**
  * Create a dynamic marker with an InfoWindow that appears with the label upon clicking.
  */
-function createCheckableMarker(map, waypoint, letter, icon, color) {
+function createCheckableMarker(map, waypoint, letter, icon, color, genRoutePage) {
     let marker = createMarker(map, waypoint.latlng, letter, icon, color);
-    let infowindow = createInfoWindow(waypoint, marker);
+    let infowindow = createInfoWindow(waypoint, marker, genRoutePage);
     marker.addListener('click', function() {
         infowindow.open(map, marker);
     });
@@ -182,7 +119,7 @@ function toggleCheckbox(box) {
 /**
  * Creates a Google Maps InfoWindow object with the given text.
  */
-function createInfoWindow(waypoint, marker) {
+function createInfoWindow(waypoint, marker, genRoutePage) {
     const uncheckedIcon = marker.getIcon();
     const CHECKED_ICON = {
                         path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
@@ -192,7 +129,7 @@ function createInfoWindow(waypoint, marker) {
                         strokeWeight: 4,
                         labelOrigin: { x: 0, y: 2}
                     };
-    const html = createInfoWindowHTML(waypoint);
+    const html = createInfoWindowHTML(waypoint, genRoutePage);
     const infowindow = new google.maps.InfoWindow({
         content: html
     });
@@ -212,12 +149,11 @@ function createInfoWindow(waypoint, marker) {
 /**
  * Create the HTML that goes inside an InfoWindow with the given text.
  */
-function createInfoWindowHTML(waypoint) {
-    console.log(waypoint);
+function createInfoWindowHTML(waypoint, genRoutePage) {
     let html = document.createElement('div');
-    addNewTypeElem(html, waypoint.label, 'b');
-    addNewTypeElem(html, `species: ${waypoint.species}`, 'p');
-    let link = addNewTypeElem(html, 'More Information', 'a');
+    genRoutePage.addNewTypeElem(html, waypoint.label, 'b');
+    genRoutePage.addNewTypeElem(html, `species: ${waypoint.species}`, 'p');
+    let link = genRoutePage.addNewTypeElem(html, 'More Information', 'a');
     link.setAttribute('href', waypoint.url);
     link.setAttribute('target', '_blank');
 
@@ -282,9 +218,9 @@ function getCheckboxFromMarker(location) {
     return boxFound;
 }
 
-/** Takes ArrayList<ArrayList<Coordinates>> and creates checkboxes grouped by labels */
+/** Takes list of coordinates and creates checkboxes grouped by labels */
 function createCheckBoxes(waypointChoices) {
-  submitEl = document.createElement("input");
+  let submitEl = document.createElement("input");
   submitEl.setAttribute("type", "submit");
   submitEl.setAttribute('id', 'submit-checkbox');
   submitEl.setAttribute('class', 'button');
@@ -347,157 +283,13 @@ function getNumChecked() {
 }
 
 /**
- * Given a DirectionsService object, a DirectionsRenderer object, start/end coordinates and a list
- * of waypoint coordinates, generate a route using the Google Maps API.
- */
-function calcRoute(directionsService, directionsRenderer, start, end, waypoints) {
-    var waypointsWithLabels = waypoints;
-    let waypointsData = [];
-    waypoints.forEach(pt => waypointsData.push({ location: pt.latlng }));
-    let request = {
-        origin: start,
-        destination: end,
-        waypoints: waypointsData,
-        optimizeWaypoints: true,
-        travelMode: 'WALKING'
-    };
-    directionsService.route(request, function(result, status) {
-        if (status == 'OK') {
-            directionsRenderer.setDirections(result);
-            createWaypointLegend(result.routes[0], waypointsWithLabels);
-            generateURL (start, end, waypoints, result.routes[0].waypoint_order);
-        } else {
-            alert(`Could not display directions: ${status}`);
-        }
-    });
-    
-}
-
-/** Create a new element iwth the given tag name with the given text and append it to the given parent. */
-function addNewTypeElem(parent, text, tag) {
-    let newElem = document.createElement(tag);
-    newElem.textContent = text;
-    newElem.style.marginBottom = 0;
-    parent.appendChild(newElem);
-    return newElem;
-}
-
-/**
- * Given a generated route and a JSON object containing waypoint locations with their labels as inputted
- * by the user, create a legend that maps a marker on the map to corresponding user input.
- */
-async function createWaypointLegend(route, waypointsWithLabels) {
-    let legend = document.getElementById('route-legend');
-    legend.style.padding = '3px';
-    legend.style.border = 'thin solid black';
-    
-    let title = addNewTypeElem(legend, 'Route Information', 'h2');
-    title.style.textAlign = 'center';
-
-    // Add start information
-    let marker = 'A';
-    let infoDiv = addNewTypeElem(legend, '', 'div');
-    addNewTypeElem(infoDiv, `${marker}`, 'b');
-    addNewTypeElem(infoDiv, 'start', 'p');
-
-    const waypointOrder = route.waypoint_order;
-
-    // For each waypoint, in the order given by the route, add a new legend elem with label/species
-    for (let idx of waypointOrder) {
-        let waypoint = waypointsWithLabels[idx];
-        marker = String.fromCharCode(marker.charCodeAt(0) + 1);
-        infoDiv = addNewTypeElem(legend, '', 'div');
-
-        addNewTypeElem(infoDiv, `${marker}: ${waypoint.label}`, 'b');
-        addNewTypeElem(infoDiv, `${waypoint.species}`, 'p');
-        let link = addNewTypeElem(infoDiv, 'More Information', 'a');
-        link.setAttribute('href', waypoint.url);
-    }
-
-    marker = String.fromCharCode(marker.charCodeAt(0) + 1);
-    infoDiv = addNewTypeElem(legend, '', 'div');
-    addNewTypeElem(infoDiv, `${marker}`, 'b');
-    addNewTypeElem(infoDiv, 'end', 'p');
-
-    addNewTypeElem(legend, '', 'br');
-
-    // Add route distance to legend
-    let totalDistance = getRouteDistance(route);
-    addNewTypeElem(legend, `Total Route Distance: ${totalDistance} miles`, 'p');
-
-    // Add route duration to legend
-    let totalDuration = getRouteDuration(route);
-    let durationMetric = 'hours';
-    if (totalDuration < 1) {
-        totalDuration = Math.round(convertHoursToMinutes(totalDuration) * 10) / 10;
-        durationMetric = 'minutes'
-    }
-    addNewTypeElem(legend, `Total Route Duration: ${totalDuration} ${durationMetric}`, 'p');
-}
-
-/**
- * Calculate and return the total distance of a route in miles.
- */
-function getRouteDistance(route) {
-    let totalDistance = 0;
-     for (i = 0; i < route.legs.length - 1; i++) {
-        let pt = route.legs[i].end_location;
-        totalDistance += route.legs[i].distance.value;
-    }
-    let end = route.legs[route.legs.length - 1].end_location;
-    totalDistance += route.legs[route.legs.length - 1].distance.value
-    /* Convert distance to a more helpful metric. */
-    return Math.round(convertMetersToMiles(totalDistance) * 10) / 10;
-}
-
-/**
- * Calculate and return the total duration of a route in hours.
- */
-function getRouteDuration(route) {
-    let totalDuration = 0;
-    // For each leg of the route, find the label of the end point
-    // and add it to the page.
-    for (i = 0; i < route.legs.length - 1; i++) {
-        let pt = route.legs[i].end_location;
-        totalDuration += route.legs[i].duration.value;
-    }
-    let end = route.legs[route.legs.length - 1].end_location;
-    totalDuration += route.legs[route.legs.length - 1].duration.value;
-    /* Convert time to a more helpful metric. */
-    return Math.round(convertSecondsToHours(totalDuration) * 10) / 10;
-}
-
-/**
- * Convert a distance in meters to miles.
- */
-function convertMetersToMiles(distance) {
-    const CONVERSION = 0.000621371;
-    return distance * CONVERSION;
-}
-/**
- * Convert a time in seconds to hours.
- */
-function convertSecondsToHours(time) {
-    const CONVERSION = 3600;
-    return time / CONVERSION;
-}
-
-/**
- * Convert a time in hours to minutes.
- */
-function convertHoursToMinutes(time) {
-    const CONVERSION = 60;
-    return time / CONVERSION;
-}
-
-/**
  * Convert waypoint clusters in JSON form returned by servlet to a list of objects containing Google Maps LatLng objects
  * in place of coordinates.
  */
 function convertWaypointClusterstoLatLng(waypoints) {
      let latlngWaypoints = [];
      for (let cluster of waypoints) {
-         pts = [];
+         let pts = [];
          for (let pt of cluster) {
             let waypoint = new google.maps.LatLng(pt.y, pt.x);
             pts.push({ latlng : waypoint, label : pt.label, species : pt.species, url : pt.url });
@@ -505,75 +297,6 @@ function convertWaypointClusterstoLatLng(waypoints) {
          latlngWaypoints.push(pts);
     }
     return latlngWaypoints;
-}
-
-/**
- * Convert waypoints in JSON form returned by servlet to Google Maps LatLng objects.
- */
-function convertWaypointstoLatLng(waypoints) {
-    let latLngWaypoints = [];
-     for (let pt of waypoints) {
-        let waypoint = new google.maps.LatLng(pt.y, pt.x);
-        latLngWaypoints.push({ latlng: waypoint, label: pt.label, species: pt.species, url : pt.url });
-    }
-    return latLngWaypoints;
-}
-
-/**
- * Get a list of waypoints by querying the waypoint servlet.
- */
-async function getWaypoints() {
-    let res = await fetch('/query');
-    // Catch HTTP status error codes
-    if (res.status === SC_REQUEST_ENTITY_TOO_LARGE) {
-        alert('Too many waypoints in text input. Please try again.');
-    } else if (res.status === SC_BAD_REQUEST) {
-        alert('Malformed text input. Please try again.');
-    }
-
-    let waypoints = await res.json();
-    return waypoints;
-}
-
-/**
- * Given a center coordinate, create a Google Map.
- */
-function initMap(center, id) {
-    let mapOptions = {
-    zoom: 4,
-    center: center
-    }
-    return new google.maps.Map(document.getElementById(id), mapOptions);
-}
-
-/**
- * Creates a URL based on Maps URLs that will open the generated route on Google Maps on any device.
- */
-function generateURL(start, end, waypoints, waypointOrder){
-    let globalURL = 'https://www.google.com/maps/dir/?api=1';
-    globalURL = globalURL + '&origin=' + start + '&destination=' + end;
-    globalURL += '&waypoints=';
-    for (let idx of waypointOrder) {
-        let pt = waypoints[idx];
-        globalURL += pt.latlng + '|';
-    }
-    globalURL = globalURL + '&travelmode=walking';
-    const URLcontainer = document.getElementById('globalURL');
-    globalURL = globalURL.split(" ").join("") //need to get rid of white space for link to work
-    URLcontainer.innerHTML = '<a href ='+ globalURL  + '>' + globalURL + '</a>';
-}
-
-/**
- * Fetches the last text-input from /route-store to display with the map.
- */
-async function writeToAssociatedText(){
-    const response = await fetch("/text-store");
-    const storedtext = await response.text();
-    // /text-store has all the input text sorted by most recent first.
-    const associatedTextEl = document.getElementById('associated-text');
-    // To get the most recent entered term, get first element of array
-    // of all input text. 
-    associatedTextEl.innerText = "You entered: " + storedtext;
 }
 
 /* Check to see if we're running on Node.js or in a browser for tests */
