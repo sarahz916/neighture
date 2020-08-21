@@ -395,9 +395,7 @@ public class WaypointQueryServlet extends HttpServlet {
     while (!allWaypoints.isNull(index)) {
       JSONObject observation = allWaypoints.getJSONObject(index);
       Double x = observation.getDouble("longitude");
-      x = Math.round(x * 25000.0)/25000.0;
       Double y = observation.getDouble("latitude");
-      y = Math.round(y * 25000.0)/25000.0;
       JSONObject taxon = observation.getJSONObject("taxon");
       String species = taxon.getString("name");
       int idInt = observation.getInt("id");
