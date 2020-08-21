@@ -23,12 +23,10 @@ public final class StoredRoute {
   private final long id;
   private final String text;
   private final String waypoints;
-  //private final GeoPt center;
 
   public StoredRoute(long id, String text, String waypoints) {
     this.id = id;
     this.text = text;
     this.waypoints = waypoints;
-    //this.center = center;
   }
 }

@@ -14,30 +14,31 @@
 
 //TODOs: Want page to work without start and end added 
 
-const DIFF = 0.002;
+import RoutePage from './RoutePage.js'
 
 window.onload = async function setup() {
-    event.preventDefault();
-    let startAddr = await getStartAddr();
-    let endAddr = await getEndAddr();
-    let startCoord = await getStartCoord;
-    setupGenRouteCards();
+    let genRoutePage = new RoutePage();
+    await genRoutePage.init();
+    let startAddr = await genRoutePage.getStartAddr();
+    let endAddr = await genRoutePage.getEndAddr();
+    let startCoord = await genRoutePage.getStartCoord();
+    setupGenRouteCards(genRoutePage);
 }
 /** Feteches routes from routestore and creates cards to displayed on the page. */
-async function setupGenRouteCards() {
+async function setupGenRouteCards(genRoutePage) {
     let routes = await getRouteStore();
-    createCards(routes);
+    createCards(routes, genRoutePage);
 }
 
 /** Given stored text create cards with maps
     Create card with maps in card decks of two. */
-function createCards(routes) {
+function createCards(routes, genRoutePage) {
   const cardDivEl = document.getElementById('cards');
   cardDivEl.innerHTML = "";
   var CardDeck = newCardDeck();
   cardDivEl.append(CardDeck);
   routes.forEach((route, index) => {
-    CardDeck.appendChild(createCardEl(route));
+    CardDeck.appendChild(createCardEl(route, genRoutePage));
     if ((index % 2) === 1){
         CardDeck = newCardDeck();
         cardDivEl.append(CardDeck);
@@ -53,7 +54,7 @@ function newCardDeck(){
 }
 
 /** Creates an card map element */
-function createCardEl(route){
+function createCardEl(route, genRoutePage){
     const cardEl = document.createElement('div');
     cardEl.setAttribute('class', 'card');
     cardEl.appendChild(createCardBody(route));
@@ -61,7 +62,8 @@ function createCardEl(route){
     const mapID = route.id.toString(16) + 'map';
     const legendID = route.id.toString(16) + 'legend';
     const urlID = route.id.toString(16) + 'url';
-    createMapWithWaypoints(route, mapID, legendID, urlID);
+    let waypointjson = JSON.parse(route.waypoints);
+    genRoutePage.createMapWithWaypoints(waypointjson, mapID, legendID, urlID, false);
     return cardEl;
 }
 
@@ -109,6 +111,8 @@ function createLegendEl(route){
 }
 
 /**
+<<<<<<< HEAD
+=======
  * Create a route and map from a waypoint entered by the user.
  */
 async function createMapWithWaypoints(route,  mapID, legendID, urlID) {
@@ -282,12 +286,16 @@ function getInfoFromLatLng(pt, waypointsWithLabels, infoRequested) {
 
 
 /**
+>>>>>>> a1ec45fd8a9cfbb7b30c731966007055bef4fa5c
  * Get a list of StoredRouts from fetching from /route-store
  */
 async function getRouteStore() {
     let res = await fetch('/route-store');
     let routestore = await res.json();
     return routestore;
+<<<<<<< HEAD
+}
+=======
 }
 
 /**
@@ -381,3 +389,4 @@ async function getEndAddr() {
     let startEnd = await getStartEnd();
     return startEnd.end.label;
 }
+>>>>>>> a1ec45fd8a9cfbb7b30c731966007055bef4fa5c
