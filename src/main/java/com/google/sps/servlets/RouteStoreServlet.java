@@ -127,11 +127,7 @@ public class RouteStoreServlet extends HttpServlet {
         waypointsJson = (String) waypointsJsonObject;
       }
       GeoPt center;
-      try{
-        center = (GeoPt) entity.getProperty("center-of-mass");
-      }catch(Exception e){ //Some datastore center-of-mass if not as GeoPt, don't include those
-          continue;
-      }
+      center = (GeoPt) entity.getProperty("center-of-mass");
       //have function to calculate distance from midpoint
       float distance = getDistance(center, midpoint);
       if ((waypointsJson != null) && (distance < DISTANCE_CUTOFF_COORD.floatValue())){

@@ -110,8 +110,8 @@ public class ChosenWaypointsServletTest {
   public void testOne(){
     chosenWaypointsMock.add(JSON_STRING_DAISY);
     when(request.getParameterNames()).thenReturn(Collections.enumeration(chosenWaypointsMock));
-    ArrayList<Coordinate> actual = servlet.getWaypointsfromRequest(request);
-    ArrayList<Coordinate> comparison = new ArrayList<Coordinate>();
+    List<Coordinate> actual = servlet.getWaypointsfromRequest(request).getWaypointList();
+    List<Coordinate> comparison = new ArrayList<Coordinate>();
     comparison.add(DAISY);
     //String comparisonString = new Gson().toJson(comparison);
     assertEquals(comparison, actual);
@@ -125,8 +125,8 @@ public class ChosenWaypointsServletTest {
     chosenWaypointsMock.add(JSON_STRING_BELLFLOWER);
     chosenWaypointsMock.add(JSON_STRING_CLOVER);
     when(request.getParameterNames()).thenReturn(Collections.enumeration(chosenWaypointsMock));
-    ArrayList<Coordinate> actual = servlet.getWaypointsfromRequest(request);
-    ArrayList<Coordinate> comparison = new ArrayList<Coordinate>();
+    List<Coordinate> actual = servlet.getWaypointsfromRequest(request).getWaypointList();
+    List<Coordinate> comparison = new ArrayList<Coordinate>();
     comparison.add(DAISY);
     comparison.add(BELLFLOWER);
     comparison.add(CLOVER);
