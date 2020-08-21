@@ -85,10 +85,8 @@ function createPointInfoMap(start, end, startName, endName, waypoints, genRouteP
     // Make one marker for each waypoint, in a different color.
     for (let i = 0; i < waypoints.length; i++) {
         let cluster = waypoints[i];
-        let letter = 'A';
         for (let pt of cluster) {
-            createCheckableMarker(map, pt, letter, google.maps.SymbolPath.BACKWARD_CLOSED_ARROW, FILL_COLORS[i % MAX_WAYPOINTS], genRoutePage);
-            letter = String.fromCharCode(letter.charCodeAt(0) + 1); // update the marker letter label to the next letter
+            createCheckableMarker(map, pt, google.maps.SymbolPath.BACKWARD_CLOSED_ARROW, FILL_COLORS[i % MAX_WAYPOINTS], genRoutePage);
         }
     }
 }
@@ -97,8 +95,8 @@ function createPointInfoMap(start, end, startName, endName, waypoints, genRouteP
 /**
  * Create a dynamic marker with an InfoWindow that appears with the label upon clicking.
  */
-function createCheckableMarker(map, waypoint, letter, icon, color, genRoutePage) {
-    let marker = createMarker(map, waypoint.latlng, letter, icon, color);
+function createCheckableMarker(map, waypoint, icon, color, genRoutePage) {
+    let marker = createMarker(map, waypoint.latlng, icon, color);
     let infowindow = createInfoWindow(waypoint, marker, genRoutePage);
     marker.addListener('click', function() {
         infowindow.open(map, marker);
@@ -184,12 +182,11 @@ function createBounds(start, end, waypoints) {
 /**
  * Given options for a custom Google Maps marker, create the marker on the map.
  */
-function createMarker(map, pos, label, shape, color) {
+function createMarker(map, pos, shape, color) {
     let markerOpts = {
         animation: google.maps.Animation.DROP,
         map: map,
         position: pos,
-        label: label,
         icon: {
             path: shape,
             fillColor: color,
