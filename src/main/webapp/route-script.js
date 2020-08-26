@@ -103,6 +103,7 @@ function createColorLegendElem(color, label) {
     let colorbox = createColorBoxElem(color);
     colorLegendElem.appendChild(colorbox);
     colorLegendElem.appendChild(text);
+    colorLegendElem.style.marginLeft = '2px';
     return colorLegendElem;
 
 }
