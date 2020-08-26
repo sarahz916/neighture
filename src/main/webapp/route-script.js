@@ -75,6 +75,8 @@ function createPointInfoMap(start, end, startName, endName, waypoints, genRouteP
     let bounds = createBounds(start, end, waypoints);
     map.fitBounds(bounds);
 
+    let colorLegend = document.getElementById('color-legend');
+
     if (startName === endName) {
         createMarker(map, start, 'start/end', google.maps.SymbolPath.CIRCLE, 'black');
     } else {
@@ -82,21 +84,35 @@ function createPointInfoMap(start, end, startName, endName, waypoints, genRouteP
         createMarker(map, end, 'end', google.maps.SymbolPath.CIRCLE, 'black');
     }
 
-    // Make one marker for each waypoint, in a different color.
+    // Make one marker and one color legend entry for each waypoint, in a different color.
     for (let i = 0; i < waypoints.length; i++) {
         let cluster = waypoints[i];
+        let color = FILL_COLORS[i % MAX_WAYPOINTS];
+        const colorLegendElem = createColorLegendElem(color, cluster[0].label);
+        colorLegend.appendChild(colorLegendElem);
         for (let pt of cluster) {
-            createCheckableMarker(map, pt, google.maps.SymbolPath.BACKWARD_CLOSED_ARROW, FILL_COLORS[i % MAX_WAYPOINTS], genRoutePage);
+            createCheckableMarker(map, pt, '', google.maps.SymbolPath.BACKWARD_CLOSED_ARROW, color, genRoutePage);
         }
     }
+}
+
+function createColorLegendElem(color, label) {
+    let colorLegendElem = document.createElement('div');
+    let text = document.createElement('p');
+    text.textContent = label;
+    let colorbox = createColorBoxElem(color);
+    colorLegendElem.appendChild(colorbox);
+    colorLegendElem.appendChild(text);
+    return colorLegendElem;
+
 }
 
 
 /**
  * Create a dynamic marker with an InfoWindow that appears with the label upon clicking.
  */
-function createCheckableMarker(map, waypoint, icon, color, genRoutePage) {
-    let marker = createMarker(map, waypoint.latlng, icon, color);
+function createCheckableMarker(map, waypoint, label, icon, color, genRoutePage) {
+    let marker = createMarker(map, waypoint.latlng, label, icon, color);
     let infowindow = createInfoWindow(waypoint, marker, genRoutePage);
     marker.addListener('click', function() {
         infowindow.open(map, marker);
@@ -182,10 +198,11 @@ function createBounds(start, end, waypoints) {
 /**
  * Given options for a custom Google Maps marker, create the marker on the map.
  */
-function createMarker(map, pos, shape, color) {
+function createMarker(map, pos, label, shape, color) {
     let markerOpts = {
         animation: google.maps.Animation.DROP,
         map: map,
+        label: label,
         position: pos,
         icon: {
             path: shape,

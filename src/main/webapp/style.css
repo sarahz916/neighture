@@ -81,6 +81,10 @@ textarea {
     background-color: white;
 }
 
+#color-legend {
+    display: flex;
+}
+
 #route-legend {
     width: 55vw;
     background-color: white;
